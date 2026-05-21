@@ -1392,7 +1392,7 @@ const SyncCard = ({num, title, children}) => (
 const StatTile = ({label, value, color='var(--text)', mono}) => (
   <div style={{background:'rgba(255,255,255,.03)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 12px'}}>
     <div style={{font:'700 10px Sora,sans-serif', color:'var(--muted)', textTransform:'uppercase', letterSpacing:'.10em'}}>{label}</div>
-    <div style={{font:'700 14px/1.3  + (mono?'JetBrains Mono,monospace':'Sora,sans-serif'), color, marginTop:4, wordBreak:'break-all'}}>{value}</div>
+    <div style={{font:'700 14px/1.3 '+(mono?'JetBrains Mono,monospace':'Sora,sans-serif'), color, marginTop:4, wordBreak:'break-all'}}>{value}</div>
   </div>
 );
 
