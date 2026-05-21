@@ -1462,7 +1462,7 @@ const AllComplaints = ({agent}) => {
     setEditMap(function(m){ var r=Object.assign({},m); delete r[num]; return r; });
     window.EK_TOAST && window.EK_TOAST('✅ Ticket #' + num + ' updated.');
   };
-  const allTickets = (typeof EK_EXCEL_TICKETS !== 'undefined' && EK_EXCEL_TICKETS.length)
+  let allTickets = (typeof EK_EXCEL_TICKETS !== 'undefined' && EK_EXCEL_TICKETS.length)
     ? EK_EXCEL_TICKETS
     : (function() {
         var D = window.EK_DATA;
