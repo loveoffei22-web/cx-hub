@@ -26,8 +26,7 @@
   ];
 
   var BUSINESS_UNITS=[
-    'ISLAND','IJORA','MUSHIN','AJAH','LEKKI','APAPA','AGBARA','AJELE',
-    'OJO','FESTAC','ORILE','IKEJA','IKOYI','VI','BADAGRY','IBEJU-LEKKI','EPE',
+    'ISLAND','IJORA','MUSHIN','AJAH','LEKKI','APAPA','AGBARA','AJELE','OJO','FESTAC','ORILE','IBEJU-LEKKI',
   ];
 
   var RESPONSIBLE_PARTIES=[
@@ -478,7 +477,7 @@ const AStatusPill=({s})=>{const m={resolved:{c:'#4ADE80',bg:'rgba(22,163,74,.15)
 const AREF_TABLE=[{sn:1,category:'Band Reclassification',party:'Nonye Angelina Nnadozie',color:'#818CF8'},{sn:2,category:'Billing',party:'Mojibola Adefuwa',color:'#34D399'},{sn:3,category:'Interruption / Voltage / Safety',party:'Ogheneyoreme Agbroko',color:'#F87171'},{sn:4,category:'Metering',party:'Holyland Umude',color:'#60A5FA'},{sn:5,category:'PPM Support (IT / General)',party:'Adetoun Adetola',color:'#FBBF24'},{sn:6,category:'PPM Maintenance (Field / Faulty)',party:'Owokade Olusegun',color:'#F97316'},{sn:7,category:'Change of Name / Onboarding',party:'Clara Olutola',color:'#A78BFA'},{sn:8,category:'MYCRON',party:'Glory (BPS Africa)',color:'#2DD4BF'},{sn:9,category:'AMISA',party:'Festus Moko',color:'#FB7185'}];
 
 function AddTicket({agent,onCreate,onCreateMany}){
-  const BUS=window.EK_BUSINESS_UNITS||['ISLAND','MUSHIN','AJAH','LEKKI','APAPA','IKOYI','FESTAC','OJO','EPE','BADAGRY','IBEJU'];
+  const BUS=window.EK_BUSINESS_UNITS||['ISLAND','IJORA','MUSHIN','AJAH','LEKKI','APAPA','AGBARA','AJELE','OJO','FESTAC','ORILE','IBEJU-LEKKI'];
   const RESP=(window.EK_RESPONSIBLE_PARTIES||[]).map(r=>r.name);
   const EMPTY={num:'',name:'',phone:'',meter:'',addr:'',bu:BUS[0]||'ISLAND',issue:'',category:'',resp:RESP[3]||'Holyland Umude',status:'progress',note:''};
   const[pasted,setPasted]=useState('');
