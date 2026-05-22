@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>EKEDP Power App — Agents Hub</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23001F5C'/%3E%3Cpath d='M55 18 L26 56 L46 56 L42 84 L74 44 L54 44 L60 18 Z' fill='%23E30613'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="canonical.js"></script>
+<script src="AgentPhotos.js"></script>
+<script>window.EK_AGENTS = typeof AGENTS !== 'undefined' ? AGENTS : [];</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Sora',sans-serif;min-height:100vh;background:var(--bg,#060E2B);color:var(--text,#F0F4FF);transition:background .35s,color .35s;}
+/* themes */
+body[data-theme="daylight"]{--bg:#F4F6FB;--surface:#fff;--card:#fff;--border:#E2E8F0;--text:#0F172A;--muted:#64748B;--sub:#94A3B8;}
+body[data-theme="midnight"]{--bg:#060E2B;--surface:#0D1B45;--card:#111D4A;--border:#1E3070;--text:#F0F4FF;--muted:#6B85C0;--sub:#3A5299;}
+body[data-theme="solar"]{--bg:#2A1A06;--surface:#3F2C12;--card:#52391B;--border:#7A5A28;--text:#FFF7E5;--muted:#E8C98A;--sub:#C9A968;}
+body[data-theme="forest"]{--bg:#071A10;--surface:#0F2A1A;--card:#163824;--border:#235230;--text:#F0FFF4;--muted:#86EFAC;--sub:#4ADE80;}
+body[data-theme="violet"]{--bg:#0C0118;--surface:#1B0444;--card:#2A0860;--border:#4C1D95;--text:#F5F3FF;--muted:#A78BFA;--sub:#7C3AED;}
+/* sidebar */
+.nav{position:fixed;top:0;left:0;bottom:0;width:200px;z-index:100;display:flex;flex-direction:column;padding:14px 10px;transition:width .25s,padding .25s;overflow:hidden;background:var(--surface,#0D1B45);backdrop-filter:blur(12px);}
+body[data-nc="1"] .nav{width:60px;padding:14px 7px;}
+.nav-logo{display:flex;align-items:center;gap:9px;margin-bottom:12px;padding-bottom:12px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border,#1E3070);}
+.nav-logo-icon{width:34px;height:34px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;}
+.nav-logo-icon img{width:100%;height:100%;object-fit:cover;}
+body[data-nc="1"] .nh{display:none;}
+.nav-agent{padding:8px 6px 10px;margin-bottom:8px;border-bottom:1px solid var(--border,#1E3070);display:flex;align-items:center;gap:10px;}
+.agent-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:2px solid var(--ac,#3B82F6);}
+.nav-tabs{flex:1;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.nav-tab{padding:9px 10px;border:none;background:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--muted,#6B85C0);border-left:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:10px;border-radius:0 7px 7px 0;white-space:nowrap;width:100%;}
+.nav-tab:hover{color:var(--text,#fff);background:rgba(255,255,255,.05);}
+.nav-tab.on{color:#fff;background:var(--at,rgba(59,130,246,.15));border-left-color:var(--ac,#3B82F6);}
+.nav-tab .ti{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+body[data-nc="1"] .nav-tab .tl{display:none;}
+.nav-foot{padding-top:10px;border-top:1px solid var(--border,#1E3070);display:flex;flex-direction:column;gap:5px;}
+.theme-swatches{display:flex;gap:4px;justify-content:center;margin-bottom:4px;}
+.theme-sw{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.theme-sw.on{border-color:#FFC72C;box-shadow:0 0 8px rgba(255,199,44,.6);}
+body[data-nc="1"] .theme-swatches,.nav-clock{display:none;}
+body[data-nc="1"] .nav-clock{display:none;}
+.nav-clock{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted,#6B85C0);text-align:center;margin-bottom:4px;}
+.nav-btn{padding:8px 10px;border-radius:7px;border:1px solid rgba(220,38,38,.3);background:rgba(220,38,38,.12);color:#F87171;font-family:'Sora',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;}
+.nav-btn:hover{background:rgba(220,38,38,.22);}
+body[data-nc="1"] .nav-btn .nl{display:none;}
+/* topbar */
+.topbar{background:linear-gradient(135deg,var(--ac-bg,rgba(59,130,246,.12)),transparent 40%),var(--surface,#0D1B45);border-bottom:3px solid var(--ac,#3B82F6);padding:18px 28px;position:sticky;top:0;z-index:10;}
+/* main */
+.main{padding-left:200px;transition:padding-left .25s;min-height:100vh;}
+body[data-nc="1"] .main{padding-left:60px;}
+/* cards */
+.card{background:var(--card,#111D4A);border:1px solid var(--border,#1E3070);border-radius:12px;overflow:hidden;}
+.card-h{padding:13px 16px;border-bottom:1px solid var(--border,#1E3070);display:flex;justify-content:space-between;align-items:center;}
+.card-h h3{font-size:13px;font-weight:700;}
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.kpi{background:var(--card,#111D4A);border:1px solid var(--border,#1E3070);border-radius:8px;padding:10px 12px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,#3B82F6);}
+.kl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:var(--muted,#6B85C0);}
+.kv{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--text,#fff);margin-top:4px;}
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.tbl thead tr{background:rgba(0,31,92,.7);}
+.tbl th{padding:8px 10px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#6B85C0);}
+.tbl td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;}
+.tbl tr:hover td{background:rgba(255,255,255,.03);}
+/* badge */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:9.5px;font-weight:700;}
+.b-res{background:rgba(22,163,74,.15);color:#4ADE80;}.b-prg{background:rgba(217,119,6,.15);color:#FCD34D;}.b-unr{background:rgba(220,38,38,.15);color:#F87171;}.b-bu{background:rgba(59,130,246,.1);color:#93C5FD;}
+/* form */
+.fld{margin-bottom:12px;}
+.fld label{display:block;font-size:10px;font-weight:700;color:var(--muted,#6B85C0);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px;}
+.fld input,.fld select,.fld textarea{width:100%;padding:9px 11px;background:var(--bg,#060E2B);color:var(--text,#F0F4FF);border:1px solid var(--border,#1E3070);border-radius:8px;font-family:inherit;font-size:12px;outline:none;}
+.fld textarea{min-height:70px;resize:vertical;}
+/* modal */
+.modal-bg{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;overflow-y:auto;}
+.modal{width:100%;max-width:560px;background:var(--card,#111D4A);border:1px solid var(--border,#1E3070);border-radius:16px;overflow:hidden;}
+.modal-h{padding:15px 20px;border-bottom:1px solid var(--border,#1E3070);display:flex;justify-content:space-between;align-items:center;}
+.modal-h h3{font-size:15px;font-weight:800;}
+.modal-x{background:none;border:none;color:var(--muted,#6B85C0);font-size:20px;cursor:pointer;}
+.modal-b{padding:18px 20px;}
+/* slot btns */
+.slot-btn{padding:12px 16px;border-radius:10px;border:2px solid var(--border,#1E3070);background:var(--card,#111D4A);color:var(--text,#F0F4FF);font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .18s;position:relative;}
+.slot-btn.on{border-color:var(--ac,#3B82F6);background:var(--at,rgba(59,130,246,.12));}
+.slot-btn .rec{position:absolute;top:-7px;right:8px;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;background:#FFC72C;color:#001F5C;letter-spacing:.04em;}
+/* sign-in */
+.si-wrap{position:fixed;inset:0;z-index:1000;background:linear-gradient(160deg,#fff 0%,#EFF6FF 55%,#DBEAFE 100%);display:flex;align-items:center;justify-content:center;padding:24px;}
+.si-card{width:100%;max-width:420px;background:#fff;border-radius:20px;padding:32px;box-shadow:0 20px 60px rgba(15,30,79,.15),0 0 0 1px rgba(15,30,79,.06);}
+.si-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.si-agent{background:#F8FAFC;border:2px solid #E2E8F0;border-radius:12px;padding:14px 10px;cursor:pointer;text-align:center;font-family:'Sora',sans-serif;transition:all .15s;}
+.si-agent:hover{border-color:#93C5FD;background:#EFF6FF;}
+.si-agent.on{border-color:#1D4ED8;background:#EFF6FF;}
+.si-agent .av{font-size:28px;margin-bottom:6px;}
+.si-agent .nm{font-size:12px;font-weight:700;color:#0F172A;}
+.si-agent .role{font-size:10px;color:#64748B;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--sub,#3A5299);border-radius:3px;}
+/* toast */
+.toast{position:fixed;bottom:20px;right:20px;z-index:9999;padding:11px 16px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:none;}
+</style>
+</head>
+<body data-theme="midnight">
+<div id="root"></div>
+
+<script>
+// ── AGENTS DATA — loaded from canonical.js via window.EK_AGENTS ─────
+// Falls back to inline if canonical not loaded
+// Use canonical.js agent list directly
+const INIT_TICKETS={};
+try{(window.EK_AGENTS||[]).forEach(a=>{INIT_TICKETS[a.id]=JSON.parse(localStorage.getItem('ek_tix_'+a.id)||'[]');});}catch(e){}
+
+const RESP_MAP={'BAND':'Nonye Angelina Nnadozie','BILLING':'Mojibola Adefuwa','INTERRUPT':'Ogheneyoreme Agbroko','VOLTAGE':'Ogheneyoreme Agbroko','SAFETY':'Ogheneyoreme Agbroko','METERING':'Holyland Umude','METER':'Holyland Umude','GENERAL':'Adetoun Adebayo','PPM':'Olusegun Owokade'};
+function getResp(cat){const c=(cat||'').toUpperCase();for(const[k,v] of Object.entries(RESP_MAP)){if(c.includes(k))return v;}return 'Adetoun Adebayo';}
+
+function openPDF(html){try{const b=new Blob([html],{type:'text/html'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(u),3000);}catch(e){const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}}}
+
+function getWATNow(){
+  const w=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  return{date:w,isWeekend:[0,6].includes(w.getDay()),hour:w.getHours(),dayLong:w.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),dayShort:w.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})};
+}
+function parseTimeMins(s){if(!s)return 0;const m=String(s).trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);if(!m)return 0;let h=+m[1],mm=+m[2];const ap=(m[3]||'').toUpperCase();if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0;return h*60+mm;}
+function esc(s){return(s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+
+<script type="text/babel">
+
+
+// ── BROWSER NOTIFICATIONS ──────────────────────────────────────────
+function fireNotif(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try { new Notification(title, {body:body, icon:'../../assets/ekedp-app-icon.png', tag:'ekedp-ticket'}); } catch(e) {}
+}
+// ── SESSION PERSISTENCE ────────────────────────────────────────────
+const EK_SESSION_KEY='ek_agent_session_v1';
+const EK_SESSION_TTL=8*60*60*1000;
+function loadAgentSession(){try{const raw=localStorage.getItem(EK_SESSION_KEY);if(!raw)return null;const{a,ts}=JSON.parse(raw);if(Date.now()-ts>EK_SESSION_TTL){localStorage.removeItem(EK_SESSION_KEY);return null;}return a||null;}catch{return null;}}
+function saveAgentSession(a){try{localStorage.setItem(EK_SESSION_KEY,JSON.stringify({a,ts:Date.now()}));}catch{}}
+function clearAgentSession(){try{localStorage.removeItem(EK_SESSION_KEY);}catch{}}
+
+const {useState,useEffect,useMemo,useRef}=React;
+
+// ── HELPERS ────────────────────────────────────────────────────────
+const StatusBadge=({s})=>{const m={resolved:['b-res','✅ Resolved'],progress:['b-prg','⏳ Progress'],unresolved:['b-unr','🔴 Unresolved']};const[cl,lbl]=m[s]||['b-unr','—'];return <span className={`badge ${cl}`}>{lbl}</span>;};
+const BuPill=({bu})=><span className="badge b-bu">{bu||'—'}</span>;
+const Kpi=({label,v,c})=><div className="kpi" style={{'--kc':c}}><div className="kl">{label}</div><div className="kv">{v}</div></div>;
+
+// ── SIGN IN ────────────────────────────────────────────────────────
+function SignIn({onLogin}){
+  const[sel,setSel]=useState(null);
+  return(
+    <div className="si-wrap">
+      <div className="si-card">
+        <div style={{textAlign:'center',marginBottom:24}}>
+          <div style={{width:64,height:64,borderRadius:16,background:'linear-gradient(135deg,#60A5FA,#1D4ED8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:30,margin:'0 auto 12px',boxShadow:'0 10px 28px rgba(29,78,216,.28)'}}>⚡</div>
+          <div style={{fontSize:22,fontWeight:900,color:'#0F1E4F'}}>EKEDP <span style={{color:'#1D4ED8'}}>Power App</span></div>
+          <div style={{fontSize:10,fontWeight:700,color:'#64748B',letterSpacing:'.8px',textTransform:'uppercase',marginTop:4}}>Agents Hub · Marina HQ</div>
+        </div>
+        <div style={{fontSize:13,fontWeight:700,color:'#0F172A',marginBottom:12}}>Select your profile to sign in:</div>
+        <div className="si-grid">
+          {(window.EK_AGENTS||[]).map(a=>(
+            <div key={a.id} className={`si-agent${sel?.id===a.id?' on':''}`} onClick={()=>setSel(a)}>
+              <div className="av">{a.emoji}</div>
+              <div className="nm">{a.name.split(' ')[0]}</div>
+              <div className="role">{a.cat}</div>
+            </div>
+          ))}
+        </div>
+        {sel&&<div style={{marginBottom:16,padding:'10px 14px',background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:10,display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:22}}>{sel.emoji}</span>
+          <div><div style={{fontSize:13,fontWeight:800,color:'#1E3A8A'}}>{sel.name}</div><div style={{fontSize:11,color:'#3B82F6'}}>{sel.cat}</div></div>
+        </div>}
+        <button onClick={()=>sel&&onLogin(sel)} style={{width:'100%',padding:14,background:sel?'linear-gradient(135deg,#3B82F6,#1D4ED8)':'#E2E8F0',border:'none',borderRadius:12,color:sel?'#fff':'#94A3B8',fontSize:15,fontWeight:800,cursor:sel?'pointer':'default',fontFamily:'inherit',transition:'all .2s'}}>
+          {sel?`Sign in as ${sel.name.split(' ')[0]} →`:'Select your profile above'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── NAV ────────────────────────────────────────────────────────────
+const TABS=[{id:'tickets',icon:'📋',label:'My Tickets'},{id:'add',icon:'➕',label:'Add Ticket'},{id:'slot',icon:'🌤',label:'Slot Reports'},{id:'import',icon:'📂',label:'Import JSON'},{id:'export',icon:'📤',label:'Export Day'}];
+const THEMES=[{id:'midnight',sw:'linear-gradient(135deg,#001040,#001F5C)',light:false},{id:'daylight',sw:'linear-gradient(135deg,#DBEAFE,#BFDBFE)',light:true},{id:'solar',sw:'linear-gradient(135deg,#52391B,#F59E0B)',light:false},{id:'forest',sw:'linear-gradient(135deg,#071A10,#14532D)',light:false},{id:'violet',sw:'linear-gradient(135deg,#0C0118,#2E0B72)',light:false}];
+
+function Nav({agent,active,onChange,onSignOut,theme,onTheme,collapsed,onToggle}){
+  const[clock,setClock]=useState('');
+  useEffect(()=>{const f=()=>{const w=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));setClock(w.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' WAT');};f();const id=setInterval(f,1000);return()=>clearInterval(id);},[]);
+  const ag=agent;
+  return(
+    <nav className="nav" style={{borderRight:'1px solid '+(ag.color+'44')}}>
+      <div className="nav-logo" onClick={onToggle}>
+        <div className="nav-logo-icon" style={{background:'#001F5C'}}>⚡</div>
+        {!collapsed&&<div className="nh"><div style={{fontSize:11,fontWeight:800,color:'var(--text,#fff)'}}>EKEDP POWER APP</div><div style={{fontSize:9,color:'var(--muted,#6B85C0)'}}>Agents Hub</div></div>}
+      </div>
+      {!collapsed&&<div className="nav-agent">
+        <div className="agent-av" style={{'--ac':ag.color,background:ag.tint,fontSize:18}}>{ag.emoji}</div>
+        <div className="nh" style={{minWidth:0}}>
+          <div style={{fontSize:9,color:'var(--muted,#6B85C0)',fontStyle:'italic'}}>Signed in as</div>
+          <div style={{fontSize:13,fontWeight:800,color:'var(--text,#fff)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ag.name.split(' ')[0]}</div>
+        </div>
+      </div>}
+      <div className="nav-tabs">
+        {TABS.map(t=>(
+          <button key={t.id} className={`nav-tab${active===t.id?' on':''}`} onClick={()=>onChange(t.id)} style={active===t.id?{'--ac':ag.color,'--at':ag.tint}:{}}>
+            <span className="ti">{t.icon}</span><span className="tl">{t.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="nav-foot">
+        {!collapsed&&<div className="theme-swatches">
+          {THEMES.map(t=><button key={t.id} className={`theme-sw${theme===t.id?' on':''}`} style={{background:t.sw,border:t.light?'2px solid #94A3B8':theme===t.id?'2px solid #FFC72C':'2px solid transparent'}} onClick={()=>onTheme(t.id)} title={t.id}/>)}
+        </div>}
+        {!collapsed&&<div className="nav-clock">{clock}</div>}
+        <button className="nav-btn" onClick={onSignOut}><span style={{fontSize:13}}>👤</span><span className="nl">Sign out</span></button>
+      </div>
+    </nav>
+  );
+}
+
+// ── TOPBAR ─────────────────────────────────────────────────────────
+function Topbar({agent,screen}){
+  const[greet,setGreet]=useState('');
+  useEffect(()=>{const f=()=>{const h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();setGreet(h<12?'Good morning ☀':h<17?'Good afternoon 🌤':'Good evening 🌙');};f();const id=setInterval(f,60000);return()=>clearInterval(id);},[]);
+  const labels={tickets:'My Tickets',add:'Add Ticket',slot:'Slot Reports',import:'Import JSON',export:'Export Day'};
+  return(
+    <div className="topbar" style={{'--ac':agent.color,'--ac-bg':agent.tint+'88'}}>
+      <div style={{fontSize:10,fontWeight:800,color:agent.color,letterSpacing:'.10em',textTransform:'uppercase',marginBottom:4}}>{labels[screen]||'Agents Hub'}</div>
+      <div style={{fontSize:18,fontWeight:800,fontStyle:'italic',color:'var(--text,#fff)'}}>{greet}, {agent.name.split(' ')[0]}</div>
+    </div>
+  );
+}
+
+// ── MY TICKETS ─────────────────────────────────────────────────────
+function MyTickets({agent,tickets,onEdit}){
+  const[q,setQ]=useState('');
+  const[fSt,setFSt]=useState('');
+  const[fDate,setFDate]=useState('');
+
+  // Build sorted unique date list from ticket created field
+  const dateOptions=useMemo(()=>{
+    const seen=new Set();
+    tickets.forEach(t=>{
+      if(t.created){
+        const d=new Date(t.created);
+        if(!isNaN(d)){seen.add(d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}));}
+      }
+    });
+    return Array.from(seen).sort((a,b)=>new Date(a)-new Date(b));
+  },[tickets]);
+
+  const filtered=useMemo(()=>tickets.filter(t=>{
+    if(fSt&&t.status!==fSt)return false;
+    if(fDate){
+      const d=t.created?new Date(t.created):null;
+      const dl=d&&!isNaN(d)?d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+      if(dl!==fDate)return false;
+    }
+    if(q){
+      const h=[t.num,t.name,t.phone,t.issue,t.bu,t.category,t.note,t.meter,t.addr].join(' ').toLowerCase();
+      if(!h.includes(q.toLowerCase()))return false;
+    }
+    return true;
+  }),[tickets,fSt,fDate,q]);
+
+  const fmtDate=iso=>{try{const d=new Date(iso);return isNaN(d)?'—':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch{return'—';}};
+
+  return(
+    <div style={{padding:'22px 28px'}}>
+
+      {/* ── KPI strip ── */}
+      <div className="kpi-strip">
+        <Kpi label="Total" v={tickets.length} c="#3B82F6"/>
+        <Kpi label="Resolved" v={tickets.filter(t=>t.status==='resolved').length} c="#4ADE80"/>
+        <Kpi label="In Progress" v={tickets.filter(t=>t.status==='progress').length} c="#FCD34D"/>
+        <Kpi label="Unresolved" v={tickets.filter(t=>t.status==='unresolved').length} c="#F87171"/>
+      </div>
+
+      {/* ── Filters ── */}
+      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+        {/* Search */}
+        <div style={{position:'relative',flex:1,minWidth:220}}>
+          <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',fontSize:14,pointerEvents:'none'}}>🔎</span>
+          <input value={q} onChange={e=>setQ(e.target.value)}
+            placeholder="Search ticket #, name, phone, BU, issue…"
+            style={{width:'100%',padding:'9px 14px 9px 32px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:12,outline:'none'}}/>
+          {q&&<button onClick={()=>setQ('')} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:'var(--muted,#6B85C0)',fontSize:16,cursor:'pointer',lineHeight:1}}>✕</button>}
+        </div>
+
+        {/* Status filter */}
+        <select value={fSt} onChange={e=>setFSt(e.target.value)}
+          style={{padding:'9px 12px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:12,outline:'none',minWidth:140}}>
+          <option value="">All statuses</option>
+          <option value="resolved">✅ Resolved</option>
+          <option value="progress">⏳ In Progress</option>
+          <option value="unresolved">🔴 Unresolved</option>
+        </select>
+
+        {/* Date filter */}
+        <select value={fDate} onChange={e=>setFDate(e.target.value)}
+          style={{padding:'9px 12px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:12,outline:'none',minWidth:140}}>
+          <option value="">All dates</option>
+          {dateOptions.map(d=><option key={d} value={d}>{d}</option>)}
+        </select>
+
+        {/* Clear all */}
+        {(q||fSt||fDate)&&(
+          <button onClick={()=>{setQ('');setFSt('');setFDate('');}}
+            style={{padding:'9px 14px',background:'rgba(220,38,38,.12)',color:'#F87171',border:'1px solid rgba(220,38,38,.3)',borderRadius:10,fontFamily:'inherit',fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>
+            ✕ Clear filters
+          </button>
+        )}
+
+        <span style={{fontSize:11,color:'var(--muted,#6B85C0)',whiteSpace:'nowrap',marginLeft:4}}>
+          {filtered.length !== tickets.length ? `${filtered.length} of ${tickets.length} tickets` : `${tickets.length} tickets`}
+        </span>
+      </div>
+
+      {/* ── Table ── */}
+      <div className="card">
+        <div className="card-h">
+          <h3>My Tickets</h3>
+          <span style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>Click any row to update</span>
+        </div>
+        <div style={{overflowX:'auto'}}>
+          <table className="tbl">
+            <thead><tr>
+              <th>#</th><th>Ticket</th><th>Date</th><th>Time</th>
+              <th>Customer</th><th>Phone</th><th>BU</th>
+              <th>Issue</th><th>Responsible</th><th>Status</th><th>Note</th>
+            </tr></thead>
+            <tbody>
+              {filtered.map((t,i)=>(
+                <tr key={t.id||t.num||i} style={{cursor:'pointer'}} onClick={()=>onEdit(t)}>
+                  <td style={{color:'var(--muted,#6B85C0)',fontSize:10}}>{i+1}</td>
+                  <td><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:'#93C5FD'}}>#{t.num}</span></td>
+                  <td style={{whiteSpace:'nowrap',fontSize:11,color:'var(--muted,#6B85C0)'}}>{fmtDate(t.created)}</td>
+                  <td style={{whiteSpace:'nowrap',color:'var(--muted,#6B85C0)'}}>{t.time||'—'}</td>
+                  <td style={{fontWeight:600}}>{t.name||'—'}</td>
+                  <td><span style={{fontFamily:"'JetBrains Mono',monospace",color:'var(--muted,#6B85C0)',fontSize:10}}>{t.phone||'—'}</span></td>
+                  <td><BuPill bu={t.bu}/></td>
+                  <td style={{fontSize:11,maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.category||'—'}</td>
+                  <td style={{fontSize:10,color:'var(--muted,#6B85C0)'}}>{t.resp||getResp(t.category||t.issue||'')}</td>
+                  <td><StatusBadge s={t.status}/></td>
+                  <td style={{fontSize:10,color:'rgba(240,244,255,.6)',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||'—'}</td>
+                </tr>
+              ))}
+              {!filtered.length&&(
+                <tr><td colSpan={11} style={{padding:'32px',textAlign:'center',color:'var(--muted,#6B85C0)'}}>
+                  {tickets.length===0
+                    ? 'No tickets yet. Click ➕ Add Ticket to log one, or use Import JSON to load your history.'
+                    : '🔎 No tickets match your filters. Try clearing them.'}
+                </td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ADD TICKET ─────────────────────────────────────────────────────
+// ── PASTE HELPERS ──────────────────────────────────────────────────
+const stripEmoji=s=>(s||'').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{200D}\u{20E3}]+/gu,'').replace(/\s{2,}/g,' ').trim();
+function cleanIssueForDisplay(raw){if(!raw)return'—';let s=stripEmoji(raw);s=s.replace(/^(complaint|issue|problem|request|description|remarks?|nature of complaint)\s*:?\s*/i,'');s=s.replace(/\|/g,' ').trim().replace(/\n/g,' ').replace(/\s{2,}/g,' ');return s.length>120?s.slice(0,117)+'…':s||'—';}
+function matchBU(value){const buList=window.EK_BUSINESS_UNITS||[];const v=stripEmoji(value).trim().toUpperCase().replace(/\s+/g,' ');const exact=buList.find(b=>b.toUpperCase()===v);if(exact)return exact;const partial=buList.find(b=>v.includes(b.toUpperCase())||b.toUpperCase().includes(v.split(' ')[0]));return partial||null;}
+function parseSingle(txt){
+  const result={};
+  if((txt.match(/\|/g)||[]).length>3){
+    const segs=txt.split('|').map(s=>s.trim());
+    for(const seg of segs){
+      const clean=stripEmoji(seg).trim();const ci=clean.indexOf(':');
+      if(ci<1||ci>50)continue;
+      const label=clean.slice(0,ci).trim().toLowerCase().replace(/\s+/g,' ');
+      const val=clean.slice(ci+1).trim();
+      if(!val||/^n\/a$/i.test(val))continue;
+      if(/ticket\s*(no\.?|number|#)?$/.test(label)||label==='ticket no'){const m=val.match(/\b(7\d{5})\b/);if(m)result.num=m[1];}
+      else if(/^customer/.test(label))result.name=stripEmoji(val);
+      else if(/^phone$|^tel$|^mobile$/.test(label))result.phone=val.replace(/\s/g,'');
+      else if(/^meter\s*(no\.?|number|#)?$/.test(label)){const nums=val.match(/\d{10,13}/);if(nums&&nums[0]!==(result.phone||'').replace(/\D/g,''))result.meter=nums[0];}
+      else if(/^(business\s*unit|bu)$/.test(label)){const bu=matchBU(val);if(bu)result.bu=bu;}
+      else if(/^address$/.test(label))result.addr=stripEmoji(val);
+      else if(/^(description|complaint)$/.test(label))result.issue=val;
+      else if(/^category$/.test(label))result.category=stripEmoji(val);
+    }
+    if(result.meter&&result.phone&&result.meter===result.phone.replace(/\D/g,''))delete result.meter;
+    if(Object.keys(result).length>=2)return result;
+  }
+  const tktM=txt.match(/(?:ticket\s*(?:no\.?|#|number)?\s*[:–-]?\s*)(7\d{5})/i)||txt.match(/\b(7\d{5})\b/);if(tktM)result.num=tktM[1];
+  const phoneM=txt.match(/(?:phone|tel|mobile|contact)\s*[:–-]?\s*(\+?234\d{10}|0[789]\d{9})/i)||txt.match(/(\+?234\d{10}|0[789]\d{9})/);if(phoneM)result.phone=phoneM[1];
+  const meterM=txt.match(/(?:meter|account|acct)\s*(?:no\.?|number|#)?\s*[:–-]?\s*(\d{10,13})/i);if(meterM&&meterM[1]!==(result.phone||'').replace(/\D/g,''))result.meter=meterM[1];
+  const nameM=txt.match(/(?:customer\s*(?:name|details)?|name\s*[:–-])\s*[:–-]?\s*([A-Za-z][A-Za-z .'-]{2,50})/i);if(nameM)result.name=stripEmoji(nameM[1]).trim();
+  const addrM=txt.match(/(?:^|\n)\s*address\s*[:–-]?\s*(.+?)(?=\n[A-Za-z ]+\s*[:–-]|$)/im);if(addrM)result.addr=stripEmoji(addrM[1]).trim();
+  const buM=txt.match(/(?:business\s*unit|BU)\s*[:–-]?\s*([A-Za-z\s/]+?)(?:\n|,|$)/i);if(buM){const bu=matchBU(buM[1]);if(bu)result.bu=bu;}
+  const descM=txt.match(/(?:description|complaint|issue)\s*[:–-]?\s*(.+?)(?=\n[A-Za-z ]+\s*[:–-]|$)/is);if(descM)result.issue=descM[1].trim();else result.issue=cleanIssueForDisplay(txt);
+  return result;
+}
+function parseMultiple(txt){
+  const headerRe=/(?=(?:📱|🔔|⚠|NEW\s+MOBILE))/gi;
+  let blocks=txt.split(headerRe).map(b=>b.trim()).filter(Boolean);
+  if(blocks.length<=1)blocks=txt.split(/\n{2,}(?=.*7\d{5})/g).map(b=>b.trim()).filter(Boolean);
+  if(blocks.length<=1)return[parseSingle(txt)];
+  return blocks.map(parseSingle).filter(b=>b.num||b.name||b.phone);
+}
+
+// ── ADD TICKET (bulk paste) ─────────────────────────────────────────
+const AInp={width:'100%',padding:'10px 12px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'Sora,sans-serif',fontSize:12.5,outline:'none',boxSizing:'border-box'};
+const ASInp={width:'100%',padding:'7px 10px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:7,fontFamily:'Sora,sans-serif',fontSize:11.5,outline:'none',boxSizing:'border-box'};
+const AGhostBtn={padding:'6px 12px',background:'rgba(255,255,255,.06)',color:'var(--muted,#6B85C0)',border:'1px solid var(--border,#1E3070)',borderRadius:7,font:'600 11px Sora,sans-serif',cursor:'pointer'};
+const ALbl={font:'700 9px Sora,sans-serif',color:'var(--muted,#6B85C0)',letterSpacing:'.6px',textTransform:'uppercase',marginBottom:3};
+const AField=({label,full,children})=>(<div style={{gridColumn:full?'1 / -1':'auto'}}><label style={{display:'block',font:'700 10px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',letterSpacing:'.6px',textTransform:'uppercase',marginBottom:5}}>{label}</label>{children}</div>);
+const AStatusPill=({s})=>{const m={resolved:{c:'#4ADE80',bg:'rgba(22,163,74,.15)',l:'Resolved'},progress:{c:'#FCD34D',bg:'rgba(217,119,6,.15)',l:'In Progress'},unresolved:{c:'#F87171',bg:'rgba(220,38,38,.15)',l:'Unresolved'}};const v=m[s]||m.unresolved;return <span style={{display:'inline-flex',alignItems:'center',padding:'2px 8px',borderRadius:10,font:'700 10px/1 Sora,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',color:v.c,background:v.bg}}>{v.l}</span>;};
+const AREF_TABLE=[{sn:1,category:'Band Reclassification',party:'Nonye Angelina Nnadozie',color:'#818CF8'},{sn:2,category:'Billing',party:'Mojibola Adefuwa',color:'#34D399'},{sn:3,category:'Interruption / Voltage / Safety',party:'Ogheneyoreme Agbroko',color:'#F87171'},{sn:4,category:'Metering',party:'Holyland Umude',color:'#60A5FA'},{sn:5,category:'PPM Support (IT / General)',party:'Adetoun Adetola',color:'#FBBF24'},{sn:6,category:'PPM Maintenance (Field / Faulty)',party:'Owokade Olusegun',color:'#F97316'},{sn:7,category:'Change of Name / Onboarding',party:'Clara Olutola',color:'#A78BFA'},{sn:8,category:'MYCRON',party:'Glory (BPS Africa)',color:'#2DD4BF'},{sn:9,category:'AMISA',party:'Festus Moko',color:'#FB7185'}];
+
+function AddTicket({agent,onCreate,onCreateMany}){
+  const BUS=window.EK_BUSINESS_UNITS||['ISLAND','MUSHIN','AJAH','LEKKI','APAPA','IKOYI','FESTAC','OJO','EPE','BADAGRY','IBEJU'];
+  const RESP=(window.EK_RESPONSIBLE_PARTIES||[]).map(r=>r.name);
+  const EMPTY={num:'',name:'',phone:'',meter:'',addr:'',bu:BUS[0]||'ISLAND',issue:'',category:'',resp:RESP[3]||'Holyland Umude',status:'progress',note:''};
+  const[pasted,setPasted]=useState('');
+  const[bulk,setBulk]=useState([]);
+  const[single,setSingle]=useState(EMPTY);
+  const[mode,setMode]=useState('bulk');
+
+  const stamp=()=>{const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));return{time:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),created:now.toISOString(),id:'tk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)};};
+
+  const handlePaste=txt=>{
+    setPasted(txt);
+    if(!txt.trim()){setBulk([]);return;}
+    const parsed=parseMultiple(txt);
+    if(parsed.length>1||(parsed.length===1&&parsed[0].num)){
+      setBulk(parsed.map(p=>({...EMPTY,...p,resp:p.resp||getResp(p.category||p.issue||'')||RESP[3]||'Holyland Umude',_sel:true})));
+      setMode('bulk');
+    }else{
+      const p=parsed[0]||{};
+      setSingle(f=>({...EMPTY,...f,...p,resp:p.resp||getResp(p.category||p.issue||'')||f.resp}));
+      setBulk([]);setMode('single');
+    }
+  };
+
+  const addBulk=()=>{
+    const selected=bulk.filter(t=>t._sel);if(!selected.length)return;
+    const ts=stamp();
+    const list=selected.map(({_sel,...rest})=>({...rest,...ts}));
+    if(onCreateMany){onCreateMany(list);}else{list.forEach(t=>onCreate(t));}
+    setPasted('');setBulk([]);setMode('bulk');
+  };
+  const addSingle=()=>{
+    if(!single.num||!single.name){window.EK_TOAST&&window.EK_TOAST('Need Ticket # and Customer name.','warn');return;}
+    onCreate({...single,...stamp()});
+    setSingle(EMPTY);setPasted('');setBulk([]);
+  };
+  const setSF=(k,v)=>setSingle(f=>({...f,[k]:v}));
+  const setBulkField=(idx,k,v)=>setBulk(b=>b.map((t,i)=>i===idx?{...t,[k]:v}:t));
+  const toggleSel=idx=>setBulk(b=>b.map((t,i)=>i===idx?{...t,_sel:!t._sel}:t));
+  const setAllSel=v=>setBulk(b=>b.map(t=>({...t,_sel:v})));
+  const selCount=bulk.filter(t=>t._sel).length;
+
+  return(
+    <div style={{padding:'22px 28px',maxWidth:1200}}>
+      {/* Banner */}
+      <div style={{background:agent.tint||'rgba(59,130,246,.12)',border:`1px solid ${agent.color}55`,borderRadius:12,padding:'14px 18px',marginBottom:14,display:'flex',alignItems:'flex-start',gap:12}}>
+        <span style={{fontSize:22}}>{agent.emoji||'➕'}</span>
+        <div>
+          <div style={{font:'800 13px/1.2 Sora,sans-serif',color:'#fff'}}>Paste complaints from SharePoint — single or multiple at once</div>
+          <div style={{font:'500 11.5px/1.5 Sora,sans-serif',color:'rgba(255,255,255,.7)',marginTop:3}}>Paste one complaint block or many. Each "NEW MOBILE APP COMPLAINT" block is auto-detected as a separate ticket. Fields: Ticket No → Ticket #, Address → Address, Description → Issue.</div>
+        </div>
+      </div>
+
+      {/* Paste box */}
+      <textarea value={pasted} onChange={e=>handlePaste(e.target.value)}
+        placeholder={"Paste one or more complaint blocks here…\n\n📱 NEW MOBILE APP COMPLAINT| 📅 18 May 2026 · 1:44 PM| 🎫 Ticket No: 720390| 👤 Customer: Clifford Benjamin| 📞 Phone: +2347079674724| 📍 Address: 12, isiba street, Itire | 🏢 Business Unit: MUSHIN| 📝 Description: Meter in tamper mode"}
+        style={{width:'100%',minHeight:110,padding:14,marginBottom:14,background:'var(--surface,#0D1B45)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'JetBrains Mono,monospace',fontSize:11.5,outline:'none',resize:'vertical',boxSizing:'border-box',lineHeight:1.6}}/>
+
+      {/* BULK MODE */}
+      {mode==='bulk'&&bulk.length>0&&(
+        <div style={{marginBottom:32}}>
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+            <div style={{font:'800 13px Sora,sans-serif',color:'var(--text,#fff)'}}>🎯 {bulk.length} ticket{bulk.length>1?'s':''} detected — select which to add</div>
+            <button onClick={()=>setAllSel(true)} style={AGhostBtn}>Select all</button>
+            <button onClick={()=>setAllSel(false)} style={AGhostBtn}>Deselect all</button>
+            <div style={{flex:1}}/>
+            <button onClick={addBulk} disabled={!selCount} style={{padding:'10px 20px',background:selCount?agent.color:'#334',color:'#fff',border:'none',borderRadius:9,font:'800 13px Sora,sans-serif',cursor:selCount?'pointer':'not-allowed',boxShadow:selCount?`0 6px 18px ${agent.color}44`:'none',transition:'all .2s'}}>
+              ➕ Add {selCount} ticket{selCount!==1?'s':''}
+            </button>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {bulk.map((t,idx)=>(
+              <div key={idx} style={{background:'var(--card,#111D4A)',border:`1.5px solid ${t._sel?agent.color:'var(--border,#1E3070)'}`,borderRadius:12,padding:'12px 16px',transition:'border .15s',opacity:t._sel?1:.55}}>
+                <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
+                  <input type="checkbox" checked={t._sel} onChange={()=>toggleSel(idx)} style={{width:18,height:18,accentColor:agent.color,marginTop:2,flexShrink:0,cursor:'pointer'}}/>
+                  <div style={{flex:1,display:'grid',gridTemplateColumns:'auto 1fr 1fr 1fr 1fr',gap:'6px 16px',alignItems:'start'}}>
+                    <div><div style={ALbl}>Ticket #</div><div style={{fontFamily:'JetBrains Mono,monospace',fontWeight:800,color:'#93C5FD',fontSize:14}}>#{t.num||'—'}</div></div>
+                    <div><div style={ALbl}>Customer</div><div style={{font:'700 12px/1.3 Sora,sans-serif',color:'var(--text,#fff)'}}>{stripEmoji(t.name)||'—'}</div><div style={{font:'500 10.5px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>{t.phone||'—'}</div></div>
+                    <div><div style={ALbl}>BU · Meter</div><div style={{font:'700 12px/1.3 Sora,sans-serif',color:'#93C5FD'}}>{t.bu||'—'}</div><div style={{font:'500 10.5px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>{t.meter||'N/A'}</div></div>
+                    <div style={{gridColumn:'span 2'}}><div style={ALbl}>Issue</div><div style={{font:'500 11.5px/1.45 Sora,sans-serif',color:'var(--text,#F0F4FF)'}}>{cleanIssueForDisplay(t.issue)}</div>{t.addr&&<div style={{font:'500 10px/1.3 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:3}}>📍 {t.addr.slice(0,80)}</div>}</div>
+                  </div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginTop:10,paddingTop:10,borderTop:'1px solid var(--border,#1E3070)'}}>
+                  <div><div style={ALbl}>Business Unit</div>
+                    <select value={t.bu||BUS[0]} onChange={e=>setBulkField(idx,'bu',e.target.value)} style={ASInp}>
+                      {BUS.map(b=><option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div><div style={ALbl}>Responsible Party</div>
+                    <select value={t.resp||RESP[3]} onChange={e=>setBulkField(idx,'resp',e.target.value)} style={ASInp}>
+                      {RESP.map(r=><option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div><div style={ALbl}>Initial Status</div>
+                    <select value={t.status||'progress'} onChange={e=>setBulkField(idx,'status',e.target.value)} style={ASInp}>
+                      <option value="progress">⏳ In Progress</option>
+                      <option value="resolved">✅ Resolved</option>
+                      <option value="unresolved">🔴 Unresolved</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:14}}>
+            <button onClick={addBulk} disabled={!selCount} style={{padding:'12px 22px',background:selCount?agent.color:'#334',color:'#fff',border:'none',borderRadius:10,font:'800 13px Sora,sans-serif',cursor:selCount?'pointer':'not-allowed',boxShadow:selCount?`0 6px 18px ${agent.color}44`:'none'}}>➕ Add {selCount} ticket{selCount!==1?'s':''}</button>
+            <button onClick={()=>{setPasted('');setBulk([]);}} style={{padding:'12px 22px',background:'rgba(255,255,255,.06)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,font:'700 13px Sora,sans-serif',cursor:'pointer'}}>Clear</button>
+          </div>
+        </div>
+      )}
+
+      {/* SINGLE MODE */}
+      {(mode==='single'||bulk.length===0)&&(
+        <div style={{marginBottom:32}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:14}}>
+            <AField label="Ticket #"><input value={single.num} onChange={e=>setSF('num',e.target.value)} placeholder="710xxx" style={AInp}/></AField>
+            <AField label="Customer Name"><input value={single.name} onChange={e=>setSF('name',e.target.value)} style={AInp}/></AField>
+            <AField label="Phone"><input value={single.phone} onChange={e=>setSF('phone',e.target.value)} placeholder="+234…" style={AInp}/></AField>
+            <AField label="Meter / Account #"><input value={single.meter} onChange={e=>setSF('meter',e.target.value)} style={AInp}/></AField>
+            <AField label="Business Unit">
+              <select value={single.bu} onChange={e=>setSF('bu',e.target.value)} style={AInp}>
+                {BUS.map(b=><option key={b} value={b}>{b}</option>)}
+              </select>
+            </AField>
+            <AField label="Responsible Party">
+              <select value={single.resp} onChange={e=>setSF('resp',e.target.value)} style={AInp}>
+                {RESP.map(r=><option key={r} value={r}>{r}</option>)}
+              </select>
+            </AField>
+            <AField label="Address" full><input value={single.addr} onChange={e=>setSF('addr',e.target.value)} style={AInp}/></AField>
+            <AField label="Complaint / Issue" full><textarea value={single.issue} onChange={e=>setSF('issue',e.target.value)} style={{...AInp,minHeight:72,resize:'vertical'}}/></AField>
+            <AField label="Action Taken / Note" full><textarea value={single.note} onChange={e=>setSF('note',e.target.value)} style={{...AInp,minHeight:56,resize:'vertical'}}/></AField>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={addSingle} style={{padding:'12px 22px',background:agent.color,color:'#fff',border:'none',borderRadius:10,font:'800 13px Sora,sans-serif',cursor:'pointer',boxShadow:`0 6px 18px ${agent.color}44`}}>➕ Add to my tickets</button>
+            <button onClick={()=>{setSingle(EMPTY);setPasted('');setBulk([]);}} style={{padding:'12px 22px',background:'rgba(255,255,255,.06)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,font:'700 13px Sora,sans-serif',cursor:'pointer'}}>Clear</button>
+          </div>
+        </div>
+      )}
+
+      {/* Category reference */}
+      <div style={{background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:14,overflow:'hidden'}}>
+        <div style={{padding:'14px 20px',background:'linear-gradient(135deg,#001F5C,#1D4ED8)',display:'flex',alignItems:'center',gap:12}}>
+          <span style={{fontSize:20}}>📋</span>
+          <div>
+            <div style={{font:'800 13px/1.1 Sora,sans-serif',color:'#fff'}}>Category → Responsible Party</div>
+            <div style={{font:'500 10.5px/1 Sora,sans-serif',color:'rgba(255,255,255,.65)',marginTop:3}}>Quick reference while logging</div>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'36px 1fr 1fr',padding:'8px 20px',background:'rgba(29,78,216,.12)',borderBottom:'1px solid var(--border,#1E3070)'}}>
+          {['#','Complaint Category','Responsible Party'].map(h=><div key={h} style={{font:'800 9.5px/1 Sora,sans-serif',color:'#60A5FA',letterSpacing:'.06em',textTransform:'uppercase'}}>{h}</div>)}
+        </div>
+        {AREF_TABLE.map((row,i)=>(
+          <div key={row.sn} style={{display:'grid',gridTemplateColumns:'36px 1fr 1fr',padding:'10px 20px',background:i%2===0?'transparent':'rgba(255,255,255,.02)',borderBottom:'1px solid var(--border,#1E3070)',alignItems:'center'}}>
+            <div style={{width:24,height:24,borderRadius:7,background:row.color+'25',border:'1.5px solid '+row.color+'70',display:'flex',alignItems:'center',justifyContent:'center',font:'800 10px/1 Sora,sans-serif',color:row.color}}>{row.sn}</div>
+            <div style={{font:'600 12px/1.4 Sora,sans-serif',color:'var(--text,#F0F4FF)',paddingRight:16}}>{row.category}</div>
+            <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:8,height:8,borderRadius:'50%',background:row.color,flexShrink:0}}/><span style={{font:'700 12px/1.4 Sora,sans-serif',color:'var(--text,#F0F4FF)'}}>{row.party}</span></div>
+          </div>
+        ))}
+        <div style={{padding:'10px 20px',background:'rgba(255,199,44,.07)',borderTop:'1px solid rgba(255,199,44,.2)',font:'500 11px/1.5 Sora,sans-serif',color:'#FCD34D',display:'flex',gap:8}}>
+          <span>💡</span><span>Split category? Log primary first, tag second party in Action Taken.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── SLOT REPORTS ───────────────────────────────────────────────────
+function buildSlotHTML(slot,agent,tickets){
+  const wat=getWATNow();
+  const res=tickets.filter(t=>t.status==='resolved'),prg=tickets.filter(t=>t.status==='progress'),unr=tickets.filter(t=>t.status==='unresolved');
+  const statusColor={resolved:'#16A34A',progress:'#D97706',unresolved:'#DC2626'};
+  const statusLabel={resolved:'✅ RESOLVED',progress:'⏳ IN PROGRESS',unresolved:'🔴 UNRESOLVED'};
+  const tRow=(t,idx)=>`<tr>
+    <td>${idx+1}</td>
+    <td style="font-weight:800;color:#1D4ED8;font-family:monospace">#${esc(t.num)}</td>
+    <td style="white-space:nowrap">${esc(t.time||'—')}</td>
+    <td style="font-weight:600">${esc(t.name||'—')}</td>
+    <td>${esc(t.phone||'—')}</td>
+    <td style="font-family:monospace;font-size:10px">${esc(t.meter||'—')}</td>
+    <td>${esc(t.addr||t.address||'—')}</td>
+    <td><span style="background:#DBEAFE;color:#1E3A8A;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700">${esc(t.bu||'—')}</span></td>
+    <td>${esc((t.category||t.issue||'').split('/')[0].trim())}</td>
+    <td style="font-weight:700;color:#475569">${esc(t.resp||getResp(t.category||t.issue||''))}</td>
+    <td style="color:${statusColor[t.status]||'#6B7280'};font-weight:700;font-size:10px">${statusLabel[t.status]||t.status}</td>
+    <td style="color:#374151;font-size:10.5px">${esc(t.note||'—')}</td>
+  </tr>`;
+  const sect=(st,list)=>list.length?`
+    <div style="margin-bottom:20px;">
+      <div style="font:800 11px/1 Arial,sans-serif;color:${statusColor[st]};letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;border-left:4px solid ${statusColor[st]};padding-left:8px;">${statusLabel[st]} — ${list.length} TICKET${list.length!==1?'S':''}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;background:#fff;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+        <thead><tr style="background:#0F172A;color:#fff"><th style="padding:8px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.04em">#</th><th>Ticket</th><th>Time</th><th>Customer</th><th>Phone</th><th>Meter #</th><th>Address</th><th>BU</th><th>Category</th><th>Responsible</th><th>Status</th><th>Note / Action</th></tr></thead>
+        <tbody>${list.map(tRow).join('')}</tbody>
+      </table>
+    </div>`:
+  `<div style="margin-bottom:14px;padding:12px 14px;background:#F9FAFB;border:1px dashed #D1D5DB;border-radius:8px;color:#6B7280;font-size:12px;text-align:center"><strong>None.</strong> No ${statusLabel[st].replace(/[^a-zA-Z ]/g,'').trim().toLowerCase()} tickets in this window.</div>`;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EKEDP ${slot.label} — ${agent.name}</title>
+<style>@page{size:A4 landscape;margin:10mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,Segoe UI,Arial,sans-serif;padding:24px;background:#F1F5F9;color:#0F172A;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.hd{background:linear-gradient(135deg,#001F5C,#1D4ED8 55%,#3B82F6);color:#fff;padding:18px 22px;border-radius:12px;margin-bottom:14px;display:flex;align-items:center;gap:16px;}
+.hi{width:48px;height:48px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.ht h1{font-size:19px;font-weight:900;margin:0 0 3px;}.ht .sub{font-size:11px;opacity:.8;}.ht .meta{font-size:10px;opacity:.6;margin-top:3px;}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.kpi{background:#fff;border-radius:8px;padding:11px;text-align:center;border-top:3px solid var(--c);}
+.kpi .n{font-size:26px;font-weight:900;color:var(--c);font-family:monospace;}.kpi .l{font-size:10px;color:#64748B;text-transform:uppercase;letter-spacing:.04em;margin-top:3px;}
+tbody td{padding:7px 8px;border-bottom:1px solid #F1F5F9;}tbody tr:nth-child(even) td{background:#FAFBFE;}
+.footer{margin-top:18px;padding-top:12px;border-top:1px solid #CBD5E1;font-size:10px;color:#64748B;display:flex;justify-content:space-between;align-items:center;}
+.no-print{display:flex;gap:8px;margin-bottom:14px;}
+.no-print button{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;}
+@media print{.no-print{display:none;}body{background:#fff;padding:0;}}</style></head>
+<body>
+<div class="no-print"><button style="background:#001F5C;color:#fff;" onclick="window.print()">🖨 Print / Save as PDF (A4 Landscape)</button><button style="background:#E2E8F0;" onclick="window.close()">✕ Close</button></div>
+<div class="hd"><div class="hi">${slot.emoji}</div><div class="ht"><h1>EKEDP Power App — ${slot.label}</h1><div class="sub">${slot.desc} · ${agent.name}</div><div class="meta">${wat.dayLong} · Generated at ${slot.stamp} WAT · Agents Hub</div></div></div>
+<div class="kpis">
+  <div class="kpi" style="--c:#1D4ED8"><div class="n">${tickets.length}</div><div class="l">Total</div></div>
+  <div class="kpi" style="--c:#16A34A"><div class="n">${res.length}</div><div class="l">Resolved</div></div>
+  <div class="kpi" style="--c:#D97706"><div class="n">${prg.length}</div><div class="l">In Progress</div></div>
+  <div class="kpi" style="--c:#DC2626"><div class="n">${unr.length}</div><div class="l">Unresolved</div></div>
+</div>
+${sect('resolved',res)}${sect('progress',prg)}${sect('unresolved',unr)}
+<div class="footer"><span>EKEDP Power App · Agents Hub · ${agent.name} · Marina HQ</span><span>${slot.label} · ${wat.dayShort}</span></div>
+<script>setTimeout(()=>window.matchMedia&&window.matchMedia('(prefers-color-scheme:light)'),100);<\/script>
+</body></html>`;
+}
+
+function SlotReports({agent,tickets}){
+  const wat=getWATNow();
+  // Determine recommended slot
+  const rec=useMemo(()=>{
+    if(wat.isWeekend) return 'wknd1pm';
+    if(wat.hour>=15) return 'cob';
+    if(wat.hour>=11) return 'midday';
+    return 'wkday4pm';
+  },[]);
+
+  const SLOTS=[
+    {id:'midday', emoji:'🌤',label:'Midday 1–2PM',  desc:'Daily midday update — all tickets up to 2PM',       stamp:'2:00 PM', cap:14*60,   days:'Daily'},
+    {id:'cob',    emoji:'🌆',label:'COB 4–5PM',      desc:'Close of business roll-up — all day tickets',       stamp:'5:00 PM', cap:24*60,   days:'Weekdays'},
+    {id:'wknd1pm',emoji:'☀',label:'Weekend 1PM',    desc:'Saturday & Sunday midday snapshot — up to 1PM',    stamp:'1:00 PM', cap:13*60,   days:'Weekends only'},
+    {id:'wkday4pm',emoji:'🏙',label:'Weekday 4PM',   desc:'Monday–Friday afternoon snapshot — up to 4PM',     stamp:'4:00 PM', cap:16*60,   days:'Weekdays only'},
+  ];
+
+  const[slot,setSlot]=useState(rec);
+  const cur=SLOTS.find(s=>s.id===slot)||SLOTS[0];
+  const filtered=useMemo(()=>slot==='cob'?tickets:tickets.filter(t=>parseTimeMins(t.time)<=cur.cap),[slot,tickets,cur]);
+  const res=filtered.filter(t=>t.status==='resolved'),prg=filtered.filter(t=>t.status==='progress'),unr=filtered.filter(t=>t.status==='unresolved');
+  const msg=[
+    `*EKEDP ${cur.label.toUpperCase()} UPDATE — ${wat.dayLong}*`,
+    `_${agent.name} · ${cur.emoji} ${cur.stamp} WAT_`,``,
+    `📊 *Summary*`,
+    `Total: ${filtered.length}  |  ✅ Resolved: ${res.length}  |  ⏳ In Progress: ${prg.length}  |  🔴 Unresolved: ${unr.length}`,``,
+    ...(res.length?[`*✅ RESOLVED (${res.length})*`,...res.map(t=>`#${t.num} · ${t.bu} · ${t.name||'Unknown'}\n   ${t.issue||t.category||'—'}\n   ↳ ${t.resp||getResp(t.category||t.issue||'')} · ${(t.note||'—').slice(0,120)}`),``]:[]),
+    ...(prg.length?[`*⏳ IN PROGRESS (${prg.length})*`,...prg.map(t=>`#${t.num} · ${t.bu} · ${t.name||'Unknown'}\n   ${t.issue||t.category||'—'}\n   ↳ ${t.resp||getResp(t.category||t.issue||'')} · ${(t.note||'—').slice(0,120)}`),``]:[]),
+    ...(unr.length?[`*🔴 UNRESOLVED (${unr.length})*`,...unr.map(t=>`#${t.num} · ${t.bu} · ${t.name||'Unknown'}\n   ${t.issue||t.category||'—'}\n   ↳ ${t.resp||getResp(t.category||t.issue||'')} · ${(t.note||'—').slice(0,120)}`),``]:[]),
+    `— Sent from EKEDP Power App · Agents Hub`,
+  ].join('\n');
+
+  async function copyMsg(){try{await navigator.clipboard.writeText(msg);window.EK_TOAST&&window.EK_TOAST('Copied! Paste into WhatsApp.');}catch{window.EK_TOAST&&window.EK_TOAST('Copy failed — select text and Ctrl+C','warn');}}
+  function doPDF(){openPDF(buildSlotHTML(cur,agent,filtered));}
+  function doXlsx(){
+    if(typeof XLSX==='undefined')return;
+    const wb=XLSX.utils.book_new();
+    const H=['Ticket#','Time','Customer','Phone','Meter #','Address','BU','Category','Responsible Party','Status','Note'];
+    const make=(list,nm)=>{const ws=XLSX.utils.aoa_to_sheet([['EKEDP POWER APP — '+cur.label.toUpperCase()],['Agent: '+agent.name],['Total: '+list.length],[''],H,...list.map(t=>[t.num,t.time,t.name,t.phone,t.meter||'',t.addr||t.address||'',t.bu,t.category||t.issue||'',t.resp||getResp(t.category||t.issue||''),t.status,t.note||''])]);ws['!cols']=[9,8,20,14,14,22,10,20,22,12,30].map(w=>({wch:w}));XLSX.utils.book_append_sheet(wb,ws,nm.slice(0,31));};
+    make(filtered,'All');make(res,'Resolved');make(prg,'In Progress');make(unr,'Unresolved');
+    XLSX.writeFile(wb,`EKEDP_Agent_${agent.id}_${cur.id}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  return(
+    <div style={{padding:'22px 28px',maxWidth:1100}}>
+      <div style={{marginBottom:16}}><h2 style={{fontSize:17,fontWeight:800}}>🌤 Slot Reports</h2><p style={{fontSize:11,color:'var(--muted,#6B85C0)',marginTop:3}}>Generate WhatsApp updates and PDF reports for your shift slot</p></div>
+
+      {/* Slot selector */}
+      <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap'}}>
+        {SLOTS.map(s=>(
+          <button key={s.id} className={`slot-btn${slot===s.id?' on':''}`} onClick={()=>setSlot(s.id)} style={slot===s.id?{borderColor:agent.color,background:agent.tint}:{}}>
+            {s.id===rec&&<span className="rec">NOW</span>}
+            <span style={{fontSize:20}}>{s.emoji}</span>
+            <div style={{textAlign:'left'}}>
+              <div style={{fontSize:13,fontWeight:700}}>{s.label}</div>
+              <div style={{fontSize:10,color:'var(--muted,#6B85C0)',marginTop:1}}>{s.days}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* KPIs */}
+      <div className="kpi-strip">
+        <Kpi label="Total" v={filtered.length} c="#3B82F6"/>
+        <Kpi label="Resolved" v={res.length} c="#4ADE80"/>
+        <Kpi label="In Progress" v={prg.length} c="#FCD34D"/>
+        <Kpi label="Unresolved" v={unr.length} c="#F87171"/>
+      </div>
+
+      {/* Action buttons */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:18}}>
+        <button onClick={doPDF} style={{padding:'14px 10px',background:'var(--red,#E30613)',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:13,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+          <span style={{fontSize:22}}>📄</span>
+          <span>PDF Report</span>
+          <small style={{fontSize:10,fontWeight:500,opacity:.85}}>Print / Save as PDF</small>
+        </button>
+        <button onClick={copyMsg} style={{padding:'14px 10px',background:'#25D366',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:13,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+          <span style={{fontSize:22}}>💬</span>
+          <span>WhatsApp Copy</span>
+          <small style={{fontSize:10,fontWeight:500,opacity:.85}}>Copy message text</small>
+        </button>
+        <button onClick={doXlsx} style={{padding:'14px 10px',background:'#16A34A',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:13,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+          <span style={{fontSize:22}}>📊</span>
+          <span>Excel Export</span>
+          <small style={{fontSize:10,fontWeight:500,opacity:.85}}>4 sheets</small>
+        </button>
+      </div>
+
+      {/* WhatsApp preview + ticket list */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        <div className="card">
+          <div className="card-h" style={{background:'rgba(37,211,102,.08)'}}>
+            <h3>💬 WhatsApp Message Preview</h3>
+            <button onClick={copyMsg} style={{padding:'6px 12px',background:'#25D366',color:'#fff',border:'none',borderRadius:7,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer'}}>📋 Copy</button>
+          </div>
+          <pre style={{margin:0,padding:'14px 16px',fontFamily:"'Sora',sans-serif",fontSize:11.5,lineHeight:1.55,color:'var(--text,#F0F4FF)',whiteSpace:'pre-wrap',wordBreak:'break-word',maxHeight:440,overflowY:'auto'}}>{msg}</pre>
+        </div>
+        <div className="card">
+          <div className="card-h"><h3>📌 Tickets in this window ({filtered.length})</h3></div>
+          <div style={{maxHeight:480,overflowY:'auto'}}>
+            {filtered.map(t=>(
+              <div key={t.num} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 14px',borderBottom:'1px solid var(--border,#1E3070)'}}>
+                <span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:'#93C5FD',fontSize:11}}>#{t.num}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name||'Unknown'} · <BuPill bu={t.bu}/></div>
+                  <div style={{fontSize:10,color:'var(--muted,#6B85C0)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.category||'—'}</div>
+                </div>
+                <StatusBadge s={t.status}/>
+              </div>
+            ))}
+            {!filtered.length&&<div style={{padding:'24px',textAlign:'center',color:'var(--muted,#6B85C0)',fontSize:12}}>No tickets in this time window.</div>}
+          </div>
+        </div>
+      </div>
+      <div style={{marginTop:12,padding:'10px 14px',background:'rgba(255,199,44,.08)',border:'1px solid rgba(255,199,44,.25)',borderRadius:8,fontSize:11,color:'#FFC72C'}}>
+        💡 <strong>PDF opens in new tab</strong> — press Ctrl+P / Cmd+P and choose "Save as PDF" → select Landscape A4. Works on all browsers without popup blockers.
+      </div>
+    </div>
+  );
+}
+
+// ── IMPORT JSON ────────────────────────────────────────────────────
+function ImportScreen({agent,onImport}){
+  const fileRef=useRef(null);
+  const[dragging,setDragging]=useState(false);
+  const[lastFile,setLastFile]=useState(null);
+
+  function handle(file){
+    if(!file)return;
+    setLastFile(file.name);
+    onImport(file);
+  }
+  function onDrop(e){
+    e.preventDefault();setDragging(false);
+    const f=e.dataTransfer.files[0];
+    if(f&&f.name.endsWith('.json'))handle(f);
+    else window.EK_TOAST&&window.EK_TOAST('Please drop a .json file','warn');
+  }
+
+  return(
+    <div style={{padding:'28px',maxWidth:720}}>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontSize:18,fontWeight:800}}>📂 Import JSON</h2>
+        <p style={{fontSize:12,color:'var(--muted,#6B85C0)',marginTop:4}}>Load tickets into your hub from a master snapshot or an agent export file.</p>
+      </div>
+
+      {/* Drop zone */}
+      <div
+        onDragOver={e=>{e.preventDefault();setDragging(true);}}
+        onDragLeave={()=>setDragging(false)}
+        onDrop={onDrop}
+        onClick={()=>fileRef.current&&fileRef.current.click()}
+        style={{
+          border:`2px dashed ${dragging?agent.color:'var(--border,#1E3070)'}`,
+          borderRadius:16,
+          background: dragging?agent.tint:'var(--card,#111D4A)',
+          padding:'48px 32px',
+          textAlign:'center',
+          cursor:'pointer',
+          transition:'all .2s',
+          marginBottom:20,
+        }}>
+        <div style={{fontSize:44,marginBottom:12}}>📂</div>
+        <div style={{fontSize:15,fontWeight:800,color:'var(--text,#fff)',marginBottom:6}}>
+          {dragging?'Drop it!':'Click or drag & drop your JSON file here'}
+        </div>
+        <div style={{fontSize:12,color:'var(--muted,#6B85C0)'}}>
+          Accepts <code style={{color:'#93C5FD',background:'rgba(147,197,253,.1)',padding:'2px 6px',borderRadius:4}}>snapshot.json</code> or <code style={{color:'#93C5FD',background:'rgba(147,197,253,.1)',padding:'2px 6px',borderRadius:4}}>ekedp_agent_*.json</code>
+        </div>
+        {lastFile&&<div style={{marginTop:12,fontSize:11,color:agent.color,fontWeight:700}}>✅ Last loaded: {lastFile}</div>}
+        <input ref={fileRef} type="file" accept=".json" style={{display:'none'}}
+          onChange={e=>{if(e.target.files[0])handle(e.target.files[0]);e.target.value='';}}/>
+      </div>
+
+      {/* What each format does */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
+        <div style={{background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:12,padding:'16px 18px'}}>
+          <div style={{fontSize:11,fontWeight:800,color:'#93C5FD',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:8}}>📋 snapshot.json (master)</div>
+          <ul style={{fontSize:12,color:'var(--muted,#6B85C0)',lineHeight:1.7,paddingLeft:16}}>
+            <li>Shared by Love (Manager)</li>
+            <li>Contains all days, all agents</li>
+            <li>Loads ALL tickets into your hub</li>
+            <li>Auto-maps to agent format</li>
+          </ul>
+        </div>
+        <div style={{background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:12,padding:'16px 18px'}}>
+          <div style={{fontSize:11,fontWeight:800,color:'#4ADE80',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:8}}>📤 Agent export (ekedp_agent_*)</div>
+          <ul style={{fontSize:12,color:'var(--muted,#6B85C0)',lineHeight:1.7,paddingLeft:16}}>
+            <li>Exported from another agent's hub</li>
+            <li>Loads that agent's tickets directly</li>
+            <li>Good for handover / shift cover</li>
+            <li>Replaces your current tickets</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Button fallback */}
+      <button
+        onClick={()=>fileRef.current&&fileRef.current.click()}
+        style={{
+          padding:'14px 28px',background:agent.color,color:'#fff',
+          border:'none',borderRadius:12,fontFamily:'inherit',
+          fontSize:14,fontWeight:800,cursor:'pointer',
+          boxShadow:`0 6px 20px ${agent.color}44`,
+          display:'flex',alignItems:'center',gap:10,
+        }}>
+        <span style={{fontSize:20}}>📂</span> Choose file to import
+      </button>
+    </div>
+  );
+}
+
+// ── EXPORT DAY ─────────────────────────────────────────────────────
+function ExportDay({agent,tickets,onImport}){
+  const wat=getWATNow();const dateStr=wat.date.toISOString().slice(0,10);
+  const payload={exportedAt:new Date().toISOString(),exportedBy:{name:agent.name,email:agent.email,id:agent.id},period:{day:dateStr,dayLong:wat.dayLong},tickets,stats:{total:tickets.length,resolved:tickets.filter(t=>t.status==='resolved').length,progress:tickets.filter(t=>t.status==='progress').length,unresolved:tickets.filter(t=>t.status==='unresolved').length}};
+  const json=JSON.stringify(payload,null,2);
+  function download(){const b=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ekedp_agent_${agent.id}_${dateStr}.json`;a.click();window.EK_TOAST&&window.EK_TOAST('📤 JSON saved. Drop in shared OneDrive folder.');}
+  async function copy(){try{await navigator.clipboard.writeText(json);window.EK_TOAST&&window.EK_TOAST('JSON copied.');}catch{window.EK_TOAST&&window.EK_TOAST('Copy failed','warn');}}
+  const fileRef=useRef(null);
+  return(
+    <div style={{padding:'22px 28px',maxWidth:1000}}>
+
+      {/* ── IMPORT SECTION ─────────────────────────────────────────── */}
+      <div style={{marginBottom:20,background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:12,overflow:'hidden'}}>
+        <div style={{padding:'13px 18px',borderBottom:'1px solid var(--border,#1E3070)',display:'flex',alignItems:'center',gap:10,background:'rgba(59,130,246,.08)'}}>
+          <span style={{fontSize:20}}>📂</span>
+          <div>
+            <div style={{fontSize:13,fontWeight:800,color:'var(--text,#fff)'}}>Import JSON</div>
+            <div style={{fontSize:10.5,color:'var(--muted,#6B85C0)',marginTop:1}}>Load from <strong style={{color:'#93C5FD'}}>snapshot.json</strong> (master) or another agent's export — replaces current tickets</div>
+          </div>
+        </div>
+        <div style={{padding:'14px 18px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".json"
+            style={{display:'none'}}
+            onChange={e=>{if(e.target.files[0])onImport(e.target.files[0]);e.target.value='';}}
+          />
+          <button
+            onClick={()=>fileRef.current&&fileRef.current.click()}
+            style={{padding:'12px 22px',background:agent.color,color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:13,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:9,boxShadow:`0 6px 18px ${agent.color}44`}}>
+            <span style={{fontSize:18}}>📂</span> Choose JSON file
+          </button>
+          <div style={{flex:1,fontSize:11,color:'var(--muted,#6B85C0)',lineHeight:1.5}}>
+            <strong style={{color:'var(--text,#fff)'}}>Accepts:</strong><br/>
+            • <code style={{color:'#93C5FD'}}>snapshot.json</code> — the master file Love shares (all days, all tickets)<br/>
+            • <code style={{color:'#93C5FD'}}>ekedp_agent_*.json</code> — any agent's daily export
+          </div>
+        </div>
+      </div>
+
+      {/* ── EXPORT SECTION ──────────────────────────────────────────── */}
+      <div style={{background:agent.tint,border:`1px solid ${agent.color}55`,borderRadius:12,padding:'16px 20px',marginBottom:18,display:'flex',alignItems:'flex-start',gap:14}}>
+        <span style={{fontSize:24}}>📤</span>
+        <div style={{flex:1}}>
+          <div style={{fontSize:14,fontWeight:800,color:'var(--text,#fff)'}}>Export today's work as JSON</div>
+          <div style={{fontSize:11.5,lineHeight:1.5,color:'rgba(240,244,255,.75)',marginTop:3}}>Save the file, then drop it in the shared OneDrive folder. Love's Managers Hub imports it automatically.</div>
+        </div>
+        <div style={{display:'flex',gap:8,flexShrink:0}}>
+          <button onClick={copy} style={{padding:'10px 14px',background:'rgba(255,255,255,.10)',color:'var(--text,#fff)',border:'1px solid rgba(255,255,255,.2)',borderRadius:8,fontFamily:'inherit',fontSize:12,fontWeight:700,cursor:'pointer'}}>📋 Copy</button>
+          <button onClick={download} style={{padding:'10px 18px',background:agent.color,color:'#fff',border:'none',borderRadius:8,fontFamily:'inherit',fontSize:12,fontWeight:800,cursor:'pointer',boxShadow:`0 6px 18px ${agent.color}55`}}>⬇ Download JSON</button>
+        </div>
+      </div>
+      <div className="kpi-strip">
+        <Kpi label="Total" v={payload.stats.total} c="#3B82F6"/>
+        <Kpi label="Resolved" v={payload.stats.resolved} c="#4ADE80"/>
+        <Kpi label="In Progress" v={payload.stats.progress} c="#FCD34D"/>
+        <Kpi label="Unresolved" v={payload.stats.unresolved} c="#F87171"/>
+      </div>
+      <div className="card">
+        <div className="card-h"><h3>Preview</h3><span style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>ekedp_agent_{agent.id}_{dateStr}.json</span></div>
+        <pre style={{margin:0,padding:'14px 18px',fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,lineHeight:1.55,color:'#93C5FD',whiteSpace:'pre-wrap',wordBreak:'break-word',maxHeight:380,overflowY:'auto',background:'transparent'}}>{json}</pre>
+      </div>
+    </div>
+  );
+}
+
+// ── UPDATE TICKET MODAL ─────────────────────────────────────────────
+function UpdateTicket({ticket,agent,onClose,onSave,onDelete}){
+  const[st,setSt]=useState(ticket.status);const[note,setNote]=useState(ticket.note||'');const[resp,setResp]=useState(ticket.resp||getResp(ticket.category||ticket.issue||''));
+  const stBtns=[{s:'resolved',l:'✅ Resolved',c:'#16A34A',bg:'rgba(22,163,74,.15)'},{s:'progress',l:'⏳ In Progress',c:'#D97706',bg:'rgba(217,119,6,.15)'},{s:'unresolved',l:'🔴 Unresolved',c:'#DC2626',bg:'rgba(220,38,38,.15)'}];
+  return(
+    <div className="modal-bg" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-h"><h3>Update Ticket #{ticket.num}</h3><button className="modal-x" onClick={onClose}>✕</button></div>
+        <div className="modal-b">
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+            <div><div style={{fontSize:10,color:'var(--muted,#6B85C0)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Ticket</div><div style={{fontSize:20,fontWeight:900,color:'#60A5FA',fontFamily:"'JetBrains Mono',monospace"}}>#{ticket.num}</div></div>
+            <div><div style={{fontSize:10,color:'var(--muted,#6B85C0)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Customer</div><div style={{fontSize:13,fontWeight:700}}>{ticket.name||'—'}</div><div style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>{ticket.phone||'—'}</div></div>
+          </div>
+          <div style={{padding:'8px 10px',background:'var(--surface,#0D1B45)',borderRadius:8,borderLeft:'3px solid #3B82F6',marginBottom:14,fontSize:12}}>{ticket.issue||ticket.category||'—'} · <strong>{ticket.bu||'—'}</strong></div>
+          <div className="fld"><label>Status</label>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
+              {stBtns.map(b=><button key={b.s} onClick={()=>setSt(b.s)} style={{padding:10,border:`2px solid ${st===b.s?b.c:'var(--border,#1E3070)'}`,background:st===b.s?b.bg:'var(--card,#111D4A)',color:st===b.s?b.c:'var(--muted,#6B85C0)',borderRadius:8,fontFamily:'inherit',fontSize:12,fontWeight:700,cursor:'pointer'}}>{b.l}</button>)}
+            </div>
+          </div>
+          <div className="fld"><label>Action Taken / Note</label><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What was done? Next steps?" style={{width:'100%',padding:'9px 11px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:12,outline:'none',minHeight:70,resize:'vertical'}}/></div>
+          <div className="fld"><label>Responsible Party</label><input value={resp} onChange={e=>setResp(e.target.value)} style={{width:'100%',padding:'9px 11px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:12,outline:'none'}}/></div>
+          <div style={{display:'flex',gap:8,justifyContent:'space-between',marginTop:14}}>
+            <button onClick={()=>{if(confirm('Delete this ticket?'))onDelete(ticket.num);}} style={{padding:'9px 14px',background:'rgba(220,38,38,.12)',color:'#F87171',border:'1px solid rgba(220,38,38,.3)',borderRadius:8,fontFamily:'inherit',fontSize:12,fontWeight:700,cursor:'pointer'}}>🗑 Delete</button>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={onClose} style={{padding:'9px 14px',background:'var(--surface,#0D1B45)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:12,fontWeight:700,cursor:'pointer'}}>Cancel</button>
+              <button onClick={()=>onSave({...ticket,status:st,note,resp})} style={{padding:'9px 16px',background:agent.color,color:'#fff',border:'none',borderRadius:8,fontFamily:'inherit',fontSize:12,fontWeight:800,cursor:'pointer'}}>💾 Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── APP ────────────────────────────────────────────────────────────
+function App(){
+  const[agent,setAgent]=useState(()=>loadAgentSession());
+  const[screen,setScreen]=useState('tickets');
+  const[tickets,setTickets]=useState(INIT_TICKETS);
+  const[editing,setEditing]=useState(null);
+  const[theme,setTheme]=useState(()=>localStorage.getItem('ekedp_agent_theme')||'midnight');
+  const[collapsed,setCollapsed]=useState(false);
+  const[toast,setToast]=useState(null);
+
+  useEffect(()=>{document.body.setAttribute('data-theme',theme);localStorage.setItem('ekedp_agent_theme',theme);},[theme]);
+  useEffect(()=>{document.body.setAttribute('data-nc',collapsed?'1':'0');},[collapsed]);
+
+  window.EK_TOAST=(msg,kind='ok')=>{setToast({msg,kind});setTimeout(()=>setToast(null),3500);};
+
+  function getMyTickets(){return agent?((tickets[agent.id]||[])):[]; }
+
+  function addTicket(tk){
+    if(!agent)return;
+    const nt={...tickets,[agent.id]:[tk,...(tickets[agent.id]||[])]};
+    setTickets(nt);localStorage.setItem('ek_tix_'+agent.id,JSON.stringify(nt[agent.id]));
+    setScreen('tickets');window.EK_TOAST('✅ Ticket #'+tk.num+' added.');fireNotif('EKEDP Power App — New Ticket','#'+tk.num+' · '+(tk.name||'Customer')+' · '+(tk.bu||''));
+  }
+  function addTickets(list){
+    if(!agent||!list.length)return;
+    const nt={...tickets,[agent.id]:[...list,...(tickets[agent.id]||[])]};
+    setTickets(nt);localStorage.setItem('ek_tix_'+agent.id,JSON.stringify(nt[agent.id]));
+    setScreen('tickets');window.EK_TOAST('✅ '+list.length+' ticket'+(list.length!==1?'s':'')+' added.');fireNotif('EKEDP Power App — '+list.length+' Ticket'+(list.length!==1?'s':'')+' Added',list.map(t=>'#'+t.num).join(', '));
+  }
+  function saveTicket(upd){
+    if(!agent)return;
+    const nt={...tickets,[agent.id]:(tickets[agent.id]||[]).map(t=>t.num===upd.num?upd:t)};
+    setTickets(nt);localStorage.setItem('ek_tix_'+agent.id,JSON.stringify(nt[agent.id]));
+    window.EK_TOAST('✅ Ticket #'+upd.num+' updated.');
+  }
+  function deleteTicket(num){
+    if(!agent)return;
+    const nt={...tickets,[agent.id]:(tickets[agent.id]||[]).filter(t=>t.num!==num)};
+    setTickets(nt);localStorage.setItem('ek_tix_'+agent.id,JSON.stringify(nt[agent.id]));
+    setEditing(null);window.EK_TOAST('Ticket deleted.','warn');
+  }
+
+  // ── IMPORT JSON (snapshot.json OR agent export) ──────────────────
+  function importJSON(file){
+    if(!file||!agent)return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const j=JSON.parse(e.target.result);
+        let imported=[];
+
+        // FORMAT A: snapshot.json — has "days" array (master format)
+        if(j.days&&Array.isArray(j.days)){
+          j.days.forEach(day=>{
+            (day.tickets||[]).forEach(t=>{
+              imported.push({
+                id:     t.id||'tk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+                num:    t.num||'',
+                time:   t.time||'',
+                name:   t.name||'',
+                phone:  t.phone||'',
+                meter:  t.meter||'',
+                addr:   t.address||t.addr||'',
+                bu:     t.bu||'',
+                issue:  t.title||t.issue||t.note||'',
+                category: t.category&&t.subcategory ? t.category+' — '+t.subcategory : (t.category||t.subcategory||''),
+                resp:   t.assignee||t.resp||getResp(t.category||''),
+                status: t.status||'unresolved',
+                note:   t.resolutionNote||'',
+                created:t.created||day.dateBig+' '+new Date().getFullYear(),
+              });
+            });
+          });
+          const count=imported.length;
+          const nt={...tickets,[agent.id]:imported};
+          setTickets(nt);
+          localStorage.setItem('ek_tix_'+agent.id,JSON.stringify(imported));
+          setScreen('tickets');
+          window.EK_TOAST('✅ Loaded '+count+' tickets from '+j.days.length+' day'+(j.days.length!==1?'s':'')+'.');
+          return;
+        }
+
+        // FORMAT B: agent export — has "tickets" array directly
+        if(j.tickets&&Array.isArray(j.tickets)){
+          imported=j.tickets.map(t=>({
+            id:     t.id||'tk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+            num:    t.num||'',
+            time:   t.time||'',
+            name:   t.name||'',
+            phone:  t.phone||'',
+            meter:  t.meter||'',
+            addr:   t.addr||t.address||'',
+            bu:     t.bu||'',
+            issue:  t.issue||t.note||'',
+            category:t.category||'',
+            resp:   t.resp||t.assignee||getResp(t.category||''),
+            status: t.status||'unresolved',
+            note:   t.note||t.resolutionNote||'',
+            created:t.created||'',
+          }));
+          const nt={...tickets,[agent.id]:imported};
+          setTickets(nt);
+          localStorage.setItem('ek_tix_'+agent.id,JSON.stringify(imported));
+          setScreen('tickets');
+          window.EK_TOAST('✅ Loaded '+imported.length+' tickets from agent export.');
+          return;
+        }
+
+        window.EK_TOAST('❌ Unrecognised JSON format.','err');
+      }catch(err){
+        window.EK_TOAST('❌ Invalid JSON file: '+err.message,'err');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  if(!agent) return <SignIn onLogin={a=>{saveAgentSession(a);setAgent(a);if('Notification' in window&&Notification.permission==='default'){Notification.requestPermission();}const cnt=(INIT_TICKETS[a.id]||[]).length;window.EK_TOAST('👋 Welcome back, '+a.name.split(' ')[0]+'!'+(cnt?' '+cnt+' ticket'+(cnt!==1?'s':'')+' restored.':''));}} />;
+
+  const myTix=getMyTickets();
+  const screenEl={
+    tickets:<MyTickets agent={agent} tickets={myTix} onEdit={setEditing}/>,
+    add:<AddTicket agent={agent} onCreate={addTicket} onCreateMany={addTickets}/>,
+    slot:<SlotReports agent={agent} tickets={myTix}/>,
+    import:<ImportScreen agent={agent} onImport={importJSON}/>,
+    export:<ExportDay agent={agent} tickets={myTix} onImport={importJSON}/>,
+  }[screen];
+
+  return(
+    <>
+      <Nav agent={agent} active={screen} onChange={setScreen} onSignOut={()=>{clearAgentSession();setAgent(null);setScreen('tickets');}} theme={theme} onTheme={setTheme} collapsed={collapsed} onToggle={()=>setCollapsed(c=>!c)}/>
+      <div className="main">
+        <Topbar agent={agent} screen={screen}/>
+        {screenEl}
+      </div>
+      {editing&&<UpdateTicket ticket={editing} agent={agent} onClose={()=>setEditing(null)} onSave={t=>{saveTicket(t);setEditing(null);}} onDelete={deleteTicket}/>}
+      {toast&&<div className="toast" style={{background:toast.kind==='warn'?'rgba(217,119,6,.95)':toast.kind==='err'?'rgba(220,38,38,.95)':'rgba(22,163,74,.95)'}}>{toast.kind==='warn'?'⚠ ':toast.kind==='err'?'✕ ':'✔ '}{toast.msg}</div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
