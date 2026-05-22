@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EKEDP Power App — Reports</title>
+<link rel="icon" type="image/png" href="../assets/ekedp-app-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --gold:#FFC72C; --red:#E30613;
+    --border:rgba(180,100,255,.20); --muted:rgba(240,234,255,.55);
+    --text:#F0EAFF; --bg:linear-gradient(135deg,#0C0118 0%,#1B0444 55%,#2E0B72 100%);
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  html, body { background: #0C0118; color: var(--text); font: 400 13px/1.5 'Sora', sans-serif; min-height:100vh; }
+  body { background: linear-gradient(135deg,#0C0118 0%,#1B0444 55%,#2E0B72 100%); background-attachment: fixed; }
+
+  .top {
+    background: rgba(12,1,24,.7); backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(180,100,255,.18);
+    color:#fff; padding: 22px 36px; display:flex; align-items:center; gap:20px;
+  }
+  .top .logo-wrap { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.15); border-radius:10px; padding:6px 12px; height:54px; display:flex; align-items:center; }
+  .top .logo-wrap img { height:100%; display:block; mix-blend-mode:screen; filter:brightness(1.2); }
+  .top h1 { font:900 24px/1.1 'Sora'; }
+  .top .eyebrow { font:800 10px/1 'Sora'; letter-spacing:.14em; color:var(--gold); text-transform:uppercase; margin-bottom:5px; }
+  .top .sub { font:500 12px/1.4 'Sora'; color:rgba(255,255,255,.55); margin-top:4px; }
+  .top .spacer { flex:1; }
+  .top a.back {
+    background: rgba(255,255,255,.08); border:1px solid rgba(180,100,255,.30);
+    color:#fff; text-decoration:none; padding:9px 14px; border-radius:8px;
+    font:700 12px 'Sora'; transition: all .15s;
+  }
+  .top a.back:hover { background: rgba(255,255,255,.16); border-color: var(--gold); color: var(--gold); }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 36px 56px; }
+
+  .group-h {
+    font:900 11px/1 'Sora'; color: var(--gold); text-transform:uppercase; letter-spacing:.12em;
+    border-bottom: 1px solid rgba(180,100,255,.25); padding-bottom: 10px; margin-bottom: 16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .group-h:not(:first-child) { margin-top: 36px; }
+  .group-h span.count { font:700 10px 'Sora'; color: rgba(240,234,255,.45); letter-spacing:.04em; text-transform:none; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+
+  .card {
+    background: rgba(255,255,255,.05); border:1px solid rgba(180,100,255,.20); border-radius:14px;
+    padding: 20px; display:flex; flex-direction:column; gap:10px;
+    transition: all .18s; text-decoration:none; color:var(--text);
+    backdrop-filter: blur(8px); box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  .card:hover {
+    background: rgba(255,255,255,.09); border-color: var(--gold);
+    transform: translateY(-3px); box-shadow: 0 12px 36px rgba(100,0,200,.25);
+  }
+  .card .emoji { font-size:30px; line-height:1; }
+  .card h3 { font:800 15px/1.2 'Sora'; color: #fff; }
+  .card p { font:500 12px/1.5 'Sora'; color: rgba(240,234,255,.65); }
+  .card .tags { display:flex; gap:6px; flex-wrap:wrap; }
+  .card .tag {
+    font:700 9.5px/1 'Sora'; padding:3px 8px; border-radius:6px;
+    text-transform:uppercase; letter-spacing:.04em;
+    background:rgba(255,199,44,.12); color:var(--gold); border:1px solid rgba(255,199,44,.25);
+  }
+  .card .tag.gm { background:rgba(227,6,19,.12); color:#FCA5A5; border-color:rgba(227,6,19,.25); }
+  .card .tag.wa { background:rgba(22,163,74,.12); color:#86EFAC; border-color:rgba(22,163,74,.25); }
+  .card .tag.ex { background:rgba(139,92,246,.12); color:#C4B5FD; border-color:rgba(139,92,246,.25); }
+  .card .row { display:flex; align-items:center; gap:14px; }
+  .card .row .emoji { flex-shrink:0; }
+  .card .row .body { flex:1; min-width:0; }
+  .card .go {
+    font:800 11px/1 'Sora'; color: var(--gold); margin-top:6px;
+    display:flex; align-items:center; gap:5px; transition: gap .15s;
+  }
+  .card:hover .go { gap: 8px; }
+  details.card[open] {
+    border-color: var(--gold) !important;
+    background: rgba(255,199,44,.08) !important;
+  }
+  details.card summary::-webkit-details-marker { display:none; }
+  details.card[open] summary h3 span { opacity:0; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="eyebrow">EKEDP Power App · Reports</div>
+    <h1>Reports</h1>
+    <div class="sub">Printable &amp; exportable reports for the team and the WhatsApp group.</div>
+  </div>
+  <div class="spacer"></div>
+  <span id="theme-badge" style="font:700 11px Sora,sans-serif;color:var(--gold);margin-right:8px;opacity:.8;"></span>
+  <a class="back" href="../ui_kits/managers-hub/index.html">← Managers Hub</a>
+</div>
+
+<div class="wrap">
+
+  <div class="group-h"><i data-lucide="mail" style="width:14px;height:14px;flex-shrink:0;"></i> Email Reports <span class="count">9 AM · 12 PM · 4 PM</span></div>
+  <div class="grid">
+    <a class="card" href="gm_report.html">
+      <div class="row">
+        <div class="emoji"><i data-lucide="bar-chart-2" style="width:28px;height:28px;color:var(--gold);"></i></div>
+        <div class="body">
+          <h3>Email Report</h3>
+          <p>Cumulative roll-up by Responsible Party. KPI cards + 9-row table + TOTAL.</p>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag ex">Excel</span>
+        <span class="tag">Email body</span>
+        <span class="tag">PDF</span>
+      </div>
+      <div class="go">Open →</div>
+    </a>
+    <a class="card" href="all_days_report.html">
+      <div class="row">
+        <div class="emoji"><i data-lucide="book-open" style="width:28px;height:28px;color:var(--gold);"></i></div>
+        <div class="body">
+          <h3>All Days Report</h3>
+          <p>Same shape as the GM report, but cumulative across the whole period. KPI cards lead.</p>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag ex">Excel</span>
+        <span class="tag">PDF</span>
+      </div>
+      <div class="go">Open →</div>
+    </a>
+  </div>
+
+  <div class="group-h"><i data-lucide="message-circle" style="width:14px;height:14px;flex-shrink:0;"></i> For the WhatsApp group <span class="count">9 AM · 12 PM · 1–2 PM · 4–5 PM</span></div>
+  <div class="grid">
+    <a class="card" href="slot_report.html">
+      <div class="row">
+        <div class="emoji"><i data-lucide="clock" style="width:28px;height:28px;color:var(--gold);"></i></div>
+        <div class="body">
+          <h3>Slot Reports — Midday & COB</h3>
+          <p>Per-ticket breakdown with address, phone, meter, age badges. Resolved → In Progress → Unresolved.</p>
+        </div>
+      </div>
+      <div class="tags">
+        <span class="tag wa">WhatsApp</span>
+        <span class="tag">PDF</span>
+        <span class="tag">Print</span>
+      </div>
+      <div class="go">Open →</div>
+    </a>
+  </div>
+
+  <div class="group-h"><i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;"></i> Conventions</div>
+  <div class="grid">
+    <details class="card" style="cursor:pointer;">
+      <summary style="list-style:none;display:flex;align-items:center;gap:14px;">
+        <div class="emoji"><i data-lucide="timer" style="width:28px;height:28px;color:var(--gold);"></i></div>
+        <div class="body">
+          <h3 style="display:flex;align-items:center;justify-content:space-between;">Age badges <span style="font:500 11px var(--ek-font-sans,Sora);color:var(--gold);opacity:.7;">click to expand ↓</span></h3>
+          <p style="color:rgba(240,234,255,.65);margin-top:3px;">Green · Amber · Red by ticket age</p>
+        </div>
+      </summary>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.10);">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <span style="display:inline-block;padding:4px 12px;border-radius:20px;font:700 11px/1.3 Sora;background:#EAF3DE;color:#3B6D11;">2 days — Green</span>
+          <span style="display:inline-block;padding:4px 12px;border-radius:20px;font:700 11px/1.3 Sora;background:#FAEEDA;color:#854F0B;">5 days — Amber</span>
+          <span style="display:inline-block;padding:4px 12px;border-radius:20px;font:700 11px/1.3 Sora;background:#FCEBEB;color:#A32D2D;">9 days — Red</span>
+        </div>
+        <p style="color:rgba(240,234,255,.7);font:500 12px/1.5 Sora,sans-serif;">🟢 Green: &lt; 3 days &nbsp;·&nbsp; 🟡 Amber: 3–6 days &nbsp;·&nbsp; 🔴 Red: ≥ 7 days. Same threshold applies on all reports.</p>
+      </div>
+    </details>
+
+    <details class="card" style="cursor:pointer;">
+      <summary style="list-style:none;display:flex;align-items:center;gap:14px;">
+        <div class="emoji"><i data-lucide="palette" style="width:28px;height:28px;color:var(--gold);"></i></div>
+        <div class="body">
+          <h3 style="display:flex;align-items:center;justify-content:space-between;">Status colours <span style="font:500 11px var(--ek-font-sans,Sora);color:var(--gold);opacity:.7;">click to expand ↓</span></h3>
+          <p style="color:rgba(240,234,255,.65);margin-top:3px;">Resolved · In Progress · Unresolved</p>
+        </div>
+      </summary>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.10);">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+          <span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:14px;font:800 10px Sora;letter-spacing:.04em;text-transform:uppercase;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;">✅ Resolved</span>
+          <span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:14px;font:800 10px Sora;letter-spacing:.04em;text-transform:uppercase;background:#FFFBEB;border:1px solid #FDE68A;color:#92400E;">⏳ In Progress</span>
+          <span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:14px;font:800 10px Sora;letter-spacing:.04em;text-transform:uppercase;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;">🔴 Unresolved</span>
+        </div>
+        <p style="color:rgba(240,234,255,.7);font:500 12px/1.5 Sora,sans-serif;">Universal across the Managers Hub, Agents Hub, and every report. Colour coding never changes.</p>
+      </div>
+    </details>
+
+    <details class="card" style="cursor:pointer;">
+      <summary style="list-style:none;display:flex;align-items:center;gap:14px;">
+        <div class="emoji"><i data-lucide="alarm-clock" style="width:28px;height:28px;color:var(--gold);"></i></div>
+        <div class="body">
+          <h3 style="display:flex;align-items:center;justify-content:space-between;">Shift windows <span style="font:500 11px var(--ek-font-sans,Sora);color:var(--gold);opacity:.7;">click to expand ↓</span></h3>
+          <p style="color:rgba(240,234,255,.65);margin-top:3px;">Weekdays 08:00–17:00 · Weekends 10:00–16:00</p>
+        </div>
+      </summary>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.10);">
+        <p style="color:rgba(240,234,255,.85);font:600 13px/1.7 'JetBrains Mono',monospace;">
+          📅 Weekdays &nbsp;·&nbsp; 08:00 – 17:00 WAT<br>
+          📅 Weekends &nbsp;·&nbsp; 10:00 – 16:00 WAT
+        </p>
+        <p style="color:rgba(240,234,255,.7);font:500 12px/1.5 Sora,sans-serif;margin-top:8px;">Slot timestamps (9 AM / 12 PM / Midday / COB) and subtitle stamps on every report follow these windows.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+
+</body>
+<script>
+// Auto theme by Lagos WAT time
+(function(){
+  const h = new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
+  const theme = h>=6&&h<12 ? 'daylight' : h>=12&&h<17 ? 'solar' : 'violet';
+  const themes = {
+    daylight: {bg:'linear-gradient(135deg,#DBEAFE 0%,#BFDBFE 55%,#E0E7FF 100%)', text:'#0F172A', muted:'rgba(15,23,42,.55)', gold:'#1D4ED8', border:'rgba(29,78,216,.15)', card:'rgba(255,255,255,.7)', cardBorder:'rgba(29,78,216,.15)', hover:'rgba(255,255,255,.95)', tag:'rgba(29,78,216,.10)', tagColor:'#1E3A8A', tagBorder:'rgba(29,78,216,.20)', topBg:'rgba(219,234,254,.85)'},
+    solar:    {bg:'linear-gradient(135deg,#2A1A06 0%,#52391B 55%,#92400E 100%)', text:'#FFF7E5', muted:'rgba(255,247,229,.55)', gold:'#F59E0B', border:'rgba(245,158,11,.20)', card:'rgba(255,255,255,.06)', cardBorder:'rgba(245,158,11,.20)', hover:'rgba(255,255,255,.10)', tag:'rgba(245,158,11,.12)', tagColor:'#FCD34D', tagBorder:'rgba(245,158,11,.25)', topBg:'rgba(42,26,6,.7)'},
+    violet:   {bg:'linear-gradient(135deg,#0C0118 0%,#1B0444 55%,#2E0B72 100%)', text:'#F0EAFF', muted:'rgba(240,234,255,.55)', gold:'#FFC72C', border:'rgba(180,100,255,.20)', card:'rgba(255,255,255,.05)', cardBorder:'rgba(180,100,255,.20)', hover:'rgba(255,255,255,.09)', tag:'rgba(255,199,44,.12)', tagColor:'#FFC72C', tagBorder:'rgba(255,199,44,.25)', topBg:'rgba(12,1,24,.7)'},
+  };
+  const t = themes[theme];
+  const r = document.documentElement.style;
+  document.body.style.background = t.bg;
+  document.body.style.backgroundAttachment = 'fixed';
+  document.body.style.color = t.text;
+  // Patch CSS vars
+  document.documentElement.style.setProperty('--gold', t.gold);
+  document.documentElement.style.setProperty('--muted', t.muted);
+  document.documentElement.style.setProperty('--text', t.text);
+  document.documentElement.style.setProperty('--border', t.border);
+  // Patch top bar
+  const top = document.querySelector('.top');
+  if(top){ top.style.background = t.topBg; top.style.color = t.text; }
+  // Patch cards
+  document.querySelectorAll('.card').forEach(c=>{
+    c.style.background = t.card; c.style.borderColor = t.cardBorder; c.style.color = t.text;
+  });
+  document.querySelectorAll('.card h3').forEach(el=>el.style.color=t.text);
+  document.querySelectorAll('.card p').forEach(el=>el.style.color=t.muted);
+  document.querySelectorAll('.card .tag:not(.gm):not(.wa):not(.ex)').forEach(el=>{el.style.background=t.tag;el.style.color=t.tagColor;el.style.borderColor=t.tagBorder;});
+  document.querySelectorAll('.group-h').forEach(el=>{el.style.color=t.gold;el.style.borderColor=t.border;});
+  // Show theme badge
+  const badge = document.getElementById('theme-badge');
+  if(badge){ badge.textContent = theme==='daylight'?'☀️ Daylight':theme==='solar'?'🌅 Solar':'🔮 Violet'; }
+})();
+// Init Lucide icons
+if(window.lucide) lucide.createIcons();
+// Make convention cards expand on click
+document.querySelectorAll('.grid:last-of-type .card').forEach(function(c){
+  c.addEventListener('click', function(){
+    var isOpen = c.getAttribute('data-open');
+    document.querySelectorAll('.grid:last-of-type .card').forEach(function(x){ x.removeAttribute('data-open'); x.style.borderColor=''; x.style.background=''; });
+    if(!isOpen){
+      c.setAttribute('data-open','1');
+      c.style.borderColor='rgba(255,199,44,.5)';
+      c.style.background='rgba(255,199,44,.08)';
+    }
+  });
+});
+</script>
+</html>

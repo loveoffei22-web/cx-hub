@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EKEDP Power App — All Days Report</title>
+<link rel="icon" type="image/png" href="../assets/ekedp-app-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#001F5C;--red:#E30613;--gold:#FFC72C;--border:#CBD5E1;--muted:#475569;--text:#0F172A;--info:#1D4ED8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:linear-gradient(135deg,#0C0118 0%,#1B0444 55%,#2E0B72 100%);background-attachment:fixed;font:600 16px/1.55 'Sora',sans-serif;color:var(--text);min-height:100vh;}
+
+/* TOOLBAR */
+.toolbar{position:sticky;top:0;z-index:10;background:rgba(20,5,60,0.85);backdrop-filter:blur(10px);border-bottom:1px solid rgba(180,100,255,.25);padding:8px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.toolbar label{font:800 11px/1 'Sora';text-transform:uppercase;letter-spacing:.10em;color:rgba(255,199,44,.85);}
+.btn{padding:9px 14px;border-radius:8px;border:1px solid rgba(180,100,255,.30);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font:700 13px/1 'Sora';text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.btn:hover{background:rgba(255,255,255,.15);}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.20);font-weight:700;font-size:12px;}
+.btn-email{background:#0078D4;color:#fff;border:none;font-weight:800;}
+.btn-print{background:var(--red);color:#fff;border:none;font-weight:800;box-shadow:0 3px 10px rgba(227,6,19,.30);}
+.btn-excel{background:#107C41;color:#fff;border:none;font-weight:800;}
+.spacer{flex:1;}
+
+/* DOCUMENT */
+.doc{width:960px;max-width:100%;margin:16px auto;background:#fff;border:1.5px solid rgba(180,100,255,.20);border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.40);}
+
+/* HEADER */
+.hd{background:linear-gradient(135deg,#0C0118 0%,#1B0444 55%,#2E0B72 100%);color:#fff;padding:8px 16px;}
+.top{display:flex;align-items:center;gap:12px;}
+.hd-logo{height:32px;background:rgba(255,255,255,.12);border-radius:8px;padding:4px 10px;display:flex;align-items:center;flex-shrink:0;}
+.hd-logo img{height:100%;width:auto;display:block;}
+.hd-title h1{font:900 15px/1.1 'Sora';letter-spacing:-.005em;}
+.hd-eyebrow{font:800 8px/1 'Sora';letter-spacing:.12em;color:var(--gold);text-transform:uppercase;margin-bottom:2px;}
+.hd-sub{font:500 10px/1.3 'Sora';color:rgba(255,255,255,.7);margin-top:2px;}
+.hd-meta{margin-left:auto;text-align:right;}
+.hd-meta .big{font:900 12px/1 'JetBrains Mono';color:var(--gold);margin-bottom:2px;}
+.hd-meta .sm{font:600 10px/1.3 'Sora';color:rgba(255,255,255,.75);}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 16px;background:#F1F5F9;border-bottom:1.5px solid var(--border);}
+.kpi-row.k5{grid-template-columns:repeat(5,1fr);}
+.kpi{padding:10px 14px;border-radius:8px;background:#fff;border:1.5px solid var(--border);position:relative;overflow:hidden;}
+.kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.tot::before{background:#1D4ED8;}.kpi.res::before{background:#16A34A;}
+.kpi.prg::before{background:#D97706;}.kpi.unr::before{background:#DC2626;}.kpi.pct::before{background:var(--gold);}
+.kpi .kl{font:800 10px/1 'Sora';text-transform:uppercase;letter-spacing:.10em;color:var(--muted);}
+.kpi .kv{font:900 26px/1 'JetBrains Mono';margin-top:5px;}
+.kpi.tot .kv{color:#1E3A8A;}.kpi.res .kv{color:#065F46;}
+.kpi.prg .kv{color:#92400E;}.kpi.unr .kv{color:#991B1B;}.kpi.pct .kv{color:#92591E;}
+
+/* TABLE */
+.tbl-wrap{padding:10px 16px 6px;}
+table.t{width:100%;border-collapse:collapse;font-size:14px;}
+table.t thead tr{background:var(--navy);}
+table.t th{color:rgba(255,255,255,.92);font:800 11px/1.3 'Sora';text-transform:uppercase;letter-spacing:.05em;padding:10px;text-align:left;white-space:normal;word-wrap:break-word;}
+table.t th.r{text-align:right;}
+table.t td{padding:10px;border-bottom:1.5px solid #EEF2F8;color:var(--text);white-space:normal;word-wrap:break-word;}
+table.t td.r{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;}
+table.t tbody tr:nth-child(even) td{background:#F8FAFC;}
+table.t tbody tr:hover td{background:#EEF2F8;}
+table.t tbody tr:last-child td{border-bottom:none;}
+table.t tfoot td{background:var(--navy)!important;color:#fff;font:900 14px/1.3 'Sora';padding:11px 10px;}
+table.t tfoot td.r{font-family:'JetBrains Mono',monospace;}
+.resp{font:800 16px/1.2 'Sora';color:var(--navy);}
+.resp-cat{font:500 12px/1.2 'Sora';color:var(--muted);margin-top:2px;}
+.num{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--info);}
+.pct-pill{display:inline-flex;padding:4px 11px;border-radius:20px;font-family:'JetBrains Mono',monospace;font-weight:900;font-size:13px;}
+.pct-hi{background:#ECFDF5;color:#065F46;}
+.pct-mid{background:#FFFBEB;color:#92400E;}
+.pct-lo{background:#FEF2F2;color:#991B1B;}
+
+/* FOOTER */
+.ft{padding:12px 16px;border-top:1.5px solid var(--border);background:#F8FAFC;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.ft .meta{font:500 12px/1.4 'Sora';color:var(--muted);flex:1;}
+.ft .meta b{color:var(--navy);font-weight:800;}
+.ft .stamp{font:700 11px/1.3 'JetBrains Mono';color:var(--muted);text-align:right;}
+
+@media print{
+  @page{size:A4 landscape;margin:8mm;}
+  html,body{background:#fff;}
+  .toolbar{display:none!important;}
+  .doc{width:auto;margin:0;border:none;border-radius:0;box-shadow:none;}
+  .hd,.kpi,.pct-pill,.ft,.kpi-row,table.t thead tr,table.t tfoot td{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="toolbar">
+  <a class="btn btn-back" href="index.html">← Reports</a>
+  <label>Period</label>
+  <span style="font:700 12px 'Sora'; color:var(--text);">1 May – 17 May 2026 · Day 1–17</span>
+  <span class="spacer"></span>
+  <button class="btn-email" onclick="copyEmail()">📧 Copy as Email</button>
+  <button class="btn-excel" onclick="downloadExcel()">📊 Export to Excel</button>
+  <button class="btn-print" onclick="window.print()">⬇ Print / Save as PDF</button>
+</div>
+
+<div class="doc" id="doc"></div>
+
+<script>
+const ROWS = [
+  [1, 'Nonye Angelina Nnadozie', 'Band Reclassification',           0,   8,  0,  1],
+  [2, 'Mojibola Adefuwa',        'Billing',                         2,  21,  4,  0],
+  [3, 'Ogheneyoreme Agbroko',    'Interruption / Voltage / Safety', 5,  44, 10,  8],
+  [4, 'Holyland Umude',          'Metering',                        4,  53, 17, 32],
+  [5, 'Adetoun Adetola',         'PPM Support',                     1,  39,  3,  2],
+  [6, 'Owokade Olusegun',        'PPM Maintenance',                 6,  62, 14,  4],
+  [7, 'Clara Olutola',           'Onboarding',                      0,   2,  0,  0],
+  [8, 'Glory (BPS Africa)',      'Mycron',                          1,   2,  0,  2],
+  [9, 'Festus Moko',             'AMISA',                           0,   1,  0,  0],
+];
+
+function compute(r) {
+  const [sn, party, cat, today, res, prg, unr] = r;
+  const grand = res + prg + unr;
+  const pct = grand ? Math.round((res / grand) * 100) : 0;
+  return {sn, party, cat, today, res, prg, unr, grand, pct};
+}
+function pctClass(p) { return p >= 80 ? 'pct-hi' : p >= 60 ? 'pct-mid' : 'pct-lo'; }
+function todayLong() {
+  const wat = new Date(new Date().toLocaleString('en-US', {timeZone:'Africa/Lagos'}));
+  return wat.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+
+function render() {
+  const rows = ROWS.map(compute);
+  const total = {
+    today: rows.reduce((a,x)=>a+x.today,0),
+    res:   rows.reduce((a,x)=>a+x.res,0),
+    prg:   rows.reduce((a,x)=>a+x.prg,0),
+    unr:   rows.reduce((a,x)=>a+x.unr,0),
+  };
+  total.grand = total.res + total.prg + total.unr;
+  total.pct = total.grand ? Math.round((total.res / total.grand) * 100) : 0;
+
+  document.getElementById('doc').innerHTML = `
+    <div class="hd">
+      <div class="top">
+        <div class="hd-logo"><img src="../assets/ekedp-logo.jpg" alt=""></div>
+        <div class="hd-title">
+          <div class="hd-eyebrow">Power App — All Days Report</div>
+          <h1 id="all-greeting">Good morning</h1>
+          <div class="hd-sub">${todayLong()} · 1 May – 17 May 2026 · Customer Experience Department · Mobile App</div>
+        </div>
+        <div class="hd-meta">
+          <div class="big">CUMULATIVE</div>
+          <div>All days · all statuses</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-row k5">
+      <div class="kpi tot"><div class="kl">Total Complaints</div><div class="kv">${total.grand}</div></div>
+      <div class="kpi res"><div class="kl">Resolved</div><div class="kv">${total.res}</div></div>
+      <div class="kpi prg"><div class="kl">In Progress</div><div class="kv">${total.prg}</div></div>
+      <div class="kpi unr"><div class="kl">Unresolved</div><div class="kv">${total.unr}</div></div>
+      <div class="kpi pct"><div class="kl">% Resolution</div><div class="kv">${total.pct}%</div></div>
+    </div>
+
+    <div class="tbl-wrap" style="padding-top:14px;">
+      <table class="t">
+        <thead><tr>
+          <th>SN</th>
+          <th>Responsible Party</th>
+          <th class="r">Received Today</th>
+          <th class="r">Cumulative Resolved</th>
+          <th class="r">Cumulative In Progress</th>
+          <th class="r">Cumulative Unresolved</th>
+          <th class="r">Grand Total</th>
+          <th class="r">% Resolution</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td class="num">${r.sn}</td>
+              <td>
+                <div class="resp">${r.party}</div>
+                <div class="resp-cat">${r.cat}</div>
+              </td>
+              <td class="r">${r.today}</td>
+              <td class="r" style="color:#065F46;">${r.res}</td>
+              <td class="r" style="color:#92400E;">${r.prg}</td>
+              <td class="r" style="color:#991B1B;">${r.unr}</td>
+              <td class="r" style="color:var(--info);">${r.grand}</td>
+              <td class="r"><span class="pct-pill ${pctClass(r.pct)}">${r.pct}%</span></td>
+            </tr>`).join('')}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="text-align:right; letter-spacing:.10em;">TOTAL</td>
+            <td class="r">${total.today}</td>
+            <td class="r">${total.res}</td>
+            <td class="r">${total.prg}</td>
+            <td class="r">${total.unr}</td>
+            <td class="r">${total.grand}</td>
+            <td class="r">${total.pct}%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="ft">
+      <div class="meta">Generated by the <b>EKEDP Power App — Managers Hub</b>. Cumulative roll-up across the reporting period.</div>
+      <div class="stamp">${todayLong()}</div>
+    </div>
+  `;
+}
+
+function downloadExcel() {
+  if (typeof XLSX === 'undefined') { showToast('SheetJS not loaded — refresh and try again.', 'warn'); return; }
+  const rows = ROWS.map(compute);
+  const total = {
+    today: rows.reduce((a,x)=>a+x.today,0),
+    res:   rows.reduce((a,x)=>a+x.res,0),
+    prg:   rows.reduce((a,x)=>a+x.prg,0),
+    unr:   rows.reduce((a,x)=>a+x.unr,0),
+  };
+  total.grand = total.res + total.prg + total.unr;
+  total.pct = total.grand ? Math.round((total.res / total.grand) * 100) : 0;
+
+  const aoa = [
+    ['EKEDP Mobile APP Report — All Days (Day 1–17)'],
+    [todayLong() + '  ·  1 May – 17 May 2026  ·  Customer Experience Department  ·  Mobile App'],
+    [],
+    ['SN','Responsible Party','Complaint Category','Received Today','Cumulative Resolved','Cumulative In Progress','Cumulative Unresolved','Grand Total','% Resolution'],
+    ...rows.map(r => [r.sn, r.party, r.cat, r.today, r.res, r.prg, r.unr, r.grand, r.pct / 100]),
+    ['', '', 'TOTAL', total.today, total.res, total.prg, total.unr, total.grand, total.pct / 100],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:4},{wch:28},{wch:32},{wch:14},{wch:18},{wch:18},{wch:18},{wch:11},{wch:12}];
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:8}}, {s:{r:1,c:0},e:{r:1,c:8}}];
+  for (let i = 4; i < 4 + rows.length + 1; i++) {
+    const cell = ws[XLSX.utils.encode_cell({r:i, c:8})];
+    if (cell) cell.z = '0%';
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, 'All Days Report', ws);
+  XLSX.writeFile(wb, 'EKEDP_All_Days_Report_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  showToast('Excel downloaded.');
+}
+
+function copyEmail() {
+  const doc = document.getElementById('doc');
+  const range = document.createRange();
+  range.selectNode(doc);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  try {
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    showToast('Copied! Open Outlook, click in the email body, and press Ctrl+V.');
+  } catch(e) {
+    sel.removeAllRanges();
+    showToast('Press Ctrl+A to select, Ctrl+C to copy, then paste into Outlook.', 'warn');
+  }
+}
+
+function showToast(msg, type='ok') {
+  let t = document.getElementById('ek-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'ek-toast'; document.body.appendChild(t); }
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;padding:14px 20px;border-radius:10px;font:700 13px Sora,sans-serif;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.25);max-width:380px;line-height:1.45;';
+  t.style.background = type === 'warn' ? '#D97706' : '#16A34A';
+  t.textContent = msg;
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.remove(), 5000);
+}
+
+render();
+(function(){
+  var h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
+  var g=h>=5&&h<12?'Good morning':h>=12&&h<18?'Good afternoon':'Good evening';
+  var el=document.getElementById('all-greeting');
+  if(el) el.textContent=g;
+})();
+</script>
+</body>
+</html>
