@@ -52,6 +52,34 @@
 
   var EKEDP_LOGO='data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAC4ALgDASIAAhEBAxEB/8QAHQABAAICAwEBAAAAAAAAAAAAAAYIBQcDBAkCAf/EAEQQAAEDAwECCQgJAgUFAQAAAAEAAgMEBQYRByEIEhMWMVFWk7EUGDdBUlVhdBciIzI2cZGSlBWBJEJzodEJVGJ1ssH/xAAcAQEAAgMBAQEAAAAAAAAAAAAAAQIEBQYDBwj/xAAzEQACAQMBBgMGBQUAAAAAAAAAAQIDBBEFEhUhMUFSBlFhExQicaGxIzIzkcFCgdHw8f/aAAwDAQACEQMRAD8Ap+iKbbH9m992k5PFabTC4RAg1FQR9WNvWUBG8dsV3yG4x2+zW+etqZCAGRM1/VWY2Y8EK83KCOszC4Nt7HDXyeLe8fmVaDY/slxXZtZ46a10bJa0tHL1cjQXvd6/yC2CgNM4xwa9mVlY0utXlcgA4zpjrqpSNjuzcDTmpb+6CnqICB/Q9s37KW/ugn0PbN+ylv7oKeIgIH9D2zfspb+6CfQ9s37KW/ugp4iAgf0PbN+ylv7oJ9D2zfspb+6CniICB/Q9s37KW/ugn0PbN+ylv7oKeIgIH9D2zfspb+6CfQ9s37KW/ugp4iAgf0PbN+ylv7oJ9D2zfspb+6CniIDUeScHbZjemEPscdM49Bh+rotHbSOB7PDDLV4ddRK4auFPPu1+AKuaiA8kcyxHIcQukluyC2T0czDpq9v1XfEH1rBL1e2lbPMZz+yy22/UEcnGH1JmgB7D1grzy2/7Hr1suyB0crX1NpmcfJqoN3EdR6igNXIiIDJYvZa3Ib/RWa3xOkqauURsAGvSelenGwfZtbNm2E01rpYmGskaH1c3F+s9+nX1Kr/ADwWK5ZDW5hWRB7aIcnT6jocekq8KAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAKMbTcMtWd4jWWC6wMeyZh5N5G+N/qIUnRAeTW07EK/B8zr8er2OD6eQ8RxGnHZ6iitpw/cEhqrFR5pSQtE9M7kqhwG8tPQiA2XwOrC2y7Gbc4sAkqftXO03nVbmUC4PoA2P47p/wBmzwU9QBERAYLN8rtGH2OW7XiobFCwbhrvceoKvV24VrW1j227GZZIAdGvfIAXfFYjhvXisfldnsfKEUjad05aD0u103qvC3llYUpU1Oos5KNlk/OurOyx71POurOyx71VsRZu77ft+5GWWT866s7LHvU866s7LHvVWxE3fb9v3GWWT866s7LHvU866s7LHvVWxE3fb9v3GWWT866s7LHvU866s7LHvVWxE3fb9v3GWWT866s7LHvU866s7LHvVWxZHG7Lc8ivdPZ7RTPqKudwDWtGoaOs9QUOwtksuP1YyyyuLcJG+5JfKez2vD5JqmZ2g0k1DR1n4KxtldcH0TH3JkbJ3AFzGdDT1LX+wvZRbNn1la+SNlRd5wDUVDhqQfZHUFs1aG6lRc8UlhF1nqERFikhERAQXbzZmX3ZVfKExte407nM1HQQOlFI8zAOJ3QEajyV/giAjXB+9D+O/Js8FPFA+D96H8d+TZ4KeIAiIgKa8NsH6TLUdN3kDv8A7WiVdHhTbMKvNLPT3eyxiS50IOkfrkZ1KnldZrzQ1L6astFdDKw6Oa6E9K6fT6sZ0Ek+KPNridFFz+RV/u+r7op5FX+76vuis4g4EXP5FX+76vuinkVf7vq+6KA4FsvZlsXyzOaUV9MxlHQn7ss27jfkFitkWB3LNM2pLUaOoipWkSVMj2EBrAVf6yWyks9rp7dQxNiggYGMaB6gFrL+9dDEYcyyWSj20fYZmOHUJuJjZcaNg1kfBvLB1kLVi9O6yCKqpZaeeNskcjS1zXDUEFef+V4Ndava7c8ZsFtnc19WeSdxDxGtJ3nXqCWF66yaqdA1giuNWO65JeYLPZqV9RVzuDQANzR1nqCvJsO2U2vZ7Z2vc1lRd5mDyioI3g9Q+C+tiWym0bPbMwhjai6ytBqKlw369Q6gtiVVRHTx8Z53+odZWs1PU4uL44gubLRi2zl1GumqLgpQ9zeVk+87oHUFzrV0ajqQUsYyWaw8BERepAREQGJzL8KXT5V/giZl+FLp8q/wRARng/eh/Hfk2eCnigfB+9D+O/Js8FPEAREQBdeagoZn8eWippHdbomk+C7BIAJJAA6SVha7LcZoZjDV3yghkHS10w1ClJvkDv8A9Ltnu6j7hv8Awn9Ltnu6j7hv/CxHPrD+0du74Jz6w/tHbu+Ctsz8mDL/ANLtnu6j7hv/AAn9Ltnu6j7hv/Cw/PrDu0dt74LN26uo7jStqqGojqIHfdew6gqGpLmD9p6Okp3F1PSwQuI0JZGGk/ouvd63yZrGMP2jyAF26mZkELpXnQNCictQ+qrmyv8AW4aDqGq4/wAV69u+lGhSf4k+Xour/wAGVbUdt7T5Il7NSwE9S4mUlIyYzMpoWynpeIwHH+65WfcH5LgrquOkhL3nf6h1rp6lenb0XVqyxFLizHUXJ4R+1tVFSQmSQ/kOtY22slr6jyyo+437jfUuhHy93rhx9RGN56gFI/saWm1c5scUbdSTuAC5OwuKniC59u1i3g/hXfJdX6LovMyZxVCOz/U/ocqKPOzjEGuLXZFbgQdCOWC+6fM8UqJRFBkFve924ATDeu12JeRiGeRfMb2SMD43te09BB1BX0qgIiIDE5l+FLp8q/wRMy/Cl0+Vf4IgIzwfvQ/jvybPBTxQPg/eh/Hfk2eCniAIiICv/C62j1+N2ylxuy1DqesrgXSytP1mx/BVEnqameQyT1M0rzvLnvJJW8eG16TLV/693/2tErqNPpxjQi11PN8z94z/AG3/ALinGf7b/wBxX4vuCKWonjp6eN0k0rgyNjRqXE9AWaQS7ZHhddneZUtogdIKcOD6mQE6NYOlegNgtVJZLRT2yijEcFPGGNH5Ba54OGzhmCYbHJWMBu1aBLUuI3t16Gj8lsO+VopqcxsP2j9w+C43X9XpW9OVao/gh9f+ntSpubUUYu/1xnn5CN32bOn4lY2DdPGT0Bw1XySSdT0ovzbqGpVb67ldVebefklyRvYU1COyiXVddDS0wkc4EkfVA9ajNTPPXVILtSXHRrepddxLtOM4nTo1Kz2PUPFb5VK36x+6CusnqF74su4WsVsUlxaX1bf2RjKELaLlzZkLVRto6YN0+ud7itB8Lbag6y2zmfZJ+LcKxv8AiJWO3xR9X5lbU2w51RYDh1Vd6gh9RxS2mi13veehUAv12r77eaq8XOZ01XVSF73E66a+ofAL7foel0qFOMYLEIcEjVVJuTyzp8eQ7zI8k9JLjvX6yWVjg5k0jXDoIeQvhF1J5FluCLtNus99dhl5qn1UUkZfSSSHVzdOluvUrVKhHBh9N9l/05fBX3XN6nTjCt8PVF48giItcWMTmX4Uunyr/BEzL8KXT5V/giAjPB+9D+O/Js8FPFA+D96H8d+TZ4KeIAiIgKmcN6wV4yG0ZGyNz6PkXU73AfcOuupVcl6W5LYrXkVpltl2pWVFNKNC1w6PiFo268FvGp6t8tFdaunjcdeIdDp8FurPUKcKahU6FHEqIrCcEbZm673U5peKc+R0ztKJjh99/rcpdDwV7E2VjpL3VOYHAuboN46lv3G7PRWCy01qt8Qjp6dga0Af7qbzUYSp7NJ8wondqZmU8DpHnRrQoq7l7nXEtGpJ3fALuXeokr6wUlPva06H81l7ZRR0cIaBq8/eK+RX9Op4mvvd6bxb0n8T7peS+RsYNW8Np/mZHLlQSULmB7w8O9YXUWdyr7kJ+KwtPC+eZsTBqXLgvEGmQtNUna2yeOGFz5pGbQqOVNSkduz0TqupBcPsmb3Hr+CkVwq6a22+WrqZGxQQMLnOJ0AAX1Q0zKWnbEwdHSetRzadik2ZY3JZG3KWhhm3SujG9w6l9d8L6DT0m2UZ/nlxk/4+SNXcVnVlw5FMNvu0SfPswlkhcRa6RxjpW67nadLlrhWvHBVsoAAvtVu/8Qv3zVrN79qv2hfRad/a04qMXwXoYuGVPRWw81aze/ar9oXLS8FfH2zNM96rHsHSAANVfeVv5/QjZZqvgj4/W3TatBdomOFLb4XmR+m4l24DVXfUewTDbFhlobbrJSNhZ/nf/meeslSFaO8uPeKm0uRdLAREWKSYnMvwpdPlX+CJmX4Uunyr/BEBGeD96H8d+TZ4KeKB8H70P478mzwU8QBERAEREAXQu1S9jBTwb5pNw+AXdlfxGF2mp9QXXpafivM8u+V3+wWt1CNWvH3ei8OXN+S649X0/c9KeI/EzjtVAyjj1P1pXfecu8sBnmWWjDsfqLxd6hsUUTSWt13vPqACwmxLNZs+xDnBJAIGyTubGz1hoO7VZlnp9OztlCjHEI8P99Ss5ucsvmZ/Kh9nDp7S57DQ8hDy0g+0d/sF3KulZUSROfvDDrp1rgv92orHZ6i518oip6dhe4nqC5+joClrFTUKqzyUV/ZZf8I9nX/CVNHfRU1yDhM5o+81Rs0NCyg5QiASsPG4vq1XQ85baP7Fr/YV260uu10MXaRdlFSbzlto/sWv9hTzlto/sWv9hU7qr+n7jaRdlFSbzlto/sWv9hXLS8JraFHO189NbJYwfrMDSCR+abrr+n7jaRdRFrfYntVte0a2OLGeS3GEfbU5O8fEfBbIWBUpypycZLiWCIioDE5l+FLp8q/wRMy/Cl0+Vf4IgIzwfvQ/jvybPBTxQPg/eh/Hfk2eCniAIiIAiIgPwgEgn1LG5Rfbbjlmnut0qGQU8LS4lx6fgFzXy60Nltc9yuM7IKaBhc97joAFRvb1tWuG0C+vpqWR0NjpnEQxg6cqfaKy7S0lcS4curIbwY7bXtJuW0TJHzyPdFa4HFtLTg7tPaPxW+OBVk1FLilVjT5msqqaUvaxx3uafWFUldq03K42i4RXC0109FVxHVksLtCFv61pGpR9lHh5FE+OT01c5rWlziABvJKqPwsdqLbvcHYdZanWlp3f4uRh3Pd7K1xd9s+0u6Wo22pyKRkLm8V74mhr3D4la/JJcXOcXOcdXOcdST1lYlppvsp7dR58iXLIREW2KhERAEREBtLgrVtTSbabbDDI5sdRDI2VoO5wA3K9yoTwX2Oftvs3FaTxY5SfhuV9lz2rfrL5F4hERassYnMvwpdPlX+CJmX4Uunyr/BEBrngkXtt62L2l4dq6BnJEdWi24qZf9PzNooam44dVzaOk+2pw53T1gK5qAIiIAvmV4jjdI7XRo1Oi+kQFQ+Ehkme5ndJLJaMZvTLJA7QlsB+3I9Z+C0zzJzXsjef45XpBycfsN/ROTj9hv6LZ0dSdKChGCKuOTzf5k5r2RvP8cpzJzXsjef45XpBycfsN/ROTj9hv6L13vPtRGyeb/MnNeyN5/jlOZOa9kbz/HK9IOTj9hv6JycfsN/RN7z7UNk83+ZOa9kbz/HKcyc17I3n+OV6QcnH7Df0Tk4/Yb+ib3n2obJ5v8yc17I3n+OU5k5r2RvP8cr0g5OP2G/onJx+w39E3vPtQ2Tzf5k5r2RvP8crlpcCzmpmbDFiN247joC6DQf3K9G+Tj9hv6IGMHQxo/so3vPtROyaK4NGx6ow3j5Bf2s/qszOKyMHXkm9WvWt7oi1tatKtNzlzJSwERF5EkO203Ztl2ZXu4FwHEpnAanp1CLSXD2zeK14XTYrTTDyqvfxpA129rAiApfgWS12I5ZQX+3yOZNSyhx0P3m+sL1B2TZva8/wyjv1sma/lGATM13sfpvBXlCto8H7a/eNl2Rtljc+e0zuAqqbXcR1j4oD06RRjZ3nWOZ3Y4rrYK+Odj2gvj1+vGeohSdAEREAREQBERAEREAREQBERAEREAREQBYjMchtuLY5WXy6zshpqaMvcXHTU+oD4plmSWXFrRNdb5Xw0dNE0kue7Qn4AetefnCb251+0m6vtdrfJTY/A/7OPXQzEf5nICC7bM7rNoWe11+qHu5EuLKZh6GRjoRQhEAREQEmwDOsmwe6suGPXKWmeCC5murH/AhW02Y8L601UEdLmdvdSTgaOnh3tJ/JEQG98d2t4BfWMdQ5FRlzxrxHPAIUjGTY8RqLzQ6f6wREB+85cf8AfND3wTnLj/vmh74IiAc5cf8AfND3wTnLj/vmh74IiAc5cf8AfND3wTnLj/vmh74IiAc5cf8AfND3wTnLj/vmh74IiAc5cf8AfND3wTnLj/vmh74IiAc5cf8AfND3wTnNj/vmh74IiAwl92n4LZWk3DIqKPQa6CQHVaT2k8LjF7XBLT4tSSXKq0IbI76rGn/9REBUjaftRy7aFcHVF+uL3Q66spmHSNn9lCERAEREB//Z';
   window.EK_LOGO=EKEDP_LOGO;
+
+  // Build notification icon as blob URL (data: URLs blocked by Chrome for notifications)
+  (function(){
+    try {
+      var c = document.createElement('canvas');
+      c.width = 96; c.height = 96;
+      var ctx = c.getContext('2d');
+      // Navy rounded square background
+      ctx.fillStyle = '#001F5C';
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(0,0,96,96,20);
+      else { ctx.rect(0,0,96,96); }
+      ctx.fill();
+      // Red lightning bolt
+      ctx.fillStyle = '#E30613';
+      ctx.beginPath();
+      ctx.moveTo(56,6); ctx.lineTo(22,52); ctx.lineTo(42,52);
+      ctx.lineTo(38,90); ctx.lineTo(76,42); ctx.lineTo(56,42);
+      ctx.closePath(); ctx.fill();
+      // White overlay for shine
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(56,6); ctx.lineTo(22,52); ctx.lineTo(42,52);
+      ctx.lineTo(38,90); ctx.lineTo(76,42); ctx.lineTo(56,42);
+      ctx.closePath(); ctx.fill();
+      c.toBlob(function(blob){ window.EK_NOTIF_ICON = URL.createObjectURL(blob); });
+    } catch(e) { window.EK_NOTIF_ICON = null; }
+  })();
   Object.assign(window,{
     EK_AGENTS:              AGENTS,
     EK_AGENT_PHOTOS:        AGENT_PHOTOS,
@@ -66,11 +94,10 @@ window.EK_AGENTS = typeof window.EK_AGENTS !== 'undefined' ? window.EK_AGENTS : 
 </script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Sora',sans-serif;min-height:100vh;background:var(--bg,#060E2B);color:var(--text,#F0F4FF);transition:background .35s,color .35s;}
+body{font-family:'Sora',sans-serif;font-size:11px;min-height:100vh;background:var(--bg,#060E2B);color:var(--text,#F0F4FF);transition:background .35s,color .35s;}
 /* themes */
 body[data-theme="daylight"]{--bg:#F4F6FB;--surface:#fff;--card:#fff;--border:#E2E8F0;--text:#0F172A;--muted:#64748B;--sub:#94A3B8;}
 body[data-theme="midnight"]{--bg:#060E2B;--surface:#0D1B45;--card:#111D4A;--border:#1E3070;--text:#F0F4FF;--muted:#6B85C0;--sub:#3A5299;}
@@ -165,7 +192,7 @@ body[data-nc="1"] .main{padding-left:60px;}
 // ── AGENTS DATA — loaded from canonical.js via window.EK_AGENTS ─────
 // Falls back to inline if canonical not loaded
 // Use canonical.js agent list directly
-const SEED_TICKETS={"matthew":[{"sn":1,"id":"tk_seed_721421","num":"721421","time":"3:42 PM","name":"Sharon Akomolafe","phone":"+2347040296388","meter":"0213245185904","addr":"sharonadesola@gmail.com","bu":"MUSHIN","issue":"I got a new meter and I've not been able to recharge on it. I call contact center last week and I was informed that the meter has not been programmed. I'm still on this issue, nothing as been done about it. I've been running on generator since Saturday due to this meanwhile there is light but I can't recharge","category":"METERING — METER PROGRAMMING","resp":"Holyland Umude","status":"progress","note":"","created":"2026-05-19 14:42"},{"sn":2,"id":"tk_seed_721114","num":"721114","time":"3:42 PM","name":"Emmanuel Oladipo","phone":"+2348129203021","meter":"01327304844","addr":"12, Efon Alaye Street","bu":"MUSHIN","issue":"Power disruption going to over 13 hours in less than 36 hours despite being in Band A","category":"INTERRUPTION — PLANNED/UNPLANNED OUTAGE","resp":"Ogheneyoreme Agbroko","status":"progress","note":"","created":"2026-05-19 14:42"},{"sn":3,"id":"tk_seed_720971","num":"720971","time":"3:42 PM","name":"Murtala Yari","phone":"+2348033196837","meter":"0125251178120","addr":"No 40 Ashafa Street Ajegunle","bu":"APAPA","issue":"I've been having issues with my prepaid meter since the units ran out last month. Despite visiting your Apapa office with code 200992, the issue persists. It seems like your admin staff need more technical support to resolve customer issues efficiently.","category":"METERING — KEY CHANGE REQUEST","resp":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-19 14:42"},{"sn":4,"id":"tk_seed_820821","num":"820821","time":"3:42 PM","name":"Precious Nwawuru","phone":"+2348167039996","meter":"","addr":"14b Post Service Housing Estate","bu":"OJO","issue":"Rejected token","category":"GENERAL — REQUEST FOR ACCOUNT HISTORY","resp":"Adetoun Adetola","status":"resolved","note":"","created":"2026-05-19 14:42"},{"sn":5,"id":"tk_seed_720734","num":"720734","time":"3:42 PM","name":"Micheal Tejuosho","phone":"+2349156549826","meter":"0232210123724","addr":"No 3 Amodun Rufai Street Orile Iganmu","bu":"ORILE","issue":"I have have applied for my meter since three months ago and I never receive calls or any about the meter","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"progress","note":"","created":"2026-05-19 14:42"}],"racheal":[{"sn":1,"id":"tk_1779123518763","num":"720693","time":"4:43 PM","name":"Samuel Okorie","phone":"+2348037067882","meter":"705993305","addr":"51, Agbonyi Avenue, Surulere Lagos","bu":"FESTAC","issue":"I have 3 phase but I don't have light in all the phases. I need it rectified urgently","category":"INTERRUPTION — VOLTAGE/SAFETY / LOW VOLTAGE","resp":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18T16:58:38.000Z"},{"sn":2,"id":"tk_1779123388383","num":"720687","time":"4:39 PM","name":"Mojisola Akinboboye","phone":"+2348067826810","meter":"705993305","addr":"721 road I close Block 2 flat 14","bu":"FESTAC","issue":"I was just booked for a new metre and got a letter to offset the balance amount on the postpaid metre. I am unable to make the payment online because account cannot be verified. Please assist to resolve. Account details are 200613330/ 705993305","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18T16:56:28.000Z"},{"sn":3,"id":"tk_1779123219573","num":"720660","time":"4:18 PM","name":"Omobukola Tijani","phone":"+2348074977611","meter":"711495896","addr":"Block 15 flat 1 Iponri LCHC","bu":"MUSHIN","issue":"before I requested to be connected directly, I usually load my prepaid with 10,000 monthly only to be charged N77,698.31 for a flat that has no heavy appliances and is always vacant at least 7 days a month. after disconnecting me I still got another bill","category":"BILLING — OVER BILLING","resp":"Mojibola Adefuwa","status":"unresolved","note":"","created":"2026-05-18T16:53:39.000Z"},{"sn":4,"id":"tk_1779122836601","num":"720651","time":"4:09 PM","name":"Musibau Ayodele","phone":"+2348131944946","meter":"707494193","addr":"25, Magbon Obele Road, Magbon Bus Stop","bu":"OJO","issue":"Bill not delivered since July 2025 and I have been instructed by officials from the area office to pay from 7,000 to 10,000 monthly since October 2025 till date","category":"BILLING — ESTIMATED BILL QUERY","resp":"Mojibola Adefuwa","status":"unresolved","note":"","created":"2026-05-18T16:47:16.000Z"},{"sn":5,"id":"tk_1779122615831","num":"720642","time":"4:03 PM","name":"Rita Ikeji","phone":"+2348131944946","meter":"0207220113758","addr":"4 Nitel Rd Satellite Town Lagos 102102","bu":"FESTAC","issue":"Today low voltage was noted and whenever we have low voltage, we do not have power. Please, if someone able to check this for us today","category":"INTERRUPTION — VOLTAGE/SAFETY / LOW VOLTAGE","resp":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18T16:43:35.000Z"},{"sn":6,"id":"tk_1779122448472_ptv6","num":"720557","time":"3:17 PM","name":"Ona Richards","phone":"+2348060028229","meter":"0101150743165","addr":"Plot 1 Unity Avenue Estate Ado Road Ajah","bu":"AJAH","issue":"I bought credit today, I was given token but it kept saying used and I couldn't credit my meter","category":"BILLING — UNCREDITED PAYMENT","resp":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-18 14:17"},{"sn":7,"id":"tk_1779122448472_gelp","num":"720456","time":"3:13 PM","name":"Olagoke Olaniyi","phone":"+2347067512143","meter":"62421111378","addr":"22, Magbon-Obele Road, Magbon Bustop off Badagry Expressway Lagos","bu":"OJO","issue":"I have been having different issues with my prepaid meter.","category":"METERING — METER REPLACEMENT","resp":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13"},{"sn":8,"id":"tk_1779122448472_64sw","num":"720452","time":"3:13 PM","name":"Emmanuel Oladipo","phone":"+2348129203021","meter":"01327304844","addr":"12, Efon Alaye Street","bu":"MUSHIN","issue":"BAND A but experiencing less than 20 hours","category":"INTERRUPTION — PLANNED/UNPLANNED OUTAGE","resp":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18 14:13"},{"sn":9,"id":"tk_1779122448472_h5x1","num":"720390","time":"3:13 PM","name":"Clifford Benjamin","phone":"+2347079674724","meter":"","addr":"12, Isiba Street, Itire Lawanson","bu":"MUSHIN","issue":"I am using a prepaid meter and inverter for awhile now but I noticed the meter tripped off and wasn't supplying light when I asked someone to check he said it's has entered tamper mode","category":"METERING — CLEAR TAMPER REQUEST","resp":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13"},{"sn":10,"id":"tk_1779122448472_8iyx","num":"720349","time":"3:13 PM","name":"Jesutobilobi Ilor","phone":"+2348121566529","meter":"0137211057278","addr":"address","bu":"FESTAC","issue":"description","category":"SAFETY ISSUES — FIRE INCIDENT/EXPLOSION","resp":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18 14:13"},{"sn":11,"id":"tk_1779122448472_mbw5","num":"720207","time":"3:13 PM","name":"Chisom Ngaikedi","phone":"+2348149557653","meter":"43012769881","addr":"22, Ayepe Street Itire Lagos","bu":"MUSHIN","issue":"Need free meter","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"resolved","note":"","created":"2026-05-18 14:13"},{"sn":12,"id":"tk_1779122448472_jn0i","num":"720135","time":"3:13 PM","name":"Alfred Odigwe","phone":"+2348035393972","meter":"","addr":"2nd Avenue 207 road B close house 4 Festac town Lagos","bu":"FESTAC","issue":"I have requested for a prepaid meter and am yet to receive it. ID is FES00000030","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"progress","note":"","created":"2026-05-18 14:13"},{"sn":13,"id":"tk_1779122448472_6wyx","num":"720083","time":"3:13 PM","name":"Aishat Sanni","phone":"+2349042396691","meter":"0195210265144","addr":"5 Sam Ulaikere Close, Royal Palmwill Estate, Oke Ira Ajah","bu":"AJAH","issue":"Have not been able to enter token through the interface, it keeps showing ERROR77","category":"METERING — UNABLE TO LOAD","resp":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-18 14:13"},{"sn":14,"id":"tk_1779122448472_3ttr","num":"720076","time":"3:13 PM","name":"Morris Odih","phone":"+2348037149137","meter":"62121224018","addr":"45, Muyiwa Opaleye Aguda Surulere","bu":"ORILE","issue":"Meter ICU box issue","category":"GENERAL — OTHERS","resp":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13"},{"sn":15,"id":"tk_1779122448472_23g8","num":"719967","time":"3:13 PM","name":"Shobayo Fatai","phone":"+2348165354437","meter":"45083730262","addr":"14A, Oguntoye Street Mushin Lagos","bu":"MUSHIN","issue":"Unable to load token","category":"METERING — UNABLE TO LOAD","resp":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13"},{"sn":16,"id":"tk_1779122448473_te9q","num":"719956","time":"3:13 PM","name":"Isabella Duke","phone":"+2348022456902","meter":"","addr":"24 Itolo Street, off Eric Moore, Surulere","bu":"IJORA","issue":"Request for 3 meters","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18 14:13"},{"sn":17,"id":"tk_1779122448473_s6a1","num":"719934","time":"3:13 PM","name":"Victorokechukwu Ogidi","phone":"+2348038457769","meter":"","addr":"72, Lawanson Road by Zamba Bus Stop Itire","bu":"MUSHIN","issue":"I applied for meter and the application was approved and here is my request number 54MUS267772 and since phcn started upgrading I was unable to open my portal and my spn was unable to retrieve it","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18 14:13"},{"sn":18,"id":"tk_1779122448473_08cw","num":"919931","time":"3:13 PM","name":"Charles Anyim","phone":"+2347033423149","meter":"","addr":"5 Ania Street Lawanson","bu":"MUSHIN","issue":"Over 6 Months we applied for meter","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18 14:13"}],"tomina":[{"sn":1,"id":"tk_xnp924eg","num":"722218","time":"5:48 PM","name":"Ikedichukwu Uchendu","phone":"+2347085517357","meter":"0213240695683","addr":"82, Idowu Street Olodi Apapa","bu":"APAPA","issue":"My name is Ikedichukwu Uchendu. I'm trying to file for adjustment on my account where by i got a crazy debt of #288,277 but I have had my prepaid for some time now. They went as far as disconnecting my light for days now. Meter number - 0213240695683","category":"BILLING — OVER BILLING","resp":"Mojibola Adefuwa","status":"progress","note":"","created":"2026-05-20 16:48"},{"sn":2,"id":"tk_efafqfx9","num":"722221","time":"3:29 PM","name":"Joke Ade","phone":"+2348132158020","meter":"43901571273","addr":"60, Omorinre Johnson Street, Lekki Phase 1","bu":"LEKKI","issue":"I purchased a 50,000 naira worth of unit today 20/5/2026 at around 11:08 am and I have not been allocated any unit as the transaction has been showing in progress for over 4 hours of purchase. Kindly help me rectify this issue.","category":"METERING — UNABLE TO VEND","resp":"Adetoun Adetola","status":"unresolved","note":"","created":"2026-05-20 14:29"},{"sn":3,"id":"tk_e1gvqmeg","num":"722204","time":"3:11 PM","name":"Mojisola Akinboboye","phone":"+2348067826810","meter":"705993305","addr":"402 Road E Close Block 2 Flat 11 Festac Town","bu":"FESTAC","issue":"A mail for approval request for prepaid metre for my mum's flat was received since November 3rd, 2025 with number 54FES257064 has been successfully approved. Up till now, we are yet to receive any update. The flat has had no light all through this year.","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"resolved","note":"","created":"2026-05-20 14:11"},{"sn":4,"id":"tk_5mupm57i","num":"721661","time":"1:37 PM","name":"Peter Ganzallo","phone":"+2348035452219","meter":"0101175054390","addr":"No. 5, Toyin Mukaila Close, Graceville Estate, Awoyaya","bu":"AJAH","issue":"Bought token and cannot get value for the purchase","category":"METERING — UNABLE TO LOAD","resp":"Adetoun Adetola","status":"unresolved","note":"","created":"2026-05-20 12:37"},{"sn":5,"id":"tk_f9w57o1s","num":"721967","time":"1:33 PM","name":"ANIEKAN AKPABOT","phone":"+2348033197473","meter":"45046784349","addr":"6 HAMEED BELLO CLOSE Isashi","bu":"OJO","issue":"Power outage in Isashi and environs","category":"INTERRUPTION — PLANNED/UNPLANNED OUTAGE","resp":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-20 12:33"},{"sn":6,"id":"tk_8cldelub","num":"721708","time":"1:31 PM","name":"Nathaniel Adebanji","phone":"+2348165880349","meter":"45076278592","addr":"13 Omoba S. Akinlolu Street, Thomas Estate","bu":"AJAH","issue":"From time to time, unexplainable amounts are displayed as outstanding when I want to purchase units using BuyPower. I need this to be investigated and stopped","category":"BILLING — WRONG INFORMATION ON BILL","resp":"Mojibola Adefuwa","status":"unresolved","note":"","created":"2026-05-20 12:31"},{"sn":7,"id":"tk_f6r9rkro","num":"721700","time":"1:28 PM","name":"Akorede Adegunle","phone":"+2348020812310","meter":"0201003085739","addr":"8, Salami Bashorun Street, by Johnson B/S Ijeshatedo","bu":"MUSHIN","issue":"Unable to load my token (rejected)","category":"METERING — UNABLE TO LOAD","resp":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-20 12:28"},{"sn":8,"id":"tk_ra6d1bdt","num":"721634","time":"1:25 PM","name":"Shuaibu Ahmad","phone":"+2348082936191","meter":"0125251179227","addr":"53b Owodunni Street Iwaya","bu":"IJORA","issue":"I paid for my meter but the token allocated to me is showing rejected","category":"METERING — UNABLE TO LOAD","resp":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-20 12:25"},{"sn":9,"id":"tk_hxf7p82c","num":"721598","time":"1:21 PM","name":"Olalekan Alliu","phone":"+2348033484085","meter":"07086665226","addr":"26 Taiwo Opaleye Crescent Badore Ajah Lagos","bu":"AJAH","issue":"INCORRECT ADDRESS DESCRIPTIONS AND NAMES ARRANGEMENT","category":"GENERAL — CHANGE OF NAME / ADDRESS","resp":"Clara Olutola","status":"progress","note":"Good morning. Can we have documents to effect the change - Clara Olutola 8:17 am","created":"2026-05-20 12:21"}]};
+const SEED_TICKETS={"matthew":[{"sn":1,"id":"tk_seed_721421","num":"721421","time":"3:42 PM","name":"Sharon Akomolafe","phone":"+2347040296388","meter":"0213245185904","addr":"sharonadesola@gmail.com","bu":"MUSHIN","issue":"I got a new meter and I've not been able to recharge on it. I call contact center last week and I was informed that the meter has not been programmed. I'm still on this issue, nothing as been done about it. I've been running on generator since Saturday due to this meanwhile there is light but I can't recharge","category":"METERING — METER PROGRAMMING","resp":"Holyland Umude","status":"progress","note":"","created":"2026-05-19 14:42"},{"sn":2,"id":"tk_seed_721114","num":"721114","time":"3:42 PM","name":"Emmanuel Oladipo","phone":"+2348129203021","meter":"01327304844","addr":"12, Efon Alaye Street","bu":"MUSHIN","issue":"Power disruption going to over 13 hours in less than 36 hours despite being in Band A","category":"INTERRUPTION — PLANNED/UNPLANNED OUTAGE","resp":"Ogheneyoreme Agbroko","status":"progress","note":"","created":"2026-05-19 14:42"},{"sn":3,"id":"tk_seed_720971","num":"720971","time":"3:42 PM","name":"Murtala Yari","phone":"+2348033196837","meter":"0125251178120","addr":"No 40 Ashafa Street Ajegunle","bu":"APAPA","issue":"I've been having issues with my prepaid meter since the units ran out last month. Despite visiting your Apapa office with code 200992, the issue persists. It seems like your admin staff need more technical support to resolve customer issues efficiently.","category":"METERING — KEY CHANGE REQUEST","resp":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-19 14:42"},{"sn":4,"id":"tk_seed_820821","num":"820821","time":"3:42 PM","name":"Precious Nwawuru","phone":"+2348167039996","meter":"","addr":"14b Post Service Housing Estate","bu":"OJO","issue":"Rejected token","category":"GENERAL — REQUEST FOR ACCOUNT HISTORY","resp":"Adetoun Adetola","status":"resolved","note":"","created":"2026-05-19 14:42"},{"sn":5,"id":"tk_seed_720734","num":"720734","time":"3:42 PM","name":"Micheal Tejuosho","phone":"+2349156549826","meter":"0232210123724","addr":"No 3 Amodun Rufai Street Orile Iganmu","bu":"ORILE","issue":"I have have applied for my meter since three months ago and I never receive calls or any about the meter","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"progress","note":"","created":"2026-05-19 14:42"}],"racheal":[{"id":"tk_1779549402385_momb","num":"723824","time":"16:16","name":"Fidelis Igaliga","phone":"+2348028802333","meter":"0137211057575","addr":"Oladimeji, Aguda","address":"Oladimeji, Aguda","bu":"ORILE","issue":"What's the issue with supply?","complaint":"What's the issue with supply?","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"resolved","note":"","created":"2026-05-23T15:16:42.000Z","day":23,"received":"05/23/2026 15:16","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"SYSTEM COLLAPSE"},{"id":"tk_1779549297340_mxsz","num":"723842","time":"16:14","name":"Gbenga Ilori","phone":"+2349033045460","meter":"43021012067","addr":"89, Adeshina street, Ijesha, Surulere.","address":"89, Adeshina street, Ijesha, Surulere.","bu":"FESTAC","issue":"I heard a loud bang (explosion) and immediately the electricity went off. Our street has been totally cut off since then. Although, the street adjacent to us, which uses the same line as us have electricity.","complaint":"I heard a loud bang (explosion) and immediately the electricity went off. Our street has been totally cut off since then. Although, the street adjacent to us, which uses the same line as us have electricity.","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T15:14:57.000Z","day":23,"received":"05/23/2026 15:14","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"FUSE BLOWN OUT"},{"id":"tk_1779549297340_mxsz","num":"723856","time":"16:14","name":"Afeez Owolabi","phone":"+2348061365474","meter":"0240125144271","addr":"64 Bank Olemoh Street off Akerele road Surulere","address":"64 Bank Olemoh Street off Akerele road Surulere","bu":"IJORA","issue":"I am reporting a total power outage at my community at Bank Olemoh Street off Akerele road Surulere, under the Ijora feeder. We have been without electricity for three days, and it is seriously affecting daily activities in the area.Please investigate urgently to confirm whether the issue is from the feeder line, and kindly provide an update on when power will be restored.Customer Details:Name: Owolabi Afeez Meter/Account Number: 0240125144271Phone Number: 08061365474Email: afexonline4@gmail.com","complaint":"I am reporting a total power outage at my community at Bank Olemoh Street off Akerele road Surulere, under the Ijora feeder. We have been without electricity for three days, and it is seriously affecting daily activities in the area.Please investigate urgently to confirm whether the issue is from the feeder line, and kindly provide an update on when power will be restored.Customer Details:Name: Owolabi Afeez Meter/Account Number: 0240125144271Phone Number: 08061365474Email: afexonline4@gmail.com","category":"GENERAL(FIRST CONTACT RESOLUTION)","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T15:14:57.000Z","day":23,"received":"05/23/2026 15:14","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"ENQUIRIES/REQUEST"},{"id":"tk_1779549297340_mxsz","num":"723868","time":"16:14","name":"Chukwuemeka Awah","phone":"+2348146006272","meter":"04190761934","addr":"63, Adetola street, Emmanuel busstop Aguda Surulere.","address":"63, Adetola street, Emmanuel busstop Aguda Surulere.","bu":"ORILE","issue":"I noticed since last week that my meter went blind but was still supplying power, and also if I recharge unit and tried to input the tokens directly I can't tell if it was successful or not because I can't see the scree. kindly help out in fixing this as the EKDc officials are threatening to disconnect and cut down the wires.","complaint":"I noticed since last week that my meter went blind but was still supplying power, and also if I recharge unit and tried to input the tokens directly I can't tell if it was successful or not because I can't see the scree. kindly help out in fixing this as the EKDc officials are threatening to disconnect and cut down the wires.","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-23T15:14:57.000Z","day":23,"received":"05/23/2026 15:14","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"BLANK AND SUPPLY"},{"id":"tk_1779549297340_mxsz","num":"723888","time":"16:14","name":"ANIEKAN AKPABOT","phone":"+2348033197473","meter":"45046784349","addr":"no 6 HAMEED BELLO CLOSE isashi","address":"no 6 HAMEED BELLO CLOSE isashi","bu":"OJO","issue":"my prepaid meter no 62121520282 unable to connect with CUI .","complaint":"my prepaid meter no 62121520282 unable to connect with CUI .","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-23T15:14:57.000Z","day":23,"received":"05/23/2026 15:14","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNABLE TO LOAD"},{"id":"tk_1779529118096_xm1x","num":"723816","time":"10:38","name":"Azeez Nojimu","phone":"+2349131230273","meter":"","addr":"247 Ijesha road surulere Lagos","address":"247 Ijesha road surulere Lagos","bu":"MUSHIN","issue":"the prepaid meter we applied for wasn't delivered to the exact address, they where here at 247 Ijesha road surulere Lagos. on the 19 of this month with the prepaid meter they told us to pay total amount of 70k which we paid and we show them before we know they took the prepaid meter away and give it to someone else,up till now no meter as been given to us","complaint":"the prepaid meter we applied for wasn't delivered to the exact address, they where here at 247 Ijesha road surulere Lagos. on the 19 of this month with the prepaid meter they told us to pay total amount of 70k which we paid and we show them before we know they took the prepaid meter away and give it to someone else,up till now no meter as been given to us","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-23T09:38:38.000Z","day":23,"received":"05/23/2026 09:38","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PAID BUT NOT METERED"},{"id":"tk_1779529118096_xm1x","num":"723819","time":"10:38","name":"Ekene Ekette","phone":"+2347038517722","meter":"0232230015413","addr":"3C Bethel Close, Thomas Estate, Ajah","address":"3C Bethel Close, Thomas Estate, Ajah","bu":"AJAH","issue":"For almost a week now, my meter has refused to supply light to the house. The technician told me it\u2019s on tamper mode. please rectify this and with immediate effect","complaint":"For almost a week now, my meter has refused to supply light to the house. The technician told me it\u2019s on tamper mode. please rectify this and with immediate effect","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T09:38:38.000Z","day":23,"received":"05/23/2026 09:38","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"SYSTEM COLLAPSE"},{"id":"tk_1779528977675_or6k","num":"723676","time":"10:36","name":"James Idowu","phone":"+2347035705023","meter":"0235231024086","addr":"4 adamak close, Abijo, Ibeju lekki lagos","address":"4 adamak close, Abijo, Ibeju lekki lagos","bu":"IBEJU-LEKKI","issue":"I am writing to file an urgent, formal complaint against Eko Electricity Distribution Company (EKEDC), specifically indictment of the field officials and management at the Majek Outpost and the Ajah Main District Office, Lagos.The staff at these branches are actively operating a localized extortion scheme. They are weaponizing a technical meter error\u2014caused by third-party energy theft\u2014to extort an un-vetted, non-NERC-compliant sum of \u20a6235,697.60 from me via handwritten slips, while deliberately denying me my right to electricity supply.Petitioner Details:Name: OMEIZA IDOWUAddress: 4 Adamak Abijo, Ibeju Lekki, LagosPrepaid Meter Number: 0235231024086Phone Number: 07035705023DisCo / District: EKEDC / Ajah Business District (Majek Axis)Facts of the Case:Third-Party Infraction: Upon my apartment being thrown into darkness, I inspected my service line and discovered that a neighbour had illegally spliced a wire into my live line coming from the pole before it enters my meter box. This external hook-up created a severe load abnormality, causing my smart meter to trigger its automated safety protocol and enter \"Tamper Mode\" (displaying \"Error o.f\" / Overload Fault).Immediate Remedial Action Taken: I immediately hired an independent electrician to completely sever and remove the neighbour's illegal connection. I have recorded definitive video and photographic evidence tracing this theft line directly to the offending neighbour's room. My line is now 100% clean and compliant.Evidence of Staff Fraud & Extortion: Rather than booking the actual perpetrator of the theft, local field officials (led by an officer named Madam Taiwo \u2013 070387873053) issued a handwritten \"Reconnection Fees Receipt/Permit\" (Serial No. 0023805) demanding an arbitrary payment of \u20a6235,697.60.Coordinated Institutional Collusion: I ran an audit of my Meter ID on the official EKEDC Customer Portal, and it reflects \u20a60.00 debt and zero official system bypass flags. When I escalated this to the Commercial Manager at the Majek branch (Mr. Camp David) and subsequently visited the Ajah Main District, management explicitly refused to generate an official electronic system invoice. They insisted that I must pay the exact cash amount written on the handwritten slip. This confirms a coordinated district-level hustle to pocket funds under the table without logging any official penalty at the EKEDC Marina Head Office.Grounds for NERC Urgent Intervention:Violation of NERC Order on Penalties: The district is enforcing arbitrary handwritten charges completely outside NERC's Standard Administrative Fines for residential single-phase lines.Intentional Denial of Service / Extortion: The branch is holding my electricity supply hostage by deliberately withholding the 20-digit Clear Tamper Token to force me into complying with an un-vetted cash demand.Wrongful Prosecution: They are attempting to hold a law-abiding consumer financially liable for external energy theft committed by a third party, despite being presented with video evidence of the actual thief.Reliefs Sought:An immediate external investigation into the fraudulent billing and extortion practices of the EKEDC Majek and Ajah District management.An order compelling EKEDC to immediately generate and provide the 20-digit Clear Tamper Token to clear the \"Error o.f\" lock on my meter, completely free of charge, as I am the victim of the infraction.The redirection of all formal energy theft investigations and legal penalties to the actual offending neighbour linked to the line tap.I have attached a clear photograph of the fraudulent handwritten slip and stand ready to transmit the video evidence of the neighbour's illegal tap-in line.","complaint":"I am writing to file an urgent, formal complaint against Eko Electricity Distribution Company (EKEDC), specifically indictment of the field officials and management at the Majek Outpost and the Ajah Main District Office, Lagos.The staff at these branches are actively operating a localized extortion scheme. They are weaponizing a technical meter error\u2014caused by third-party energy theft\u2014to extort an un-vetted, non-NERC-compliant sum of \u20a6235,697.60 from me via handwritten slips, while deliberately denying me my right to electricity supply.Petitioner Details:Name: OMEIZA IDOWUAddress: 4 Adamak Abijo, Ibeju Lekki, LagosPrepaid Meter Number: 0235231024086Phone Number: 07035705023DisCo / District: EKEDC / Ajah Business District (Majek Axis)Facts of the Case:Third-Party Infraction: Upon my apartment being thrown into darkness, I inspected my service line and discovered that a neighbour had illegally spliced a wire into my live line coming from the pole before it enters my meter box. This external hook-up created a severe load abnormality, causing my smart meter to trigger its automated safety protocol and enter \"Tamper Mode\" (displaying \"Error o.f\" / Overload Fault).Immediate Remedial Action Taken: I immediately hired an independent electrician to completely sever and remove the neighbour's illegal connection. I have recorded definitive video and photographic evidence tracing this theft line directly to the offending neighbour's room. My line is now 100% clean and compliant.Evidence of Staff Fraud & Extortion: Rather than booking the actual perpetrator of the theft, local field officials (led by an officer named Madam Taiwo \u2013 070387873053) issued a handwritten \"Reconnection Fees Receipt/Permit\" (Serial No. 0023805) demanding an arbitrary payment of \u20a6235,697.60.Coordinated Institutional Collusion: I ran an audit of my Meter ID on the official EKEDC Customer Portal, and it reflects \u20a60.00 debt and zero official system bypass flags. When I escalated this to the Commercial Manager at the Majek branch (Mr. Camp David) and subsequently visited the Ajah Main District, management explicitly refused to generate an official electronic system invoice. They insisted that I must pay the exact cash amount written on the handwritten slip. This confirms a coordinated district-level hustle to pocket funds under the table without logging any official penalty at the EKEDC Marina Head Office.Grounds for NERC Urgent Intervention:Violation of NERC Order on Penalties: The district is enforcing arbitrary handwritten charges completely outside NERC's Standard Administrative Fines for residential single-phase lines.Intentional Denial of Service / Extortion: The branch is holding my electricity supply hostage by deliberately withholding the 20-digit Clear Tamper Token to force me into complying with an un-vetted cash demand.Wrongful Prosecution: They are attempting to hold a law-abiding consumer financially liable for external energy theft committed by a third party, despite being presented with video evidence of the actual thief.Reliefs Sought:An immediate external investigation into the fraudulent billing and extortion practices of the EKEDC Majek and Ajah District management.An order compelling EKEDC to immediately generate and provide the 20-digit Clear Tamper Token to clear the \"Error o.f\" lock on my meter, completely free of charge, as I am the victim of the infraction.The redirection of all formal energy theft investigations and legal penalties to the actual offending neighbour linked to the line tap.I have attached a clear photograph of the fraudulent handwritten slip and stand ready to transmit the video evidence of the neighbour's illegal tap-in line.","category":"DISCONNECTION","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNAUTHORIZED ACCESS- (ELECTRICITY THEFT, BYPASS, METER TAMPERING)"},{"id":"tk_1779528977675_or6k","num":"723700","time":"10:36","name":"SULAIMAN MUHAMMAD","phone":"+2348135364759","meter":"43901720508","addr":"AMPLE APARTMENT OLALEYE NEWTOWN ESTATE","address":"AMPLE APARTMENT OLALEYE NEWTOWN ESTATE","bu":"IJORA","issue":"I moved in to a new apartment in December and was allocated my meter, when making purchase for the first time then I saw a negative balance and felt maybe it is just minor and will go overtimeBut recently found out I have actually been paying for that and it is accruing","complaint":"I moved in to a new apartment in December and was allocated my meter, when making purchase for the first time then I saw a negative balance and felt maybe it is just minor and will go overtimeBut recently found out I have actually been paying for that and it is accruing","category":"BILLING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"LOSS OF REVENUE/BACK BILLING"},{"id":"tk_1779528977675_or6k","num":"723701","time":"10:36","name":"Titilope Regina Apalowo","phone":"+2347052598652","meter":"0101150017305","addr":"9, Omobola street off Lawanson","address":"9, Omobola street off Lawanson","bu":"MUSHIN","issue":"The nepa came to check why the token is not generated why I loaded since yesterday they said my meter box is faulty please help","complaint":"The nepa came to check why the token is not generated why I loaded since yesterday they said my meter box is faulty please help","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"FAULTY METER"},{"id":"tk_1779528977675_or6k","num":"723702","time":"10:36","name":"Titilope Regina Apalowo","phone":"+2347052598652","meter":"0101150017305","addr":"9, Omobola street off Lawanson","address":"9, Omobola street off Lawanson","bu":"MUSHIN","issue":"The Nepa came this evening to check why the light is not coming up in my prepaid meter they said it\u2019s faulty please help how can I get a new meter box","complaint":"The Nepa came this evening to check why the light is not coming up in my prepaid meter they said it\u2019s faulty please help how can I get a new meter box","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"METER REPLACEMENT"},{"id":"tk_1779528977675_or6k","num":"723714","time":"10:36","name":"Tinto Tipsy","phone":"+2348064014578","meter":"0232210118955","addr":"ilado street esa Ojo","address":"ilado street esa Ojo","bu":"OJO","issue":"I need a new prepaid meter","complaint":"I need a new prepaid meter","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"resolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"},{"id":"tk_1779528977675_or6k","num":"723758","time":"10:36","name":"ANIEKAN AKPABOT","phone":"+2348033197473","meter":"45046784349","addr":"no 6 HAMEED BELLO CLOSE Isashi","address":"no 6 HAMEED BELLO CLOSE Isashi","bu":"OJO","issue":"unable to load my token/no network","complaint":"unable to load my token/no network","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNABLE TO LOAD"},{"id":"tk_1779528977675_or6k","num":"723770","time":"10:36","name":"Celina Biam","phone":"+2348134182873","meter":"43901922674","addr":"HSE 4 Okoya Close, Abule Ode, Opposite Spartan Gas, Off Emerald Housing Estate, Mobile Road, Road","address":"HSE 4 Okoya Close, Abule Ode, Opposite Spartan Gas, Off Emerald Housing Estate, Mobile Road, Road","bu":"AJAH","issue":"I have funded my wallet but when I want to put my pin to pay it say wrong pin. I did a pin reset and even the new pin is still invalid?","complaint":"I have funded my wallet but when I want to put my pin to pay it say wrong pin. I did a pin reset and even the new pin is still invalid?","category":"BILLING","resp":"Glory (BPS Africa)","responsible":"Glory (BPS Africa)","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"BILLS NOT DELIVERED/ISSUED"},{"id":"tk_1779528977675_or6k","num":"723775","time":"10:36","name":"olugbenga akanji","phone":"+2348056308041","meter":"0195130031485","addr":"4, Mr Vees Drive, Thomas Estate, Ajah Lagos","address":"4, Mr Vees Drive, Thomas Estate, Ajah Lagos","bu":"AJAH","issue":"No power supply","complaint":"No power supply","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PLANNED/UNPLANNED OUTAGE"},{"id":"tk_1779528977675_or6k","num":"723782","time":"10:36","name":"adesanya solarin","phone":"+2348073936566","meter":"0137220131098","addr":"19 akinwunmi Street itire lagos","address":"19 akinwunmi Street itire lagos","bu":"MUSHIN","issue":"balance of debt balance","complaint":"balance of debt balance","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"resolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"OVER BILLING"},{"id":"tk_1779528977675_or6k","num":"723784","time":"10:36","name":"Biobele Obene","phone":"+2349020730500","meter":"43901467001","addr":"19b Taslim Elias Close off Ahmadu Bello Way V I","address":"19b Taslim Elias Close off Ahmadu Bello Way V I","bu":"ISLAND","issue":"No power since the early hours of 22nd of May till now there's still no power","complaint":"No power since the early hours of 22nd of May till now there's still no power","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PLANNED/UNPLANNED OUTAGE"},{"id":"tk_1779528977675_or6k","num":"723786","time":"10:36","name":"adesanya solarin","phone":"+2348073936566","meter":"0137220131098","addr":"19 akinwunmi Street itire lagos","address":"19 akinwunmi Street itire lagos","bu":"MUSHIN","issue":"balance of debt on my prepaid meter","complaint":"balance of debt on my prepaid meter","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"resolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"OVER BILLING"},{"id":"tk_1779528977675_or6k","num":"723806","time":"10:36","name":"Tim Ayegba","phone":"+2348024138998","meter":"54120115396","addr":"8 kamal shasi street Bakare estate Agungi","address":"8 kamal shasi street Bakare estate Agungi","bu":"LEKKI","issue":"2 phases were out on Sunday, Low voltage on the third phase on Wednesday, total loss of phases on Thursday.","complaint":"2 phases were out on Sunday, Low voltage on the third phase on Wednesday, total loss of phases on Thursday.","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"FUSE BLOWN OUT"},{"id":"tk_1779528977675_or6k","num":"723809","time":"10:36","name":"Yinoluwa Olowofoyeku","phone":"+2347060898363","meter":"32224011158","addr":"10 Ibrahim Odofin Street Agungi","address":"10 Ibrahim Odofin Street Agungi","bu":"LEKKI","issue":"low voltage since last night","complaint":"low voltage since last night","category":"VOLTAGE","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"LOW VOLTAGE"},{"id":"tk_1779528977675_or6k","num":"723812","time":"10:36","name":"Tosin Omoyeni","phone":"+2348134002885","meter":"0207220004635","addr":"39 Tapa street Ijesha","address":"39 Tapa street Ijesha","bu":"MUSHIN","issue":"meter entering tamper mode","complaint":"meter entering tamper mode","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-23T09:36:17.000Z","day":23,"received":"05/23/2026 09:36","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"METER NOT SUPPLYING"},{"id":"tk_1779464569959_1d38","num":"723640","time":"16:42","name":"Faith Anyaoha","phone":"+2348107071556","meter":"43901572883","addr":"236 Murtala Mohammed Way, Alagomeji Yaba","address":"236 Murtala Mohammed Way, Alagomeji Yaba","bu":"IJORA","issue":"we have had no light since around 12 midnight last night. in addition, night light is most important to us yet light gets taken once its 12 and sleep becomes a nightmare.","complaint":"we have had no light since around 12 midnight last night. in addition, night light is most important to us yet light gets taken once its 12 and sleep becomes a nightmare.","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-22T15:42:49.000Z","day":22,"received":"05/22/2026 15:42","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PLANNED/UNPLANNED OUTAGE"},{"id":"tk_1779462534602_h502","num":"723527","time":"16:08","name":"Azeez Nojimu","phone":"+2349131230273","meter":"","addr":"247 Ijesha road surulere Lagos","address":"247 Ijesha road surulere Lagos","bu":"MUSHIN","issue":"Please I want to know my current bill","complaint":"Please I want to know my current bill","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"resolved","note":"","created":"2026-05-22T15:08:54.000Z","day":22,"received":"05/22/2026 15:08","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"OVER BILLING"},{"id":"tk_1779462534602_h502","num":"723628","time":"16:08","name":"ANIEKAN AKPABOT","phone":"+2348033197473","meter":"45046784349","addr":"no 6 HAMEED BELLO CLOSE Isashi","address":"no 6 HAMEED BELLO CLOSE Isashi","bu":"OJO","issue":"no electricity power supply since yesterday 21/5/2026 complain of low voltage","complaint":"no electricity power supply since yesterday 21/5/2026 complain of low voltage","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-22T15:08:54.000Z","day":22,"received":"05/22/2026 15:08","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PLANNED/UNPLANNED OUTAGE"},{"id":"tk_1779454136293_rh9j","num":"723464","time":"13:48","name":"Confidence Kelechi","phone":"+2349065143976","meter":"45055871359","addr":"101 lawanson road ikate","address":"101 lawanson road ikate","bu":"MUSHIN","issue":"I received a disconnection notice alleging direct or illegal connection. I want clarification and investigation because I need details of the allged offence","complaint":"I received a disconnection notice alleging direct or illegal connection. I want clarification and investigation because I need details of the allged offence","category":"DISCONNECTION","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-22T12:48:56.000Z","day":22,"received":"05/22/2026 12:48","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"WRONGFUL DISCONNECTION"},{"id":"tk_1779449429158_j9xb","num":"723340","time":"12:30","name":"Liberty Ekpoto","phone":"+2348127160258","meter":"","addr":"9 Oseni, Street by Lawanson","address":"9 Oseni, Street by Lawanson","bu":"MUSHIN","issue":"Moving from PostPaid to Prepaid","complaint":"Moving from PostPaid to Prepaid","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"resolved","note":"","created":"2026-05-22T11:30:29.000Z","day":22,"received":"05/22/2026 11:30","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"},{"id":"tk_1779448945155_jwb0","num":"722394","time":"12:22","name":"Uche Odigbo","phone":"+2348063882835","meter":"0101150074710","addr":"6A Unity close satellite town","address":"6A Unity close satellite town","bu":"FESTAC","issue":"I bought a 100,000 naira worth of token on 5th May 2026, I tried loading it a week later and it showing old","complaint":"I bought a 100,000 naira worth of token on 5th May 2026, I tried loading it a week later and it showing old","category":"REFUND","resp":"Festus Moko","responsible":"Festus Moko","status":"progress","note":"","created":"2026-05-22T11:22:25.000Z","day":22,"received":"05/22/2026 11:22","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REFUND FOR METER PAYMENT"},{"id":"tk_1779445662149_ne4r","num":"722999","time":"11:27","name":"Adeleke Erejuwa","phone":"+2348035222653","meter":"","addr":"38, White House Street Ajah-Ilaje, Ajah","address":"38, White House Street Ajah-Ilaje, Ajah","bu":"AJAH","issue":"Name:Adeleke Erejuwa, phone number: 0803 522 2653, Account number: 708890759, Amount: \u20a6835,382.31","complaint":"Name:Adeleke Erejuwa, phone number: 0803 522 2653, Account number: 708890759, Amount: \u20a6835,382.31","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"resolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"OVER BILLING"},{"id":"tk_1779445662149_ne4r","num":"723056","time":"11:27","name":"Jeremiah peter","phone":"+2348064619958","meter":"0195110114962","addr":"badora ajah","address":"badora ajah","bu":"AJAH","issue":"is writing reject","complaint":"is writing reject","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"FAULTY METER"},{"id":"tk_1779445662149_ne4r","num":"723103","time":"11:27","name":"Ogheneovo Brodoh","phone":"+2349018234195","meter":"","addr":"12a Al-HassanMusastreet Newtown estate ogombo","address":"12a Al-HassanMusastreet Newtown estate ogombo","bu":"LEKKI","issue":"request for tamper code","complaint":"request for tamper code","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"METER NOT SUPPLYING"},{"id":"tk_1779445662149_ne4r","num":"723106","time":"11:27","name":"ANIEKAN AKPABOT","phone":"+2348033197473","meter":"45046784349","addr":"no 6 HAMEED BELLO CLOSE Isashi","address":"no 6 HAMEED BELLO CLOSE Isashi","bu":"OJO","issue":"low voltage and my meter is not supplying the house","complaint":"low voltage and my meter is not supplying the house","category":"VOLTAGE","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"LOW VOLTAGE"},{"id":"tk_1779445662149_ne4r","num":"723113","time":"11:27","name":"Titilope Apalowo","phone":"+2347052598652","meter":"0101150017305","addr":"9 Omobola street off Lawanson","address":"9 Omobola street off Lawanson","bu":"MUSHIN","issue":"Trying to load token in our prepaid meter and it\u2019s saying link error","complaint":"Trying to load token in our prepaid meter and it\u2019s saying link error","category":"DISCONNECTION","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PREPAID METER DISCONNECTION"},{"id":"tk_1779445662149_ne4r","num":"723117","time":"11:27","name":"Titilope Apalowo","phone":"+2347052598652","meter":"0101150017305","addr":"9, Omobola street off Lawanson Mushin Surulere Lagos","address":"9, Omobola street off Lawanson Mushin Surulere Lagos","bu":"MUSHIN","issue":"good evening I have trying to load my token card that I bought to load into my meter box but it\u2019s saying link error my meter number is 0101150017305","complaint":"good evening I have trying to load my token card that I bought to load into my meter box but it\u2019s saying link error my meter number is 0101150017305","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"LINK ERROR"},{"id":"tk_1779445662149_ne4r","num":"723120","time":"11:27","name":"memuna idris","phone":"+2348108885090","meter":"0125253023449","addr":"Thompson house 6 Ajah","address":"Thompson house 6 Ajah","bu":"AJAH","issue":"not able to load token","complaint":"not able to load token","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNABLE TO LOAD"},{"id":"tk_1779445662149_ne4r","num":"723147","time":"11:27","name":"olabisi odushola","phone":"+2347061315905","meter":"0240125029670","addr":"13 iseyin street ijesha, mushin","address":"13 iseyin street ijesha, mushin","bu":"MUSHIN","issue":"the monitor keeps rejecting the token","complaint":"the monitor keeps rejecting the token","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNABLE TO LOAD"},{"id":"tk_1779445662149_ne4r","num":"723185","time":"11:27","name":"Azeez Nojimu","phone":"+2349131230273","meter":"","addr":"247 Ijesha road surulere Lagos","address":"247 Ijesha road surulere Lagos","bu":"MUSHIN","issue":"the nepa people have been given us crazy bill and that was last year before we tell them to come over and disconnect the electricity and that was august 8 2025 till now, so we heard about the free prepaid meter which we apply for it so they brought it on Tuesday of this month which is on the 19 of this month so they told us to pay total amount of 70k and we paid it the next we see they took the prepaid meter away saying we have an outstanding bill of 252,000 up till date they haven't fix the meter for us","complaint":"the nepa people have been given us crazy bill and that was last year before we tell them to come over and disconnect the electricity and that was august 8 2025 till now, so we heard about the free prepaid meter which we apply for it so they brought it on Tuesday of this month which is on the 19 of this month so they told us to pay total amount of 70k and we paid it the next we see they took the prepaid meter away saying we have an outstanding bill of 252,000 up till date they haven't fix the meter for us","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"resolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"OVER BILLING"},{"id":"tk_1779445662149_ne4r","num":"723229","time":"11:27","name":"wendy isichei","phone":"+2349073808845","meter":"0163211094251","addr":"51 Bolaji Banwo Street, aguda","address":"51 Bolaji Banwo Street, aguda","bu":"ORILE","issue":"i want to confirm what band my feeder is on? band A,B, C\u2026?","complaint":"i want to confirm what band my feeder is on? band A,B, C\u2026?","category":"GENERAL(FIRST CONTACT RESOLUTION)","resp":"Nonye Angelina Nnadozie","responsible":"Nonye Angelina Nnadozie","status":"resolved","note":"","created":"2026-05-22T10:27:42.000Z","day":22,"received":"05/22/2026 10:27","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"ENQUIRIES/REQUEST"},{"id":"tk_1779123518763","num":"720693","time":"4:43 PM","name":"Samuel Okorie","phone":"+2348037067882","meter":"705993305","addr":"51, Agbonyi Avenue, Surulere Lagos","address":"51, Agbonyi Avenue, Surulere Lagos","bu":"FESTAC","issue":"I have 3 phase but I don't have light in all the phases. I need it rectified urgently","complaint":"I have 3 phase but I don't have light in all the phases. I need it rectified urgently","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18T16:58:38.000Z","day":18,"received":"05/18/2026 16:58","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":""},{"id":"tk_1779123388383","num":"720687","time":"4:39 PM","name":"mojisola akinboboye","phone":"+2348067826810","meter":"705993305","addr":"721 road I close Block 2 flat 14","address":"721 road I close Block 2 flat 14","bu":"FESTAC","issue":"I was just booked for a new metre and got a letter to offset the balance amount on the postpaid metre. I am unable to make the payment online because account cannot be verified. Please assist to resolve. Account details are 200613330/ 705993305","complaint":"I was just booked for a new metre and got a letter to offset the balance amount on the postpaid metre. I am unable to make the payment online because account cannot be verified. Please assist to resolve. Account details are 200613330/ 705993305","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18T16:56:28.000Z","day":18,"received":"05/18/2026 16:56","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":""},{"id":"tk_1779123219573","num":"720660","time":"4:18 PM","name":"Omobukola Tijani","phone":"+2348074977611","meter":"711495896","addr":"Block 15 flat 1 Iponri LCHC","address":"Block 15 flat 1 Iponri LCHC","bu":"MUSHIN","issue":"before I requested to be connected directly, I usually load my prepaid with 10,000(ten thousand naira) monthly only to be charged N77,698.31 for a flat that has no heavy appliances and is always vacant at least 7 days a month. after disconnecting me I still got another bill","complaint":"before I requested to be connected directly, I usually load my prepaid with 10,000(ten thousand naira) monthly only to be charged N77,698.31 for a flat that has no heavy appliances and is always vacant at least 7 days a month. after disconnecting me I still got another bill","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"unresolved","note":"","created":"2026-05-18T16:53:39.000Z","day":18,"received":"05/18/2026 16:53","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":""},{"id":"tk_1779122836601","num":"720651","time":"4:09 PM","name":"Musibau Ayodele","phone":"+2348131944946","meter":"707494193","addr":"25, Magbon obele road, Magbon bus stop.","address":"25, Magbon obele road, Magbon bus stop.","bu":"OJO","issue":"bill not delivered since the month of July 2025 and I have been instructed by officials from the area office to pay from the 7,000 naira to 10,000 monthly since October 2025 till date","complaint":"bill not delivered since the month of July 2025 and I have been instructed by officials from the area office to pay from the 7,000 naira to 10,000 monthly since October 2025 till date","category":"BILLING","resp":"Mojibola Adefuwa","responsible":"Mojibola Adefuwa","status":"resolved","note":"","created":"2026-05-18T16:47:16.000Z","day":18,"received":"05/18/2026 16:47","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":""},{"id":"tk_1779122615831","num":"720642","time":"4:03 PM","name":"Rita Ikeji","phone":"+2348131944946","meter":"0207220113758","addr":"4 nitel rd sattelite town lagos 102102","address":"4 nitel rd sattelite town lagos 102102","bu":"FESTAC","issue":"today low voltage was noted and whenever we have low voltage, we do not have power . please, if someone able to check this for us today","complaint":"today low voltage was noted and whenever we have low voltage, we do not have power . please, if someone able to check this for us today","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18T16:43:35.000Z","day":18,"received":"05/18/2026 16:43","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":""},{"id":"tk_1779122448472_ptv6","num":"720557","time":"3:17 PM","name":"Ona Richards","phone":"+2348060028229","meter":"0101150743165","addr":"plot 1 unity avenue estate ado road ajah","address":"plot 1 unity avenue estate ado road ajah","bu":"AJAH","issue":"I bought credit today, I was given token but it kept saying used and I couldn\u2019t credit my meter","complaint":"I bought credit today, I was given token but it kept saying used and I couldn\u2019t credit my meter","category":"BILLING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-18 14:17","day":18,"received":"05/18/2026 14:17","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNCREDITED PAYMENT"},{"id":"tk_1779122448472_gelp","num":"720456","time":"3:13 PM","name":"Olagoke Olaniyi","phone":"+2347067512143","meter":"62421111378","addr":"22, Magbon-Obele Road, Magbon Bustop off Badagry Expressway Lagos","address":"22, Magbon-Obele Road, Magbon Bustop off Badagry Expressway Lagos","bu":"OJO","issue":"I have been having different issues with my prepaid meter.","complaint":"I have been having different issues with my prepaid meter.","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"METER REPLACEMENT"},{"id":"tk_1779122448472_64sw","num":"720452","time":"3:13 PM","name":"Emmanuel Oladipo","phone":"+2348129203021","meter":"01327304844","addr":"12, Efon Alaye Street","address":"12, Efon Alaye Street","bu":"MUSHIN","issue":"BAND A but experiencing Less than 20 hours","complaint":"BAND A but experiencing Less than 20 hours","category":"INTERRUPTION","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"PLANNED/UNPLANNED OUTAGE"},{"id":"tk_1779122448472_h5x1","num":"720390","time":"3:13 PM","name":"Clifford Benjamin","phone":"+2347079674724","meter":"","addr":"12, isiba street, Itire lawanson","address":"12, isiba street, Itire lawanson","bu":"MUSHIN","issue":"I am using a prepaid meter and inverter for awhile now but I noticed the meter tripped off and wasn't supplying light when I asked someone to check he said it's has entered tamper mode","complaint":"I am using a prepaid meter and inverter for awhile now but I noticed the meter tripped off and wasn't supplying light when I asked someone to check he said it's has entered tamper mode","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"CLEAR TAMPER REQUEST"},{"id":"tk_1779122448472_8iyx","num":"720349","time":"3:13 PM","name":"Jesutobilobi Ilor","phone":"+2348121566529","meter":"0137211057278","addr":"address","address":"address","bu":"FESTAC","issue":"description","complaint":"description","category":"SAFETY ISSUES","resp":"Ogheneyoreme Agbroko","responsible":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"FIRE INCIDENT/EXPLOSION"},{"id":"tk_1779122448472_mbw5","num":"720207","time":"3:13 PM","name":"Chisom Ngaikedi","phone":"+2348149557653","meter":"43012769881","addr":"22, Ayepe street Itire Lagos","address":"22, Ayepe street Itire Lagos","bu":"MUSHIN","issue":"Need free meter","complaint":"Need free meter","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"resolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"},{"id":"tk_1779122448472_jn0i","num":"720135","time":"3:13 PM","name":"ALFRED ODIGWE","phone":"+2348035393972","meter":"","addr":"2nd Avenue 207 road B close house 4 festac town lagos","address":"2nd Avenue 207 road B close house 4 festac town lagos","bu":"FESTAC","issue":"I have requested for a prepaid meter and am yet to receive it ID is FES00000030","complaint":"I have requested for a prepaid meter and am yet to receive it ID is FES00000030","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"progress","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"},{"id":"tk_1779122448472_6wyx","num":"720083","time":"3:13 PM","name":"Aishat Sanni","phone":"+2349042396691","meter":"0195210265144","addr":"SAM ULAIKERE CLOSE 5 sam Ulaikere Close royal palmwill estate oke ira Ajah","address":"SAM ULAIKERE CLOSE 5 sam Ulaikere Close royal palmwill estate oke ira Ajah","bu":"AJAH","issue":"Have not been able to enter token thru the interface, it keeps showing ERROR77","complaint":"Have not been able to enter token thru the interface, it keeps showing ERROR77","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"resolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNABLE TO LOAD"},{"id":"tk_1779122448472_3ttr","num":"720076","time":"3:13 PM","name":"morris odih","phone":"+2348037149137","meter":"62121224018","addr":"45, muyiwa opaleye aguda surulere","address":"45, muyiwa opaleye aguda surulere","bu":"ORILE","issue":"meter icu box","complaint":"meter icu box","category":"GENERAL(FIRST CONTACT RESOLUTION)","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"OTHERS"},{"id":"tk_1779122448472_23g8","num":"719967","time":"3:13 PM","name":"Shobayo Fatai","phone":"+2348165354437","meter":"45083730262","addr":"14A, Oguntoye street mushin lagos","address":"14A, Oguntoye street mushin lagos","bu":"MUSHIN","issue":"unable to load token","complaint":"unable to load token","category":"METERING","resp":"Owokade Olusegun","responsible":"Owokade Olusegun","status":"progress","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"UNABLE TO LOAD"},{"id":"tk_1779122448473_te9q","num":"719956","time":"3:13 PM","name":"Isabella Duke","phone":"+2348022456902","meter":"","addr":"24 Itolo street, off Eric Moore, Surulere","address":"24 Itolo street, off Eric Moore, Surulere","bu":"IJORA","issue":"Request for 3 meters","complaint":"Request for 3 meters","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"},{"id":"tk_1779122448473_s6a1","num":"719934","time":"3:13 PM","name":"Victorokechukwu ogidi","phone":"+2348038457769","meter":"","addr":"72, lawanson road by zamba bus stop itire","address":"72, lawanson road by zamba bus stop itire","bu":"MUSHIN","issue":"I applied for meter and the application was approved and here ismy request number 54MUS267772 and since phcn started upgrading I was unable to open my portal and my spn was unable to retrieve it","complaint":"I applied for meter and the application was approved and here ismy request number 54MUS267772 and since phcn started upgrading I was unable to open my portal and my spn was unable to retrieve it","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"},{"id":"tk_1779122448473_08cw","num":"719931","time":"3:13 PM","name":"Charles Anyim","phone":"+2347033423149","meter":"","addr":"5 Ania street lawanson","address":"5 Ania street lawanson","bu":"MUSHIN","issue":"Over 6 Months we applied","complaint":"Over 6 Months we applied","category":"METERING","resp":"Holyland Umude","responsible":"Holyland Umude","status":"unresolved","note":"","created":"2026-05-18 14:13","day":18,"received":"05/18/2026 14:13","modified_by":"","resolved_by_cx":"","resolved_by_field":"","resolved_date":"","email":"","channel":"Mobile App","sn":0,"subcategory":"REQUEST FOR METER"}],"tomina":[{"sn":1,"id":"tk_xnp924eg","num":"722218","time":"5:48 PM","name":"Ikedichukwu Uchendu","phone":"+2347085517357","meter":"0213240695683","addr":"82, Idowu Street Olodi Apapa","bu":"APAPA","issue":"My name is Ikedichukwu Uchendu. I'm trying to file for adjustment on my account where by i got a crazy debt of #288,277 but I have had my prepaid for some time now. They went as far as disconnecting my light for days now. Meter number - 0213240695683","category":"BILLING — OVER BILLING","resp":"Mojibola Adefuwa","status":"progress","note":"","created":"2026-05-20 16:48"},{"sn":2,"id":"tk_efafqfx9","num":"722221","time":"3:29 PM","name":"Joke Ade","phone":"+2348132158020","meter":"43901571273","addr":"60, Omorinre Johnson Street, Lekki Phase 1","bu":"LEKKI","issue":"I purchased a 50,000 naira worth of unit today 20/5/2026 at around 11:08 am and I have not been allocated any unit as the transaction has been showing in progress for over 4 hours of purchase. Kindly help me rectify this issue.","category":"METERING — UNABLE TO VEND","resp":"Adetoun Adetola","status":"unresolved","note":"","created":"2026-05-20 14:29"},{"sn":3,"id":"tk_e1gvqmeg","num":"722204","time":"3:11 PM","name":"Mojisola Akinboboye","phone":"+2348067826810","meter":"705993305","addr":"402 Road E Close Block 2 Flat 11 Festac Town","bu":"FESTAC","issue":"A mail for approval request for prepaid metre for my mum's flat was received since November 3rd, 2025 with number 54FES257064 has been successfully approved. Up till now, we are yet to receive any update. The flat has had no light all through this year.","category":"METERING — REQUEST FOR METER","resp":"Holyland Umude","status":"resolved","note":"","created":"2026-05-20 14:11"},{"sn":4,"id":"tk_5mupm57i","num":"721661","time":"1:37 PM","name":"Peter Ganzallo","phone":"+2348035452219","meter":"0101175054390","addr":"No. 5, Toyin Mukaila Close, Graceville Estate, Awoyaya","bu":"AJAH","issue":"Bought token and cannot get value for the purchase","category":"METERING — UNABLE TO LOAD","resp":"Adetoun Adetola","status":"unresolved","note":"","created":"2026-05-20 12:37"},{"sn":5,"id":"tk_f9w57o1s","num":"721967","time":"1:33 PM","name":"ANIEKAN AKPABOT","phone":"+2348033197473","meter":"45046784349","addr":"6 HAMEED BELLO CLOSE Isashi","bu":"OJO","issue":"Power outage in Isashi and environs","category":"INTERRUPTION — PLANNED/UNPLANNED OUTAGE","resp":"Ogheneyoreme Agbroko","status":"unresolved","note":"","created":"2026-05-20 12:33"},{"sn":6,"id":"tk_8cldelub","num":"721708","time":"1:31 PM","name":"Nathaniel Adebanji","phone":"+2348165880349","meter":"45076278592","addr":"13 Omoba S. Akinlolu Street, Thomas Estate","bu":"AJAH","issue":"From time to time, unexplainable amounts are displayed as outstanding when I want to purchase units using BuyPower. I need this to be investigated and stopped","category":"BILLING — WRONG INFORMATION ON BILL","resp":"Mojibola Adefuwa","status":"unresolved","note":"","created":"2026-05-20 12:31"},{"sn":7,"id":"tk_f6r9rkro","num":"721700","time":"1:28 PM","name":"Akorede Adegunle","phone":"+2348020812310","meter":"0201003085739","addr":"8, Salami Bashorun Street, by Johnson B/S Ijeshatedo","bu":"MUSHIN","issue":"Unable to load my token (rejected)","category":"METERING — UNABLE TO LOAD","resp":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-20 12:28"},{"sn":8,"id":"tk_ra6d1bdt","num":"721634","time":"1:25 PM","name":"Shuaibu Ahmad","phone":"+2348082936191","meter":"0125251179227","addr":"53b Owodunni Street Iwaya","bu":"IJORA","issue":"I paid for my meter but the token allocated to me is showing rejected","category":"METERING — UNABLE TO LOAD","resp":"Owokade Olusegun","status":"unresolved","note":"","created":"2026-05-20 12:25"},{"sn":9,"id":"tk_hxf7p82c","num":"721598","time":"1:21 PM","name":"Olalekan Alliu","phone":"+2348033484085","meter":"07086665226","addr":"26 Taiwo Opaleye Crescent Badore Ajah Lagos","bu":"AJAH","issue":"INCORRECT ADDRESS DESCRIPTIONS AND NAMES ARRANGEMENT","category":"GENERAL — CHANGE OF NAME / ADDRESS","resp":"Clara Olutola","status":"progress","note":"Good morning. Can we have documents to effect the change - Clara Olutola 8:17 am","created":"2026-05-20 12:21"}]};
 // Pre-populate from seed if no localStorage data exists yet
 const INIT_TICKETS={};
 try{(window.EK_AGENTS||[]).forEach(a=>{const saved=localStorage.getItem('ek_tix_'+a.id);INIT_TICKETS[a.id]=saved?JSON.parse(saved):(SEED_TICKETS[a.id]||[]);});}catch(e){}
@@ -189,7 +216,7 @@ function esc(s){return(s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;'
 // ── BROWSER NOTIFICATIONS ──────────────────────────────────────────
 function fireNotif(title, body) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  try { new Notification(title, {body:body, icon:window.EK_LOGO||'', tag:'ekedp-ticket'}); } catch(e) {}
+  try { new Notification(title, {body:body, icon:window.EK_NOTIF_ICON||window.EK_LOGO||'', tag:'ekedp-ticket'}); } catch(e) {}
 }
 // ── SESSION PERSISTENCE ────────────────────────────────────────────
 const EK_SESSION_KEY='ek_agent_session_v1';
@@ -213,7 +240,7 @@ function SignIn({onLogin}){
       <div className="si-card">
         <div style={{textAlign:'center',marginBottom:14}}>
           <img src={window.EK_LOGO||''} alt="EKEDP" style={{width:52,height:52,borderRadius:12,margin:'0 auto 8px',display:'block',boxShadow:'0 8px 20px rgba(0,31,92,.35)'}}/>
-          <div style={{fontSize:18,fontWeight:900,color:'#0F1E4F'}}>EKEDP <span style={{color:'#1D4ED8'}}>Power App</span></div>
+          <div style={{fontSize:13,fontWeight:900,color:'#0F1E4F'}}>EKEDP <span style={{color:'#1D4ED8'}}>Power App</span></div>
           <div style={{fontSize:11,fontWeight:700,color:'#64748B',letterSpacing:'.8px',textTransform:'uppercase',marginTop:2}}>Agents Hub · Marina HQ</div>
         </div>
         <div style={{fontSize:12,fontWeight:700,color:'#0F172A',marginBottom:8}}>Select your profile to sign in:</div>
@@ -230,9 +257,9 @@ function SignIn({onLogin}){
         </div>
         {sel&&<div style={{marginBottom:16,padding:'10px 14px',background:'#EFF6FF',border:`2px solid ${sel.color}`,borderRadius:10,display:'flex',alignItems:'center',gap:12}}>
           <img src={(window.EK_AGENT_PHOTOS||{})[sel.id]||''} alt={sel.name} style={{width:36,height:36,borderRadius:'50%',objectFit:'cover',border:`2px solid ${sel.color}`,flexShrink:0}}/>
-          <div><div style={{fontSize:13,fontWeight:800,color:'#1E3A8A'}}>{sel.name}</div><div style={{fontSize:11,color:'#3B82F6'}}>{sel.cat}</div></div>
+          <div><div style={{fontSize:11,fontWeight:800,color:'#1E3A8A'}}>{sel.name}</div><div style={{fontSize:11,color:'#3B82F6'}}>{sel.cat}</div></div>
         </div>}
-        <button onClick={()=>sel&&onLogin(sel)} style={{width:'100%',padding:'10px 14px',background:sel?'linear-gradient(135deg,#3B82F6,#1D4ED8)':'#E2E8F0',border:'none',borderRadius:10,color:sel?'#fff':'#94A3B8',fontSize:14,fontWeight:800,cursor:sel?'pointer':'default',fontFamily:'inherit',transition:'all .2s'}}>
+        <button onClick={()=>sel&&onLogin(sel)} style={{width:'100%',padding:'10px 14px',background:sel?'linear-gradient(135deg,#3B82F6,#1D4ED8)':'#E2E8F0',border:'none',borderRadius:10,color:sel?'#fff':'#94A3B8',fontSize:12,fontWeight:800,cursor:sel?'pointer':'default',fontFamily:'inherit',transition:'all .2s'}}>
           {sel?`Sign in as ${sel.name.split(' ')[0]} →`:'Select your profile above'}
         </button>
       </div>
@@ -241,7 +268,7 @@ function SignIn({onLogin}){
 }
 
 // ── NAV ────────────────────────────────────────────────────────────
-const TABS=[{id:'dashboard',icon:'🏠',label:'Dashboard'},{id:'tickets',icon:'📋',label:'My Tickets'},{id:'all',icon:'📨',label:'All Complaints'},{id:'add',icon:'➕',label:'Add Ticket'},{id:'slot',icon:'🌤',label:'Slot Reports'},{id:'import',icon:'📂',label:'Import JSON'},{id:'export',icon:'📤',label:'Export Day'},{id:'sync',icon:'☁️',label:'OneDrive Sync'}];
+const TABS=[{id:'dashboard',icon:'🏠',label:'Dashboard'},{id:'tickets',icon:'📋',label:'My Tickets'},{id:'all',icon:'📨',label:'All Complaints'},{id:'add',icon:'➕',label:'Add Ticket'},{id:'slot',icon:'🌤',label:'Slot Reports'},{id:'import',icon:'📂',label:'Import JSON'},{id:'export',icon:'📤',label:'Export Day'},{id:'sync',icon:'☁️',label:'Cloud Sync'}];
 const THEMES=[{id:'midnight',sw:'linear-gradient(135deg,#001040,#001F5C)',light:false},{id:'daylight',sw:'linear-gradient(135deg,#DBEAFE,#BFDBFE)',light:true},{id:'solar',sw:'linear-gradient(135deg,#52391B,#F59E0B)',light:false},{id:'forest',sw:'linear-gradient(135deg,#071A10,#14532D)',light:false},{id:'violet',sw:'linear-gradient(135deg,#0C0118,#2E0B72)',light:false}];
 
 function Nav({agent,active,onChange,onSignOut,theme,onTheme,collapsed,onToggle}){
@@ -252,15 +279,15 @@ function Nav({agent,active,onChange,onSignOut,theme,onTheme,collapsed,onToggle})
     <nav className="nav" style={{borderRight:'1px solid '+(ag.color+'44')}}>
       <div className="nav-logo" onClick={onToggle}>
         <div className="nav-logo-icon" style={{background:'#001F5C'}}><img src={window.EK_LOGO||''} alt="EKEDP" style={{width:'100%',height:'100%',objectFit:'contain'}}/></div>
-        {!collapsed&&<div className="nh"><div style={{fontSize:16,fontWeight:800,color:'var(--text,#fff)'}}>EKEDP POWER APP</div><div style={{fontSize:16,color:'var(--muted,#6B85C0)'}}>Agents Hub</div></div>}
+        {!collapsed&&<div className="nh"><div style={{fontSize:11,fontWeight:800,color:'var(--text,#fff)'}}>EKEDP POWER APP</div><div style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>Agents Hub</div></div>}
       </div>
       {!collapsed&&<div className="nav-agent">
         {(window.EK_AGENT_PHOTOS||{})[ag.id]
           ? <img src={(window.EK_AGENT_PHOTOS||{})[ag.id]} alt={ag.name} className="agent-av" style={{objectFit:'cover','--ac':ag.color,border:`2px solid ${ag.color}`}}/>
           : <div className="agent-av" style={{'--ac':ag.color,background:ag.tint,fontSize:20}}>{ag.emoji}</div>}
         <div className="nh" style={{minWidth:0}}>
-          <div style={{fontSize:16,color:'var(--muted,#6B85C0)',fontStyle:'italic'}}>Signed in as</div>
-          <div style={{fontSize:16,fontWeight:800,color:'var(--text,#fff)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ag.name.split(' ')[0]}</div>
+          <div style={{fontSize:11,color:'var(--muted,#6B85C0)',fontStyle:'italic'}}>Signed in as</div>
+          <div style={{fontSize:11,fontWeight:800,color:'var(--text,#fff)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{ag.name.split(' ')[0]}</div>
         </div>
       </div>}
       <div className="nav-tabs">
@@ -275,7 +302,7 @@ function Nav({agent,active,onChange,onSignOut,theme,onTheme,collapsed,onToggle})
           {THEMES.map(t=><button key={t.id} className={`theme-sw${theme===t.id?' on':''}`} style={{background:t.sw,border:t.light?'2px solid #94A3B8':theme===t.id?'2px solid #FFC72C':'2px solid transparent'}} onClick={()=>onTheme(t.id)} title={t.id}/>)}
         </div>}
         {!collapsed&&<div className="nav-clock">{clock}</div>}
-        <button className="nav-btn" onClick={onSignOut}><span style={{fontSize:16}}>👤</span><span className="nl">Sign out</span></button>
+        <button className="nav-btn" onClick={onSignOut}><span style={{fontSize:11}}>👤</span><span className="nl">Sign out</span></button>
       </div>
     </nav>
   );
@@ -285,10 +312,10 @@ function Nav({agent,active,onChange,onSignOut,theme,onTheme,collapsed,onToggle})
 function Topbar({agent,screen}){
   const[greet,setGreet]=useState('');
   useEffect(()=>{const f=()=>{const h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();setGreet(h<12?'Good morning ☀':h<17?'Good afternoon 🌤':'Good evening 🌙');};f();const id=setInterval(f,60000);return()=>clearInterval(id);},[]);
-  const labels={tickets:'My Tickets',all:'All Complaints',add:'Add Ticket',slot:'Slot Reports',import:'Import JSON',export:'Export Day',sync:'OneDrive Sync'};
+  const labels={tickets:'My Tickets',all:'All Complaints',add:'Add Ticket',slot:'Slot Reports',import:'Import JSON',export:'Export Day',sync:'Cloud Sync'};
   return(
     <div className="topbar" style={{'--ac':agent.color,'--ac-bg':agent.tint+'88'}}>
-      <div style={{fontSize:16,fontWeight:800,color:agent.color,letterSpacing:'.10em',textTransform:'uppercase',marginBottom:4}}>{labels[screen]||'Agents Hub'}</div>
+      <div style={{fontSize:11,fontWeight:800,color:agent.color,letterSpacing:'.10em',textTransform:'uppercase',marginBottom:4}}>{labels[screen]||'Agents Hub'}</div>
       <div style={{fontSize:20,fontWeight:800,fontStyle:'italic',color:'var(--text,#fff)'}}>{greet}, {agent.name.split(' ')[0]}</div>
     </div>
   );
@@ -343,16 +370,16 @@ function MyTickets({agent,tickets,onEdit}){
       <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
         {/* Search */}
         <div style={{position:'relative',flex:1,minWidth:220}}>
-          <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',fontSize:16,pointerEvents:'none'}}>🔎</span>
+          <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',fontSize:11,pointerEvents:'none'}}>🔎</span>
           <input value={q} onChange={e=>setQ(e.target.value)}
             placeholder="Search ticket #, name, phone, BU, issue…"
-            style={{width:'100%',padding:'9px 14px 9px 32px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:16,outline:'none'}}/>
-          {q&&<button onClick={()=>setQ('')} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:'var(--muted,#6B85C0)',fontSize:16,cursor:'pointer',lineHeight:1}}>✕</button>}
+            style={{width:'100%',padding:'9px 14px 9px 32px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:11,outline:'none'}}/>
+          {q&&<button onClick={()=>setQ('')} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:'var(--muted,#6B85C0)',fontSize:11,cursor:'pointer',lineHeight:1}}>✕</button>}
         </div>
 
         {/* Status filter */}
         <select value={fSt} onChange={e=>setFSt(e.target.value)}
-          style={{padding:'9px 12px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:16,outline:'none',minWidth:140}}>
+          style={{padding:'9px 12px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:11,outline:'none',minWidth:140}}>
           <option value="">All statuses</option>
           <option value="resolved">✅ Resolved</option>
           <option value="progress">⏳ In Progress</option>
@@ -361,7 +388,7 @@ function MyTickets({agent,tickets,onEdit}){
 
         {/* Date filter */}
         <select value={fDate} onChange={e=>setFDate(e.target.value)}
-          style={{padding:'9px 12px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:16,outline:'none',minWidth:140}}>
+          style={{padding:'9px 12px',background:'var(--card,#111D4A)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'inherit',fontSize:11,outline:'none',minWidth:140}}>
           <option value="">All dates</option>
           {dateOptions.map(d=><option key={d} value={d}>{d}</option>)}
         </select>
@@ -369,12 +396,12 @@ function MyTickets({agent,tickets,onEdit}){
         {/* Clear all */}
         {(q||fSt||fDate)&&(
           <button onClick={()=>{setQ('');setFSt('');setFDate('');}}
-            style={{padding:'9px 14px',background:'rgba(220,38,38,.12)',color:'#F87171',border:'1px solid rgba(220,38,38,.3)',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>
+            style={{padding:'9px 14px',background:'rgba(220,38,38,.12)',color:'#F87171',border:'1px solid rgba(220,38,38,.3)',borderRadius:10,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>
             ✕ Clear filters
           </button>
         )}
 
-        <span style={{fontSize:16,color:'var(--muted,#6B85C0)',whiteSpace:'nowrap',marginLeft:4}}>
+        <span style={{fontSize:11,color:'var(--muted,#6B85C0)',whiteSpace:'nowrap',marginLeft:4}}>
           {filtered.length !== tickets.length ? `${filtered.length} of ${tickets.length} tickets` : `${tickets.length} tickets`}
         </span>
       </div>
@@ -383,7 +410,7 @@ function MyTickets({agent,tickets,onEdit}){
       <div className="card">
         <div className="card-h">
           <h3>My Tickets</h3>
-          <span style={{fontSize:16,color:'var(--muted,#6B85C0)'}}>Click any row to update</span>
+          <span style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>Click any row to update</span>
         </div>
         <div style={{overflowX:'auto'}}>
           <table className="tbl">
@@ -395,17 +422,17 @@ function MyTickets({agent,tickets,onEdit}){
             <tbody>
               {filtered.map((t,i)=>(
                 <tr key={t.id||t.num||i} style={{cursor:'pointer'}} onClick={()=>onEdit(t)}>
-                  <td style={{color:'var(--muted,#6B85C0)',fontSize:16}}>{i+1}</td>
+                  <td style={{color:'var(--muted,#6B85C0)',fontSize:11}}>{i+1}</td>
                   <td><span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:'#93C5FD'}}>#{t.num}</span></td>
-                  <td style={{whiteSpace:'nowrap',fontSize:16,color:'var(--muted,#6B85C0)'}}>{fmtDate(t.created)}</td>
+                  <td style={{whiteSpace:'nowrap',fontSize:11,color:'var(--muted,#6B85C0)'}}>{fmtDate(t.created)}</td>
                   <td style={{whiteSpace:'nowrap',color:'var(--muted,#6B85C0)'}}>{t.time||'—'}</td>
                   <td style={{fontWeight:600}}>{t.name||'—'}</td>
-                  <td><span style={{fontFamily:"'JetBrains Mono',monospace",color:'var(--muted,#6B85C0)',fontSize:16}}>{t.phone||'—'}</span></td>
+                  <td><span style={{fontFamily:"'JetBrains Mono',monospace",color:'var(--muted,#6B85C0)',fontSize:11}}>{t.phone||'—'}</span></td>
                   <td><BuPill bu={t.bu}/></td>
-                  <td style={{fontSize:16,maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.category||'—'}</td>
-                  <td style={{fontSize:16,color:'var(--muted,#6B85C0)'}}>{t.resp||getResp(t.category||t.issue||'')}</td>
+                  <td style={{fontSize:11,maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.category||'—'}</td>
+                  <td style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>{t.resp||getResp(t.category||t.issue||'')}</td>
                   <td><StatusBadge s={t.status}/></td>
-                  <td style={{fontSize:16,color:'rgba(240,244,255,.6)',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||'—'}</td>
+                  <td style={{fontSize:11,color:'rgba(240,244,255,.6)',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||'—'}</td>
                 </tr>
               ))}
               {!filtered.length&&(
@@ -468,9 +495,9 @@ function parseMultiple(txt){
 }
 
 // ── ADD TICKET (bulk paste) ─────────────────────────────────────────
-const AInp={width:'100%',padding:'10px 12px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'Sora,sans-serif',fontSize:16.5,outline:'none',boxSizing:'border-box'};
-const ASInp={width:'100%',padding:'7px 10px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:7,fontFamily:'Sora,sans-serif',fontSize:16.5,outline:'none',boxSizing:'border-box'};
-const AGhostBtn={padding:'6px 12px',background:'rgba(255,255,255,.06)',color:'var(--muted,#6B85C0)',border:'1px solid var(--border,#1E3070)',borderRadius:7,font:'600 13px Sora,sans-serif',cursor:'pointer'};
+const AInp={width:'100%',padding:'10px 12px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'Sora,sans-serif',fontSize:12,outline:'none',boxSizing:'border-box'};
+const ASInp={width:'100%',padding:'7px 10px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:7,fontFamily:'Sora,sans-serif',fontSize:12,outline:'none',boxSizing:'border-box'};
+const AGhostBtn={padding:'6px 12px',background:'rgba(255,255,255,.06)',color:'var(--muted,#6B85C0)',border:'1px solid var(--border,#1E3070)',borderRadius:7,font:'600 12px Sora,sans-serif',cursor:'pointer'};
 const ALbl={font:'700 10px Sora,sans-serif',color:'var(--muted,#6B85C0)',letterSpacing:'.6px',textTransform:'uppercase',marginBottom:3};
 const AField=({label,full,children})=>(<div style={{gridColumn:full?'1 / -1':'auto'}}><label style={{display:'block',font:'700 12px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',letterSpacing:'.6px',textTransform:'uppercase',marginBottom:5}}>{label}</label>{children}</div>);
 const AStatusPill=({s})=>{const m={resolved:{c:'#4ADE80',bg:'rgba(22,163,74,.15)',l:'Resolved'},progress:{c:'#FCD34D',bg:'rgba(217,119,6,.15)',l:'In Progress'},unresolved:{c:'#F87171',bg:'rgba(220,38,38,.15)',l:'Unresolved'}};const v=m[s]||m.unresolved;return <span style={{display:'inline-flex',alignItems:'center',padding:'2px 8px',borderRadius:10,font:'700 12px/1 Sora,sans-serif',letterSpacing:'.04em',textTransform:'uppercase',color:v.c,background:v.bg}}>{v.l}</span>;};
@@ -525,25 +552,25 @@ function AddTicket({agent,onCreate,onCreateMany}){
       <div style={{background:agent.tint||'rgba(59,130,246,.12)',border:`1px solid ${agent.color}55`,borderRadius:12,padding:'14px 18px',marginBottom:14,display:'flex',alignItems:'flex-start',gap:12}}>
         <span style={{fontSize:24}}>{agent.emoji||'➕'}</span>
         <div>
-          <div style={{font:'800 15px/1.2 Sora,sans-serif',color:'#fff'}}>Paste complaints from SharePoint — single or multiple at once</div>
-          <div style={{font:'500 13px/1.5 Sora,sans-serif',color:'rgba(255,255,255,.7)',marginTop:3}}>Paste one complaint block or many. Each "NEW MOBILE APP COMPLAINT" block is auto-detected as a separate ticket. Fields: Ticket No → Ticket #, Address → Address, Description → Issue.</div>
+          <div style={{font:'800 12px/1.2 Sora,sans-serif',color:'#fff'}}>Paste complaints from SharePoint — single or multiple at once</div>
+          <div style={{font:'500 12px/1.5 Sora,sans-serif',color:'rgba(255,255,255,.7)',marginTop:3}}>Paste one complaint block or many. Each "NEW MOBILE APP COMPLAINT" block is auto-detected as a separate ticket. Fields: Ticket No → Ticket #, Address → Address, Description → Issue.</div>
         </div>
       </div>
 
       {/* Paste box */}
       <textarea value={pasted} onChange={e=>handlePaste(e.target.value)}
         placeholder={"Paste one or more complaint blocks here…\n\n📱 NEW MOBILE APP COMPLAINT| 📅 18 May 2026 · 1:44 PM| 🎫 Ticket No: 720390| 👤 Customer: Clifford Benjamin| 📞 Phone: +2347079674724| 📍 Address: 12, isiba street, Itire | 🏢 Business Unit: MUSHIN| 📝 Description: Meter in tamper mode"}
-        style={{width:'100%',minHeight:110,padding:14,marginBottom:14,background:'var(--surface,#0D1B45)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'JetBrains Mono,monospace',fontSize:16.5,outline:'none',resize:'vertical',boxSizing:'border-box',lineHeight:1.6}}/>
+        style={{width:'100%',minHeight:110,padding:14,marginBottom:14,background:'var(--surface,#0D1B45)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,fontFamily:'JetBrains Mono,monospace',fontSize:12,outline:'none',resize:'vertical',boxSizing:'border-box',lineHeight:1.6}}/>
 
       {/* BULK MODE */}
       {mode==='bulk'&&bulk.length>0&&(
         <div style={{marginBottom:32}}>
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-            <div style={{font:'800 15px Sora,sans-serif',color:'var(--text,#fff)'}}>🎯 {bulk.length} ticket{bulk.length>1?'s':''} detected — select which to add</div>
+            <div style={{font:'800 12px Sora,sans-serif',color:'var(--text,#fff)'}}>🎯 {bulk.length} ticket{bulk.length>1?'s':''} detected — select which to add</div>
             <button onClick={()=>setAllSel(true)} style={AGhostBtn}>Select all</button>
             <button onClick={()=>setAllSel(false)} style={AGhostBtn}>Deselect all</button>
             <div style={{flex:1}}/>
-            <button onClick={addBulk} disabled={!selCount} style={{padding:'10px 20px',background:selCount?agent.color:'#334',color:'#fff',border:'none',borderRadius:9,font:'800 15px Sora,sans-serif',cursor:selCount?'pointer':'not-allowed',boxShadow:selCount?`0 6px 18px ${agent.color}44`:'none',transition:'all .2s'}}>
+            <button onClick={addBulk} disabled={!selCount} style={{padding:'10px 20px',background:selCount?agent.color:'#334',color:'#fff',border:'none',borderRadius:9,font:'800 12px Sora,sans-serif',cursor:selCount?'pointer':'not-allowed',boxShadow:selCount?`0 6px 18px ${agent.color}44`:'none',transition:'all .2s'}}>
               ➕ Add {selCount} ticket{selCount!==1?'s':''}
             </button>
           </div>
@@ -553,10 +580,10 @@ function AddTicket({agent,onCreate,onCreateMany}){
                 <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
                   <input type="checkbox" checked={t._sel} onChange={()=>toggleSel(idx)} style={{width:18,height:18,accentColor:agent.color,marginTop:2,flexShrink:0,cursor:'pointer'}}/>
                   <div style={{flex:1,display:'grid',gridTemplateColumns:'auto 1fr 1fr 1fr 1fr',gap:'6px 16px',alignItems:'start'}}>
-                    <div><div style={ALbl}>Ticket #</div><div style={{fontFamily:'JetBrains Mono,monospace',fontWeight:800,color:'#93C5FD',fontSize:16}}>#{t.num||'—'}</div></div>
-                    <div><div style={ALbl}>Customer</div><div style={{font:'700 14px/1.3 Sora,sans-serif',color:'var(--text,#fff)'}}>{stripEmoji(t.name)||'—'}</div><div style={{font:'500 12.5px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>{t.phone||'—'}</div></div>
-                    <div><div style={ALbl}>BU · Meter</div><div style={{font:'700 14px/1.3 Sora,sans-serif',color:'#93C5FD'}}>{t.bu||'—'}</div><div style={{font:'500 12.5px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>{t.meter||'N/A'}</div></div>
-                    <div style={{gridColumn:'span 2'}}><div style={ALbl}>Issue</div><div style={{font:'500 13px/1.45 Sora,sans-serif',color:'var(--text,#F0F4FF)'}}>{cleanIssueForDisplay(t.issue)}</div>{t.addr&&<div style={{font:'500 12px/1.3 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:3}}>📍 {t.addr.slice(0,80)}</div>}</div>
+                    <div><div style={ALbl}>Ticket #</div><div style={{fontFamily:'JetBrains Mono,monospace',fontWeight:800,color:'#93C5FD',fontSize:11}}>#{t.num||'—'}</div></div>
+                    <div><div style={ALbl}>Customer</div><div style={{font:'700 12px/1.3 Sora,sans-serif',color:'var(--text,#fff)'}}>{stripEmoji(t.name)||'—'}</div><div style={{font:'500 12.5px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>{t.phone||'—'}</div></div>
+                    <div><div style={ALbl}>BU · Meter</div><div style={{font:'700 12px/1.3 Sora,sans-serif',color:'#93C5FD'}}>{t.bu||'—'}</div><div style={{font:'500 12.5px/1 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>{t.meter||'N/A'}</div></div>
+                    <div style={{gridColumn:'span 2'}}><div style={ALbl}>Issue</div><div style={{font:'500 12px/1.45 Sora,sans-serif',color:'var(--text,#F0F4FF)'}}>{cleanIssueForDisplay(t.issue)}</div>{t.addr&&<div style={{font:'500 12px/1.3 Sora,sans-serif',color:'var(--muted,#6B85C0)',marginTop:3}}>📍 {t.addr.slice(0,80)}</div>}</div>
                   </div>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginTop:10,paddingTop:10,borderTop:'1px solid var(--border,#1E3070)'}}>
@@ -582,8 +609,8 @@ function AddTicket({agent,onCreate,onCreateMany}){
             ))}
           </div>
           <div style={{display:'flex',gap:10,marginTop:14}}>
-            <button onClick={addBulk} disabled={!selCount} style={{padding:'12px 22px',background:selCount?agent.color:'#334',color:'#fff',border:'none',borderRadius:10,font:'800 15px Sora,sans-serif',cursor:selCount?'pointer':'not-allowed',boxShadow:selCount?`0 6px 18px ${agent.color}44`:'none'}}>➕ Add {selCount} ticket{selCount!==1?'s':''}</button>
-            <button onClick={()=>{setPasted('');setBulk([]);}} style={{padding:'12px 22px',background:'rgba(255,255,255,.06)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,font:'700 15px Sora,sans-serif',cursor:'pointer'}}>Clear</button>
+            <button onClick={addBulk} disabled={!selCount} style={{padding:'12px 22px',background:selCount?agent.color:'#334',color:'#fff',border:'none',borderRadius:10,font:'800 12px Sora,sans-serif',cursor:selCount?'pointer':'not-allowed',boxShadow:selCount?`0 6px 18px ${agent.color}44`:'none'}}>➕ Add {selCount} ticket{selCount!==1?'s':''}</button>
+            <button onClick={()=>{setPasted('');setBulk([]);}} style={{padding:'12px 22px',background:'rgba(255,255,255,.06)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,font:'700 12px Sora,sans-serif',cursor:'pointer'}}>Clear</button>
           </div>
         </div>
       )}
@@ -611,8 +638,8 @@ function AddTicket({agent,onCreate,onCreateMany}){
             <AField label="Action Taken / Note" full><textarea value={single.note} onChange={e=>setSF('note',e.target.value)} style={{...AInp,minHeight:56,resize:'vertical'}}/></AField>
           </div>
           <div style={{display:'flex',gap:10}}>
-            <button onClick={addSingle} style={{padding:'12px 22px',background:agent.color,color:'#fff',border:'none',borderRadius:10,font:'800 15px Sora,sans-serif',cursor:'pointer',boxShadow:`0 6px 18px ${agent.color}44`}}>➕ Add to my tickets</button>
-            <button onClick={()=>{setSingle(EMPTY);setPasted('');setBulk([]);}} style={{padding:'12px 22px',background:'rgba(255,255,255,.06)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,font:'700 15px Sora,sans-serif',cursor:'pointer'}}>Clear</button>
+            <button onClick={addSingle} style={{padding:'12px 22px',background:agent.color,color:'#fff',border:'none',borderRadius:10,font:'800 12px Sora,sans-serif',cursor:'pointer',boxShadow:`0 6px 18px ${agent.color}44`}}>➕ Add to my tickets</button>
+            <button onClick={()=>{setSingle(EMPTY);setPasted('');setBulk([]);}} style={{padding:'12px 22px',background:'rgba(255,255,255,.06)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:10,font:'700 12px Sora,sans-serif',cursor:'pointer'}}>Clear</button>
           </div>
         </div>
       )}
@@ -622,7 +649,7 @@ function AddTicket({agent,onCreate,onCreateMany}){
         <div style={{padding:'14px 20px',background:'linear-gradient(135deg,#001F5C,#1D4ED8)',display:'flex',alignItems:'center',gap:12}}>
           <span style={{fontSize:20}}>📋</span>
           <div>
-            <div style={{font:'800 15px/1.1 Sora,sans-serif',color:'#fff'}}>Category → Responsible Party</div>
+            <div style={{font:'800 12px/1.1 Sora,sans-serif',color:'#fff'}}>Category → Responsible Party</div>
             <div style={{font:'500 12.5px/1 Sora,sans-serif',color:'rgba(255,255,255,.65)',marginTop:3}}>Quick reference while logging</div>
           </div>
         </div>
@@ -632,11 +659,11 @@ function AddTicket({agent,onCreate,onCreateMany}){
         {AREF_TABLE.map((row,i)=>(
           <div key={row.sn} style={{display:'grid',gridTemplateColumns:'36px 1fr 1fr',padding:'10px 20px',background:i%2===0?'transparent':'rgba(255,255,255,.02)',borderBottom:'1px solid var(--border,#1E3070)',alignItems:'center'}}>
             <div style={{width:24,height:24,borderRadius:7,background:row.color+'25',border:'1.5px solid '+row.color+'70',display:'flex',alignItems:'center',justifyContent:'center',font:'800 12px/1 Sora,sans-serif',color:row.color}}>{row.sn}</div>
-            <div style={{font:'600 14px/1.4 Sora,sans-serif',color:'var(--text,#F0F4FF)',paddingRight:16}}>{row.category}</div>
-            <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:8,height:8,borderRadius:'50%',background:row.color,flexShrink:0}}/><span style={{font:'700 14px/1.4 Sora,sans-serif',color:'var(--text,#F0F4FF)'}}>{row.party}</span></div>
+            <div style={{font:'600 12px/1.4 Sora,sans-serif',color:'var(--text,#F0F4FF)',paddingRight:16}}>{row.category}</div>
+            <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:8,height:8,borderRadius:'50%',background:row.color,flexShrink:0}}/><span style={{font:'700 12px/1.4 Sora,sans-serif',color:'var(--text,#F0F4FF)'}}>{row.party}</span></div>
           </div>
         ))}
-        <div style={{padding:'10px 20px',background:'rgba(255,199,44,.07)',borderTop:'1px solid rgba(255,199,44,.2)',font:'500 13px/1.5 Sora,sans-serif',color:'#FCD34D',display:'flex',gap:8}}>
+        <div style={{padding:'10px 20px',background:'rgba(255,199,44,.07)',borderTop:'1px solid rgba(255,199,44,.2)',font:'500 12px/1.5 Sora,sans-serif',color:'#FCD34D',display:'flex',gap:8}}>
           <span>💡</span><span>Split category? Log primary first, tag second party in Action Taken.</span>
         </div>
       </div>
@@ -745,15 +772,164 @@ function SlotReports({agent,tickets}){
   }
 
   const GM_EMAILS = 'love.offei@ekedp.com';
-  function doEmailGMs() {
-    var subject = encodeURIComponent('EKEDP ' + cur.label.toUpperCase() + ' UPDATE — ' + wat.dayLong);
-    var body = encodeURIComponent(msg);
-    window.location.href = 'mailto:' + GM_EMAILS + '?subject=' + subject + '&body=' + body;
+  const is9am = (slot === 'wkday4pm' && wat.hour < 10); // treat early morning as 9am report
+  // Received today: 0 for 9am slot, count of today's tickets otherwise
+  const todayStr2 = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  function isToday(t) {
+    var c = t.created || t.received || '';
+    return String(c).startsWith(todayStr2) || String(c).includes(todayStr2.slice(5).replace('-','/'));
   }
+  const receivedToday = (slot === 'wkday4pm' && wat.hour <= 9) ? 0 : filtered.filter(isToday).length;
+
+  function buildGMTable() {
+    // Group by responsible party + category
+    var map = {};
+    filtered.forEach(function(t) {
+      var rp = t.resp || t.responsible || '—';
+      var cat = t.category || '—';
+      var key = rp + '|||' + cat;
+      if (!map[key]) map[key] = {rp,cat,today:0,res:0,prog:0,unr:0,total:0};
+      map[key].total++;
+      if (t.status==='resolved') map[key].res++;
+      else if (t.status==='progress') map[key].prog++;
+      else map[key].unr++;
+      if ((slot !== 'wkday4pm' || wat.hour > 9) && isToday(t)) map[key].today++;
+    });
+    return Object.values(map).sort(function(a,b){ return b.total - a.total; });
+  }
+
+  function doEmailGMs() {
+    if (typeof XLSX === 'undefined') { window.EK_TOAST && window.EK_TOAST('Excel library loading…','warn'); return; }
+    var rows = buildGMTable();
+    var dateStr = new Date().toISOString().slice(0,10);
+    var slotLabel = cur.label.toUpperCase();
+
+    // ── Excel (GM Summary table) ──
+    var wb = XLSX.utils.book_new();
+    var headers = ['Responsible Party','Category','Received today','Cumulative Resolved','Cumulative In Progress','Cumulative Unresolved','Grand Total','Percentage'];
+    var totRes2 = rows.reduce(function(s,r){return s+r.res;},0);
+    var totPrg  = rows.reduce(function(s,r){return s+r.prog;},0);
+    var totUnr  = rows.reduce(function(s,r){return s+r.unr;},0);
+    var totTod  = rows.reduce(function(s,r){return s+r.today;},0);
+    var grandPct = filtered.length ? Math.round(totRes2/filtered.length*100) : 0;
+    var data = [
+      ['EKEDP ' + slotLabel + ' REPORT — ' + wat.dayLong],
+      ['Agent: ' + agent.name + '  ·  Generated: ' + cur.stamp + ' WAT'],
+      [],
+      headers,
+      ...rows.map(function(r){
+        var pct = r.total ? Math.round(r.res / r.total * 100) + '%' : '0%';
+        return [r.rp, r.cat, r.today, r.res, r.prog, r.unr, r.total, pct];
+      }),
+      [],
+      ['TOTALS','', totTod, totRes2, totPrg, totUnr, filtered.length, grandPct+'%']
+    ];
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [22,28,14,18,18,18,12,12].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, ws, 'GM Report');
+    var rawH = ['S/N','Ticket#','Time','Customer','Phone','BU','Category','Responsible Party','Status','Note'];
+    var rawData = [rawH, ...filtered.map(function(t,i){
+      return [i+1,t.num,t.time,t.name,t.phone,t.bu,t.category,t.resp||t.responsible,t.status,t.note||''];
+    })];
+    var ws2 = XLSX.utils.aoa_to_sheet(rawData);
+    ws2['!cols'] = [5,9,8,22,14,10,25,22,12,35].map(w=>({wch:w}));
+    XLSX.utils.book_append_sheet(wb, ws2, 'Raw Tickets');
+    XLSX.writeFile(wb, 'EKEDP-GM-Report-' + slotLabel.replace(/[^A-Z0-9]/g,'_') + '-' + dateStr + '.xlsx');
+
+    // ── HTML Preview ──
+    var NAVY='#0D2137'; var NAVY2='#1B3A6B'; var STRIPE='#EBF3FB';
+    var tableRows = rows.map(function(r, i){
+      var pct = r.total ? Math.round(r.res/r.total*100) : 0;
+      var pctC = pct>=80?'#16A34A':pct>=50?'#D97706':'#DC2626';
+      var bg = i%2===0 ? '#FFFFFF' : STRIPE;
+      return '<tr style="background:'+bg+';">'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;font-weight:700;color:#0D2137;white-space:nowrap;">'+r.rp+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;color:#334155;">'+r.cat+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;text-align:center;font-weight:700;color:#1D4ED8;font-size:13px;">'+r.today+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;text-align:center;font-weight:600;color:#15803D;">'+r.res+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;text-align:center;font-weight:600;color:#D97706;">'+r.prog+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;text-align:center;font-weight:600;color:#DC2626;">'+r.unr+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;text-align:center;font-weight:800;color:#0D2137;font-size:13px;">'+r.total+'</td>'
+        + '<td style="padding:7px 11px;border:1px solid #C8D6E5;text-align:center;font-weight:700;color:'+pctC+';">'+pct+'%</td>'
+        + '</tr>';
+    }).join('');
+    var subject = 'EKEDP ' + slotLabel + ' UPDATE — ' + wat.dayLong;
+    var TH = 'padding:8px 11px;border:1px solid '+NAVY+';font-weight:700;color:#fff;text-align:center;font-size:11px;line-height:1.3;white-space:nowrap;';
+    var THL = 'padding:8px 11px;border:1px solid '+NAVY+';font-weight:700;color:#fff;text-align:left;font-size:11px;';
+    var TOTD = 'padding:7px 11px;border:1px solid '+NAVY2+';text-align:center;font-weight:800;color:#fff;font-size:13px;';
+    var htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+subject+'</title>'
+      + '<style>'
+      + 'body{font-family:Calibri,Arial,sans-serif;font-size:12px;color:#111;background:#F0F4F8;margin:0;padding:16px;}'
+      + '.wrap{max-width:820px;margin:0 auto;}'
+      + '.card{background:#fff;border-radius:6px;border:1px solid #CBD5E1;overflow:hidden;margin-bottom:16px;}'
+      + '.meta-bar{background:'+NAVY+';color:#fff;padding:9px 16px;display:flex;justify-content:space-between;align-items:center;}'
+      + '.meta-bar .subj{font-weight:700;font-size:13px;letter-spacing:.01em;}'
+      + '.meta-bar .stamp{font-size:11px;opacity:.75;}'
+      + '.addr{background:#F8FAFC;padding:7px 16px;border-bottom:1px solid #E2E8F0;font-size:11px;color:#475569;line-height:1.8;}'
+      + '.body{padding:18px 20px;}'
+      + '.title{font-weight:700;font-size:14px;color:#0D2137;margin-bottom:2px;}'
+      + '.sub{font-style:italic;font-size:12px;color:#475569;margin-bottom:12px;}'
+      + '.sumbar{background:#EBF3FB;border:1px solid #BFDBFE;border-radius:5px;padding:8px 14px;margin-bottom:16px;font-size:12px;color:#1E3A5F;}'
+      + 'table{border-collapse:collapse;width:100%;font-size:12px;}'
+      + '.tfoot td{background:'+NAVY2+';color:#fff;font-weight:800;}'
+      + '.note{font-size:10px;color:#64748B;margin-top:14px;padding-top:10px;border-top:1px solid #E2E8F0;}'
+      + '.btn{display:inline-block;margin:0 0 14px;padding:7px 18px;background:'+NAVY+';color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;}'
+      + '@media print{.btn{display:none;}body{background:#fff;padding:0;}.card{border:none;border-radius:0;}}'
+      + '</style></head><body>'
+      + '<div class="wrap">'
+      + '<button class="btn" onclick="window.print()">🖨 Print / Save as PDF</button>'
+      + '<div class="card">'
+      + '<div class="meta-bar"><span class="subj">'+subject+'</span><span class="stamp">'+cur.stamp+' WAT</span></div>'
+      + '<div class="addr">'
+      + '<span><strong>From:</strong> '+agent.email+'</span>&nbsp;&nbsp;&nbsp;'
+      + '<span><strong>To:</strong> love.offei@ekedp.com</span>&nbsp;&nbsp;&nbsp;'
+      + '<span><strong>Subject:</strong> '+subject+'</span>'
+      + '</div>'
+      + '<div class="body">'
+      + '<div class="title">EKEDP '+slotLabel+' UPDATE &mdash; '+wat.dayLong+'</div>'
+      + '<div class="sub">'+agent.name+' &middot; '+cur.emoji+' '+cur.stamp+' WAT</div>'
+      + '<div class="sumbar">'
+      + '📊 <strong>Summary &nbsp;</strong>'
+      + 'Total: <strong>'+filtered.length+'</strong> &nbsp;|&nbsp; '
+      + '✅ Resolved: <strong style="color:#16A34A;">'+totRes2+'</strong> &nbsp;|&nbsp; '
+      + '⏳ In Progress: <strong style="color:#D97706;">'+totPrg+'</strong> &nbsp;|&nbsp; '
+      + '🔴 Unresolved: <strong style="color:#DC2626;">'+totUnr+'</strong>'
+      + '</div>'
+      + '<table>'
+      + '<thead><tr style="background:'+NAVY+';">'
+      + '<th style="'+THL+'">Responsible Party</th>'
+      + '<th style="'+THL+'">Category</th>'
+      + '<th style="'+TH+'">Received<br>Today</th>'
+      + '<th style="'+TH+'">Cumulative<br>Resolved</th>'
+      + '<th style="'+TH+'">Cumulative<br>In Progress</th>'
+      + '<th style="'+TH+'">Cumulative<br>Unresolved</th>'
+      + '<th style="'+TH+'">Grand<br>Total</th>'
+      + '<th style="'+TH+'">Percentage</th>'
+      + '</tr></thead>'
+      + '<tbody>'+tableRows+'</tbody>'
+      + '<tfoot><tr class="tfoot">'
+      + '<td style="'+TOTD+' text-align:left;" colspan="2">Total</td>'
+      + '<td style="'+TOTD+'">'+totTod+'</td>'
+      + '<td style="'+TOTD+'">'+totRes2+'</td>'
+      + '<td style="'+TOTD+'">'+totPrg+'</td>'
+      + '<td style="'+TOTD+'">'+totUnr+'</td>'
+      + '<td style="'+TOTD+'">'+filtered.length+'</td>'
+      + '<td style="'+TOTD+'">'+grandPct+'%</td>'
+      + '</tr></tfoot>'
+      + '</table>'
+      + '<div class="note">📎 Excel file (GM Report + Raw Tickets) has been downloaded. Attach it to your email before sending.</div>'
+      + '</div></div></div>'
+      + '</body></html>';
+
+    var win = window.open('','_blank','width=860,height=720,scrollbars=yes');
+    if (win) { win.document.write(htmlContent); win.document.close(); }
+    window.EK_TOAST && window.EK_TOAST('📧 Email preview opened · Excel downloaded — attach it!');
+  }
+
 
   return(
     <div style={{padding:'22px 28px',maxWidth:1100}}>
-      <div style={{marginBottom:16}}><h2 style={{fontSize:17,fontWeight:800}}>🌤 Slot Reports</h2><p style={{fontSize:16,color:'var(--muted,#6B85C0)',marginTop:3}}>Generate WhatsApp updates and PDF reports for your shift slot</p></div>
+      <div style={{marginBottom:16}}><h2 style={{fontSize:13,fontWeight:800}}>🌤 Slot Reports</h2><p style={{fontSize:11,color:'var(--muted,#6B85C0)',marginTop:3}}>Generate WhatsApp updates and PDF reports for your shift slot</p></div>
 
       {/* Slot selector */}
       <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap'}}>
@@ -762,15 +938,15 @@ function SlotReports({agent,tickets}){
             {s.id===rec&&<span className="rec">NOW</span>}
             <span style={{fontSize:20}}>{s.emoji}</span>
             <div style={{textAlign:'left'}}>
-              <div style={{fontSize:16,fontWeight:700}}>{s.label}</div>
-              <div style={{fontSize:16,color:'var(--muted,#6B85C0)',marginTop:1}}>{s.days}</div>
+              <div style={{fontSize:11,fontWeight:700}}>{s.label}</div>
+              <div style={{fontSize:11,color:'var(--muted,#6B85C0)',marginTop:1}}>{s.days}</div>
             </div>
           </button>
         ))}
       </div>
 
       {/* Email schedule notice */}
-      <div style={{marginBottom:14,padding:'10px 14px',background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.25)',borderRadius:8,font:'500 13px/1.5 Sora,sans-serif',color:'rgba(240,244,255,.8)'}}>
+      <div style={{marginBottom:14,padding:'10px 14px',background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.25)',borderRadius:8,font:'500 12px/1.5 Sora,sans-serif',color:'rgba(240,244,255,.8)'}}>
         📧 <strong style={{color:'#93C5FD'}}>GM Report Schedule:</strong> Send by <strong>9:00 AM</strong> · <strong>12:00 PM</strong> · <strong>4:00 PM</strong> WAT each day. Click <em>Email GMs</em> to open your mail client with this report pre-filled.
       </div>
 
@@ -784,25 +960,25 @@ function SlotReports({agent,tickets}){
 
       {/* Action buttons */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:18}}>
-        <button onClick={doPDF} style={{padding:'14px 10px',background:'var(--red,#E30613)',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+        <button onClick={doPDF} style={{padding:'14px 10px',background:'var(--red,#E30613)',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
           <span style={{fontSize:24}}>📄</span>
           <span>PDF Report</span>
-          <small style={{fontSize:16,fontWeight:500,opacity:.85}}>Print / Save as PDF</small>
+          <small style={{fontSize:11,fontWeight:500,opacity:.85}}>Print / Save as PDF</small>
         </button>
-        <button onClick={copyMsg} style={{padding:'14px 10px',background:'#25D366',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+        <button onClick={copyMsg} style={{padding:'14px 10px',background:'#25D366',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
           <span style={{fontSize:24}}>💬</span>
           <span>WhatsApp Copy</span>
-          <small style={{fontSize:16,fontWeight:500,opacity:.85}}>Copy message text</small>
+          <small style={{fontSize:11,fontWeight:500,opacity:.85}}>Copy message text</small>
         </button>
-        <button onClick={doXlsx} style={{padding:'14px 10px',background:'#16A34A',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+        <button onClick={doXlsx} style={{padding:'14px 10px',background:'#16A34A',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
           <span style={{fontSize:24}}>📊</span>
           <span>Excel Export</span>
-          <small style={{fontSize:16,fontWeight:500,opacity:.85}}>4 sheets</small>
+          <small style={{fontSize:11,fontWeight:500,opacity:.85}}>4 sheets</small>
         </button>
-        <button onClick={doEmailGMs} style={{padding:'14px 10px',background:'#7C3AED',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+        <button onClick={doEmailGMs} style={{padding:'14px 10px',background:'#7C3AED',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
           <span style={{fontSize:24}}>📧</span>
           <span>Email GMs</span>
-          <small style={{fontSize:16,fontWeight:500,opacity:.85}}>9AM · 12PM · 4PM</small>
+          <small style={{fontSize:11,fontWeight:500,opacity:.85}}>9AM · 12PM · 4PM</small>
         </button>
       </div>
 
@@ -811,28 +987,28 @@ function SlotReports({agent,tickets}){
         <div className="card">
           <div className="card-h" style={{background:'rgba(37,211,102,.08)'}}>
             <h3>💬 WhatsApp Message Preview</h3>
-            <button onClick={copyMsg} style={{padding:'6px 12px',background:'#25D366',color:'#fff',border:'none',borderRadius:7,fontFamily:'inherit',fontSize:16,fontWeight:700,cursor:'pointer'}}>📋 Copy</button>
+            <button onClick={copyMsg} style={{padding:'6px 12px',background:'#25D366',color:'#fff',border:'none',borderRadius:7,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer'}}>📋 Copy</button>
           </div>
-          <pre style={{margin:0,padding:'14px 16px',fontFamily:"'Sora',sans-serif",fontSize:16.5,lineHeight:1.55,color:'var(--text,#F0F4FF)',whiteSpace:'pre-wrap',wordBreak:'break-word',maxHeight:440,overflowY:'auto'}}>{msg}</pre>
+          <pre style={{margin:0,padding:'14px 16px',fontFamily:"'Sora',sans-serif",fontSize:12,lineHeight:1.55,color:'var(--text,#F0F4FF)',whiteSpace:'pre-wrap',wordBreak:'break-word',maxHeight:440,overflowY:'auto'}}>{msg}</pre>
         </div>
         <div className="card">
           <div className="card-h"><h3>📌 Tickets in this window ({filtered.length})</h3></div>
           <div style={{maxHeight:480,overflowY:'auto'}}>
             {filtered.map(t=>(
               <div key={t.num} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 14px',borderBottom:'1px solid var(--border,#1E3070)'}}>
-                <span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:'#93C5FD',fontSize:16}}>#{t.num}</span>
+                <span style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,color:'#93C5FD',fontSize:11}}>#{t.num}</span>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:16,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name||'Unknown'} · <BuPill bu={t.bu}/></div>
-                  <div style={{fontSize:16,color:'var(--muted,#6B85C0)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.category||'—'}</div>
+                  <div style={{fontSize:11,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name||'Unknown'} · <BuPill bu={t.bu}/></div>
+                  <div style={{fontSize:11,color:'var(--muted,#6B85C0)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.issue||t.category||'—'}</div>
                 </div>
                 <StatusBadge s={t.status}/>
               </div>
             ))}
-            {!filtered.length&&<div style={{padding:'24px',textAlign:'center',color:'var(--muted,#6B85C0)',fontSize:16}}>No tickets in this time window.</div>}
+            {!filtered.length&&<div style={{padding:'24px',textAlign:'center',color:'var(--muted,#6B85C0)',fontSize:11}}>No tickets in this time window.</div>}
           </div>
         </div>
       </div>
-      <div style={{marginTop:12,padding:'10px 14px',background:'rgba(255,199,44,.08)',border:'1px solid rgba(255,199,44,.25)',borderRadius:8,fontSize:16,color:'#FFC72C'}}>
+      <div style={{marginTop:12,padding:'10px 14px',background:'rgba(255,199,44,.08)',border:'1px solid rgba(255,199,44,.25)',borderRadius:8,fontSize:11,color:'#FFC72C'}}>
         💡 <strong>PDF opens in new tab</strong> — press Ctrl+P / Cmd+P and choose "Save as PDF" → select Landscape A4. Works on all browsers without popup blockers.
       </div>
     </div>
@@ -861,7 +1037,7 @@ function ImportScreen({agent,onImport}){
     <div style={{padding:'28px',maxWidth:720}}>
       <div style={{marginBottom:20}}>
         <h2 style={{fontSize:20,fontWeight:800}}>📂 Import JSON</h2>
-        <p style={{fontSize:16,color:'var(--muted,#6B85C0)',marginTop:4}}>Load tickets into your hub from a master snapshot or an agent export file.</p>
+        <p style={{fontSize:11,color:'var(--muted,#6B85C0)',marginTop:4}}>Load tickets into your hub from a master snapshot or an agent export file.</p>
       </div>
 
       {/* Drop zone */}
@@ -881,13 +1057,13 @@ function ImportScreen({agent,onImport}){
           marginBottom:20,
         }}>
         <div style={{fontSize:44,marginBottom:12}}>📂</div>
-        <div style={{fontSize:16,fontWeight:800,color:'var(--text,#fff)',marginBottom:6}}>
+        <div style={{fontSize:11,fontWeight:800,color:'var(--text,#fff)',marginBottom:6}}>
           {dragging?'Drop it!':'Click or drag & drop your JSON file here'}
         </div>
-        <div style={{fontSize:16,color:'var(--muted,#6B85C0)'}}>
+        <div style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>
           Accepts <code style={{color:'#93C5FD',background:'rgba(147,197,253,.1)',padding:'2px 6px',borderRadius:4}}>snapshot.json</code> or <code style={{color:'#93C5FD',background:'rgba(147,197,253,.1)',padding:'2px 6px',borderRadius:4}}>ekedp_agent_*.json</code>
         </div>
-        {lastFile&&<div style={{marginTop:12,fontSize:16,color:agent.color,fontWeight:700}}>✅ Last loaded: {lastFile}</div>}
+        {lastFile&&<div style={{marginTop:12,fontSize:11,color:agent.color,fontWeight:700}}>✅ Last loaded: {lastFile}</div>}
         <input ref={fileRef} type="file" accept=".json" style={{display:'none'}}
           onChange={e=>{if(e.target.files[0])handle(e.target.files[0]);e.target.value='';}}/>
       </div>
@@ -895,8 +1071,8 @@ function ImportScreen({agent,onImport}){
       {/* What each format does */}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
         <div style={{background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:12,padding:'16px 18px'}}>
-          <div style={{fontSize:16,fontWeight:800,color:'#93C5FD',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:8}}>📋 snapshot.json (master)</div>
-          <ul style={{fontSize:16,color:'var(--muted,#6B85C0)',lineHeight:1.7,paddingLeft:16}}>
+          <div style={{fontSize:11,fontWeight:800,color:'#93C5FD',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:8}}>📋 snapshot.json (master)</div>
+          <ul style={{fontSize:11,color:'var(--muted,#6B85C0)',lineHeight:1.7,paddingLeft:16}}>
             <li>Shared by Love (Manager)</li>
             <li>Contains all days, all agents</li>
             <li>Loads ALL tickets → All Complaints</li>
@@ -904,8 +1080,8 @@ function ImportScreen({agent,onImport}){
           </ul>
         </div>
         <div style={{background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:12,padding:'16px 18px'}}>
-          <div style={{fontSize:16,fontWeight:800,color:'#4ADE80',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:8}}>📤 Agent export (ekedp_agent_*)</div>
-          <ul style={{fontSize:16,color:'var(--muted,#6B85C0)',lineHeight:1.7,paddingLeft:16}}>
+          <div style={{fontSize:11,fontWeight:800,color:'#4ADE80',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:8}}>📤 Agent export (ekedp_agent_*)</div>
+          <ul style={{fontSize:11,color:'var(--muted,#6B85C0)',lineHeight:1.7,paddingLeft:16}}>
             <li>Exported from any agent's hub</li>
             <li>Goes to All Complaints (shared pool)</li>
             <li>Source agent's My Tickets also synced</li>
@@ -920,7 +1096,7 @@ function ImportScreen({agent,onImport}){
         style={{
           padding:'14px 28px',background:agent.color,color:'#fff',
           border:'none',borderRadius:12,fontFamily:'inherit',
-          fontSize:16,fontWeight:800,cursor:'pointer',
+          fontSize:11,fontWeight:800,cursor:'pointer',
           boxShadow:`0 6px 20px ${agent.color}44`,
           display:'flex',alignItems:'center',gap:10,
         }}>
@@ -935,7 +1111,7 @@ function ExportDay({agent,tickets,onImport}){
   const wat=getWATNow();const dateStr=wat.date.toISOString().slice(0,10);
   const payload={exportedAt:new Date().toISOString(),exportedBy:{name:agent.name,email:agent.email,id:agent.id},period:{day:dateStr,dayLong:wat.dayLong},tickets,stats:{total:tickets.length,resolved:tickets.filter(t=>t.status==='resolved').length,progress:tickets.filter(t=>t.status==='progress').length,unresolved:tickets.filter(t=>t.status==='unresolved').length}};
   const json=JSON.stringify(payload,null,2);
-  function download(){const b=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ekedp_agent_${agent.id}_${dateStr}.json`;a.click();window.EK_TOAST&&window.EK_TOAST('📤 JSON saved. Drop in shared OneDrive folder.');}
+  function download(){const b=new Blob([json],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ekedp_agent_${agent.id}_${dateStr}.json`;a.click();window.EK_TOAST&&window.EK_TOAST('📤 JSON saved. Push to Cloud Sync or share with Love.');}
   async function copy(){try{await navigator.clipboard.writeText(json);window.EK_TOAST&&window.EK_TOAST('JSON copied.');}catch{window.EK_TOAST&&window.EK_TOAST('Copy failed','warn');}}
   const fileRef=useRef(null);
   return(
@@ -946,8 +1122,8 @@ function ExportDay({agent,tickets,onImport}){
         <div style={{padding:'13px 18px',borderBottom:'1px solid var(--border,#1E3070)',display:'flex',alignItems:'center',gap:10,background:'rgba(59,130,246,.08)'}}>
           <span style={{fontSize:20}}>📂</span>
           <div>
-            <div style={{fontSize:16,fontWeight:800,color:'var(--text,#fff)'}}>Import JSON</div>
-            <div style={{fontSize:16.5,color:'var(--muted,#6B85C0)',marginTop:1}}>Load from <strong style={{color:'#93C5FD'}}>snapshot.json</strong> (master) or another agent's export — goes straight to All Complaints, shared with everyone</div>
+            <div style={{fontSize:11,fontWeight:800,color:'var(--text,#fff)'}}>Import JSON</div>
+            <div style={{fontSize:12,color:'var(--muted,#6B85C0)',marginTop:1}}>Load from <strong style={{color:'#93C5FD'}}>snapshot.json</strong> (master) or another agent's export — goes straight to All Complaints, shared with everyone</div>
           </div>
         </div>
         <div style={{padding:'14px 18px',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
@@ -960,10 +1136,10 @@ function ExportDay({agent,tickets,onImport}){
           />
           <button
             onClick={()=>fileRef.current&&fileRef.current.click()}
-            style={{padding:'12px 22px',background:agent.color,color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:9,boxShadow:`0 6px 18px ${agent.color}44`}}>
+            style={{padding:'12px 22px',background:agent.color,color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:9,boxShadow:`0 6px 18px ${agent.color}44`}}>
             <span style={{fontSize:20}}>📂</span> Choose JSON file
           </button>
-          <div style={{flex:1,fontSize:16,color:'var(--muted,#6B85C0)',lineHeight:1.5}}>
+          <div style={{flex:1,fontSize:11,color:'var(--muted,#6B85C0)',lineHeight:1.5}}>
             <strong style={{color:'var(--text,#fff)'}}>Accepts:</strong><br/>
             • <code style={{color:'#93C5FD'}}>snapshot.json</code> — master file (all days, all agents) → loads into All Complaints<br/>
             • <code style={{color:'#93C5FD'}}>ekedp_agent_*.json</code> — any agent's daily export → syncs to All Complaints (shared with that agent)
@@ -975,12 +1151,12 @@ function ExportDay({agent,tickets,onImport}){
       <div style={{background:agent.tint,border:`1px solid ${agent.color}55`,borderRadius:12,padding:'16px 20px',marginBottom:18,display:'flex',alignItems:'flex-start',gap:14}}>
         <span style={{fontSize:24}}>📤</span>
         <div style={{flex:1}}>
-          <div style={{fontSize:16,fontWeight:800,color:'var(--text,#fff)'}}>Export today's work as JSON</div>
-          <div style={{fontSize:16.5,lineHeight:1.5,color:'rgba(240,244,255,.75)',marginTop:3}}>Save the file, then drop it in the shared OneDrive folder. Love's Managers Hub imports it automatically.</div>
+          <div style={{fontSize:11,fontWeight:800,color:'var(--text,#fff)'}}>Export today's work as JSON</div>
+          <div style={{fontSize:12,lineHeight:1.5,color:'rgba(240,244,255,.75)',marginTop:3}}>Save the file, then use ☁ Cloud Sync → Push, or email it to Love.</div>
         </div>
         <div style={{display:'flex',gap:8,flexShrink:0}}>
-          <button onClick={copy} style={{padding:'10px 14px',background:'rgba(255,255,255,.10)',color:'var(--text,#fff)',border:'1px solid rgba(255,255,255,.2)',borderRadius:8,fontFamily:'inherit',fontSize:16,fontWeight:700,cursor:'pointer'}}>📋 Copy</button>
-          <button onClick={download} style={{padding:'10px 18px',background:agent.color,color:'#fff',border:'none',borderRadius:8,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',boxShadow:`0 6px 18px ${agent.color}55`}}>⬇ Download JSON</button>
+          <button onClick={copy} style={{padding:'10px 14px',background:'rgba(255,255,255,.10)',color:'var(--text,#fff)',border:'1px solid rgba(255,255,255,.2)',borderRadius:8,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer'}}>📋 Copy</button>
+          <button onClick={download} style={{padding:'10px 18px',background:agent.color,color:'#fff',border:'none',borderRadius:8,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer',boxShadow:`0 6px 18px ${agent.color}55`}}>⬇ Download JSON</button>
         </div>
       </div>
       <div className="kpi-strip">
@@ -990,8 +1166,8 @@ function ExportDay({agent,tickets,onImport}){
         <Kpi label="Unresolved" v={payload.stats.unresolved} c="#F87171"/>
       </div>
       <div className="card">
-        <div className="card-h"><h3>Preview</h3><span style={{fontSize:16,color:'var(--muted,#6B85C0)'}}>ekedp_agent_{agent.id}_{dateStr}.json</span></div>
-        <pre style={{margin:0,padding:'14px 18px',fontFamily:"'JetBrains Mono',monospace",fontSize:16.5,lineHeight:1.55,color:'#93C5FD',whiteSpace:'pre-wrap',wordBreak:'break-word',maxHeight:380,overflowY:'auto',background:'transparent'}}>{json}</pre>
+        <div className="card-h"><h3>Preview</h3><span style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>ekedp_agent_{agent.id}_{dateStr}.json</span></div>
+        <pre style={{margin:0,padding:'14px 18px',fontFamily:"'JetBrains Mono',monospace",fontSize:12,lineHeight:1.55,color:'#93C5FD',whiteSpace:'pre-wrap',wordBreak:'break-word',maxHeight:380,overflowY:'auto',background:'transparent'}}>{json}</pre>
       </div>
     </div>
   );
@@ -1007,22 +1183,22 @@ function UpdateTicket({ticket,agent,onClose,onSave,onDelete}){
         <div className="modal-h"><h3>Update Ticket #{ticket.num}</h3><button className="modal-x" onClick={onClose}>✕</button></div>
         <div className="modal-b">
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-            <div><div style={{fontSize:16,color:'var(--muted,#6B85C0)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Ticket</div><div style={{fontSize:20,fontWeight:900,color:'#60A5FA',fontFamily:"'JetBrains Mono',monospace"}}>#{ticket.num}</div></div>
-            <div><div style={{fontSize:16,color:'var(--muted,#6B85C0)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Customer</div><div style={{fontSize:16,fontWeight:700}}>{ticket.name||'—'}</div><div style={{fontSize:16,color:'var(--muted,#6B85C0)'}}>{ticket.phone||'—'}</div></div>
+            <div><div style={{fontSize:11,color:'var(--muted,#6B85C0)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Ticket</div><div style={{fontSize:20,fontWeight:900,color:'#60A5FA',fontFamily:"'JetBrains Mono',monospace"}}>#{ticket.num}</div></div>
+            <div><div style={{fontSize:11,color:'var(--muted,#6B85C0)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.6px'}}>Customer</div><div style={{fontSize:11,fontWeight:700}}>{ticket.name||'—'}</div><div style={{fontSize:11,color:'var(--muted,#6B85C0)'}}>{ticket.phone||'—'}</div></div>
           </div>
-          <div style={{padding:'8px 10px',background:'var(--surface,#0D1B45)',borderRadius:8,borderLeft:'3px solid #3B82F6',marginBottom:14,fontSize:16}}>{ticket.issue||ticket.category||'—'} · <strong>{ticket.bu||'—'}</strong></div>
+          <div style={{padding:'8px 10px',background:'var(--surface,#0D1B45)',borderRadius:8,borderLeft:'3px solid #3B82F6',marginBottom:14,fontSize:11}}>{ticket.issue||ticket.category||'—'} · <strong>{ticket.bu||'—'}</strong></div>
           <div className="fld"><label>Status</label>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
-              {stBtns.map(b=><button key={b.s} onClick={()=>setSt(b.s)} style={{padding:10,border:`2px solid ${st===b.s?b.c:'var(--border,#1E3070)'}`,background:st===b.s?b.bg:'var(--card,#111D4A)',color:st===b.s?b.c:'var(--muted,#6B85C0)',borderRadius:8,fontFamily:'inherit',fontSize:16,fontWeight:700,cursor:'pointer'}}>{b.l}</button>)}
+              {stBtns.map(b=><button key={b.s} onClick={()=>setSt(b.s)} style={{padding:10,border:`2px solid ${st===b.s?b.c:'var(--border,#1E3070)'}`,background:st===b.s?b.bg:'var(--card,#111D4A)',color:st===b.s?b.c:'var(--muted,#6B85C0)',borderRadius:8,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer'}}>{b.l}</button>)}
             </div>
           </div>
-          <div className="fld"><label>Action Taken / Note</label><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What was done? Next steps?" style={{width:'100%',padding:'9px 11px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:16,outline:'none',minHeight:70,resize:'vertical'}}/></div>
-          <div className="fld"><label>Responsible Party</label><input value={resp} onChange={e=>setResp(e.target.value)} style={{width:'100%',padding:'9px 11px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:16,outline:'none'}}/></div>
+          <div className="fld"><label>Action Taken / Note</label><textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="What was done? Next steps?" style={{width:'100%',padding:'9px 11px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:11,outline:'none',minHeight:70,resize:'vertical'}}/></div>
+          <div className="fld"><label>Responsible Party</label><input value={resp} onChange={e=>setResp(e.target.value)} style={{width:'100%',padding:'9px 11px',background:'var(--bg,#060E2B)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:11,outline:'none'}}/></div>
           <div style={{display:'flex',gap:8,justifyContent:'space-between',marginTop:14}}>
-            <button onClick={()=>{if(confirm('Delete this ticket?'))onDelete(ticket.num);}} style={{padding:'9px 14px',background:'rgba(220,38,38,.12)',color:'#F87171',border:'1px solid rgba(220,38,38,.3)',borderRadius:8,fontFamily:'inherit',fontSize:16,fontWeight:700,cursor:'pointer'}}>🗑 Delete</button>
+            <button onClick={()=>{if(confirm('Delete this ticket?'))onDelete(ticket.num);}} style={{padding:'9px 14px',background:'rgba(220,38,38,.12)',color:'#F87171',border:'1px solid rgba(220,38,38,.3)',borderRadius:8,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer'}}>🗑 Delete</button>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={onClose} style={{padding:'9px 14px',background:'var(--surface,#0D1B45)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:16,fontWeight:700,cursor:'pointer'}}>Cancel</button>
-              <button onClick={()=>onSave({...ticket,status:st,note,resp})} style={{padding:'9px 16px',background:agent.color,color:'#fff',border:'none',borderRadius:8,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer'}}>💾 Save</button>
+              <button onClick={onClose} style={{padding:'9px 14px',background:'var(--surface,#0D1B45)',color:'var(--text,#F0F4FF)',border:'1px solid var(--border,#1E3070)',borderRadius:8,fontFamily:'inherit',fontSize:11,fontWeight:700,cursor:'pointer'}}>Cancel</button>
+              <button onClick={()=>onSave({...ticket,status:st,note,resp})} style={{padding:'9px 16px',background:agent.color,color:'#fff',border:'none',borderRadius:8,fontFamily:'inherit',fontSize:11,fontWeight:800,cursor:'pointer'}}>💾 Save</button>
             </div>
           </div>
         </div>
@@ -1122,7 +1298,7 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',flexWrap:'wrap',gap:10}}>
           <div>
-            <h2 style={{font:'800 20px/1.2 Sora,sans-serif',color:'#fff',margin:0}}>👥 Agents Roster</h2>
+            <h2 style={{font:'800 12px/1.2 Sora,sans-serif',color:'#fff',margin:0}}>👥 Agents Roster</h2>
             <p style={{font:'500 12px/1.4 Sora,sans-serif',color:'#6B85C0',margin:'4px 0 0'}}>
               {todayLong} · <span style={{color:'#4ADE80',fontWeight:700}}>{onShiftCount} on shift</span> · <span style={{color:'#9CA3AF'}}>{AGENTS.length-onShiftCount} off</span>
             </p>
@@ -1130,21 +1306,21 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
           {/* YOU TODAY */}
           <div style={{display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.12)',borderRadius:10,padding:'8px 16px'}}>
             <span style={{font:'700 10px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.1em'}}>YOU TODAY</span>
-            <span style={{fontSize:15}}>{mySM.icon}</span>
-            <span style={{font:'700 13px/1 Sora,sans-serif',color:mySM.color}}>{mySM.label}</span>
+            <span style={{fontSize:12}}>{mySM.icon}</span>
+            <span style={{font:'700 12px/1 Sora,sans-serif',color:mySM.color}}>{mySM.label}</span>
           </div>
         </div>
       </div>
 
       {/* ── Info banner ── */}
       <div style={{display:'flex',alignItems:'flex-start',gap:12,padding:'12px 16px',background:'rgba(59,130,246,.10)',border:'1px solid rgba(59,130,246,.25)',borderRadius:10,marginBottom:22,font:'500 12.5px/1.55 Sora,sans-serif',color:'rgba(240,244,255,.80)'}}>
-        <span style={{fontSize:16,flexShrink:0}}>ℹ️</span>
+        <span style={{fontSize:11,flexShrink:0}}>ℹ️</span>
         <span>This roster is set by Love (Managers Hub) and synced here automatically. View only — to change your shift, message Love.</span>
       </div>
 
       {/* ── TODAY label ── */}
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-        <span style={{fontSize:16}}>📅</span>
+        <span style={{fontSize:11}}>📅</span>
         <span style={{font:'700 11px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.12em'}}>
           TODAY · {watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase()}
         </span>
@@ -1170,11 +1346,11 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
                 <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
                   {photo
                     ?<img src={photo} alt={a.name} style={{width:48,height:48,borderRadius:'50%',objectFit:'cover',border:`2.5px solid ${a.color}`,flexShrink:0}}/>
-                    :<div style={{width:48,height:48,borderRadius:'50%',background:a.tint,border:`2.5px solid ${a.color}`,display:'flex',alignItems:'center',justifyContent:'center',font:'800 16px/1 Sora,sans-serif',color:'#fff',flexShrink:0}}>{a.initials}</div>
+                    :<div style={{width:48,height:48,borderRadius:'50%',background:a.tint,border:`2.5px solid ${a.color}`,display:'flex',alignItems:'center',justifyContent:'center',font:'800 12px/1 Sora,sans-serif',color:'#fff',flexShrink:0}}>{a.initials}</div>
                   }
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-                      <div style={{font:'800 13px/1.2 Sora,sans-serif',color:'#fff'}}>{a.name}</div>
+                      <div style={{font:'800 12px/1.2 Sora,sans-serif',color:'#fff'}}>{a.name}</div>
                       {isMe&&<span style={{font:'800 8px/1 Sora,sans-serif',padding:'3px 6px',borderRadius:5,background:a.color,color:'#fff',textTransform:'uppercase',letterSpacing:'.06em',flexShrink:0}}>YOU</span>}
                     </div>
                   </div>
@@ -1183,7 +1359,7 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
                 {/* Shift pill */}
                 <div style={{padding:'7px 10px',borderRadius:8,background:sm.bg,marginBottom:sm.shadow?6:12}}>
                   <div style={{display:'flex',alignItems:'center',gap:6}}>
-                    <span style={{fontSize:13}}>{sm.icon}</span>
+                    <span style={{fontSize:11}}>{sm.icon}</span>
                     <div>
                       <div style={{font:'700 12px/1.2 Sora,sans-serif',color:sm.color}}>{sm.label}</div>
                       {sm.time&&<div style={{font:'500 11px/1 Sora,sans-serif',color:sm.color,opacity:.75,marginTop:2}}>{sm.time}</div>}
@@ -1195,7 +1371,7 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
                 {sm.shadow&&(
                   <div style={{padding:'6px 10px',borderRadius:8,background:'rgba(59,130,246,.12)',marginBottom:12}}>
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
-                      <span style={{fontSize:13}}>🌙</span>
+                      <span style={{fontSize:11}}>🌙</span>
                       <div style={{font:'500 11px/1.2 Sora,sans-serif',color:'#93C5FD'}}>Shadows Mycron (5PM–8AM)</div>
                     </div>
                   </div>
@@ -1223,7 +1399,7 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
       {/* ── Weekly calendar ── */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,flexWrap:'wrap',gap:10}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:16}}>📅</span>
+          <span style={{fontSize:11}}>📅</span>
           <span style={{font:'700 11px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.12em'}}>{weekLabel}</span>
         </div>
         <div style={{display:'flex',gap:8}}>
@@ -1274,7 +1450,7 @@ const AgentDashboard = ({agent, tickets, onChange}) => {
                   return(
                     <td key={di} style={{padding:'10px 4px',textAlign:'center',background:isToday?'rgba(29,78,216,.12)':sm.cellBg,borderRight:di<6?'1px solid var(--border,#1E3070)':'none'}}>
                       <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
-                        <span style={{fontSize:18}}>{sm.icon}</span>
+                        <span style={{fontSize:13}}>{sm.icon}</span>
                         <span style={{font:'600 9.5px/1.2 Sora,sans-serif',color:sm.color,whiteSpace:'pre-line',textAlign:'center'}}>{sm.cellLabel}</span>
                       </div>
                     </td>
@@ -1481,194 +1657,186 @@ function App(){
   );
 }
 
-// OneDrive Sync screen — Microsoft Graph via MSAL.
-// Uses string concatenation to avoid Babel template-literal issues.
+// ── JSONBin Sync Screen ─────────────────────────────────────────────
+// jsonbin.io — free JSON cloud storage. No Azure, no IT, no installs.
+// Setup: jsonbin.io → sign up → New Bin → copy Bin ID + Master Key
 
 const SyncScreen = () => {
-  const [account, setAccount]   = React.useState(null);
-  const [msalApp, setMsalApp]   = React.useState(null);
-  const [clientId, setClientId] = React.useState(() => localStorage.getItem('ekedp_client_id') || '');
-  const [statusMsg, setStatusMsg] = React.useState('');
-  const [statusOk, setStatusOk]   = React.useState(true);
-  const [lastSync, setLastSync]   = React.useState(() => localStorage.getItem('ekedp_last_sync') || '');
-  const [busy, setBusy] = React.useState(false);
+  // ── Hardcoded shared credentials — same for all agents ──────────
+  const SHARED_BIN_ID  = '6a11fd706877513b27bf6f70';
+  const SHARED_API_KEY = '$2a$10$fJC1nhWE9aPBRZKKgHgbWOU.OQVGkWEqxjmB33sy1Rix8uqGoPCXG';
 
-  const FOLDER   = 'EKEDP CX Live';
-  const FILENAME = 'ekedp-cx-live.json';
+  const [binId,   setBinId]   = React.useState(SHARED_BIN_ID);
+  const [apiKey,  setApiKey]  = React.useState(SHARED_API_KEY);
+  const [saving,  setSaving]  = React.useState(false);
+  const [status,  setStatus]  = React.useState({msg:'', ok:true});
+  const [lastSync,setLastSync]= React.useState(() => localStorage.getItem('ek_last_sync') || '');
+  const [preview, setPreview] = React.useState(null);
 
-  const toast = (msg, ok=true) => { setStatusMsg(msg); setStatusOk(ok); };
+  // ── Auto-pull on first load ───────────────────────────────────────
+  React.useEffect(() => {
+    const alreadyPulled = sessionStorage.getItem('ek_auto_pulled');
+    if (!alreadyPulled) {
+      sessionStorage.setItem('ek_auto_pulled', '1');
+      setTimeout(pullNow, 1200); // slight delay so UI renders first
+    }
+  }, []);
 
-  const initMsal = (id) => {
-    if (!window.msal) { toast('MSAL not loaded — check internet connection.', false); return; }
+  const toast = (msg, ok=true) => setStatus({msg, ok});
+
+  const BASE = 'https://api.jsonbin.io/v3/b';
+  const headers = () => ({ 'Content-Type':'application/json', 'X-Master-Key': apiKey });
+
+  // ── Save credentials ──────────────────────────────────────────────
+  function saveCreds() {
+    if (!binId.trim() || !apiKey.trim()) { toast('Paste both the Bin ID and API key first.', false); return; }
+    localStorage.setItem('ek_bin_id',  binId.trim());
+    localStorage.setItem('ek_bin_key', apiKey.trim());
+    toast('Credentials saved! Try Pull now.');
+  }
+
+  // ── Collect all local tickets ─────────────────────────────────────
+  function collectLocal() {
+    var all = {};
     try {
-      const app = new window.msal.PublicClientApplication({
-        auth: {
-          clientId: id,
-          authority: 'https://login.microsoftonline.com/common',
-          redirectUri: window.location.origin + window.location.pathname,
-        },
-        cache: { cacheLocation: 'localStorage' },
-      });
-      setMsalApp(app);
-      const accounts = app.getAllAccounts();
-      if (accounts.length > 0) setAccount(accounts[0]);
-    } catch(e) { toast('MSAL init failed: ' + e.message, false); }
-  };
+      for (var k in localStorage) {
+        if (!k.startsWith('ek_tix_')) continue;
+        var arr = JSON.parse(localStorage.getItem(k) || '[]');
+        if (Array.isArray(arr) && arr.length) all[k.replace('ek_tix_','')] = arr;
+      }
+    } catch(e) {}
+    return all;
+  }
 
-  const saveClientId = () => {
-    localStorage.setItem('ekedp_client_id', clientId);
-    initMsal(clientId);
-    toast('Client ID saved. Now sign in with Microsoft below.');
-  };
-
-  const signIn = async () => {
-    if (!msalApp) { toast('Save your Client ID first.', false); return; }
-    setBusy(true);
+  // ── PULL — read from JSONBin, merge into localStorage ─────────────
+  async function pullNow() {
+    if (!binId || !apiKey) { toast('Save your credentials first.', false); return; }
+    setSaving(true); toast('Pulling from cloud…');
     try {
-      const result = await msalApp.loginPopup({
-        scopes: ['Files.ReadWrite', 'User.Read'],
-        prompt: 'select_account',
-      });
-      setAccount(result.account);
-      toast('Signed in as ' + result.account.name);
-    } catch(e) {
-      toast('Sign-in failed: ' + e.message, false);
-    } finally { setBusy(false); }
-  };
-
-  const signOut = () => {
-    if (msalApp && account) msalApp.logoutPopup();
-    setAccount(null);
-    toast('Signed out.');
-  };
-
-  const getToken = async () => {
-    const result = await msalApp.acquireTokenSilent({
-      scopes: ['Files.ReadWrite'],
-      account,
-    });
-    return result.accessToken;
-  };
-
-  const syncNow = async () => {
-    if (!account) { toast('Sign in with Microsoft first.', false); return; }
-    setBusy(true); toast('Syncing...');
-    try {
-      const token = await getToken();
-      const url = 'https://graph.microsoft.com/v1.0/me/drive/root:/' + FOLDER + '/' + FILENAME + ':/content';
-      const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-      if (!res.ok) throw new Error('File not found (' + res.status + '). Create ' + FOLDER + '/' + FILENAME + ' in your OneDrive first.');
+      const res = await fetch(BASE + '/' + binId.trim() + '/latest', { headers: headers() });
+      if (res.status === 401) throw new Error('Invalid API key — check and re-save.');
+      if (res.status === 404) throw new Error('Bin ID not found — check the ID.');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      window.EK_SYNC_DATA = data;
-      const t = new Date().toISOString();
-      setLastSync(t); localStorage.setItem('ekedp_last_sync', t);
-      toast('Synced — ' + Object.keys(data).join(', '));
-    } catch(e) {
-      toast('Sync failed: ' + e.message, false);
-    } finally { setBusy(false); }
-  };
-
-  const pushData = async () => {
-    if (!account) { toast('Sign in with Microsoft first.', false); return; }
-    setBusy(true); toast('Pushing...');
-    try {
-      const token = await getToken();
-      const url = 'https://graph.microsoft.com/v1.0/me/drive/root:/' + FOLDER + '/' + FILENAME + ':/content';
-      const payload = {
-        source: 'managers-hub',
-        timestamp: new Date().toISOString(),
-        tickets: window.EK_IMPORTED_TICKETS || [],
-      };
-      const res = await fetch(url, {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const cloud = data.record || {};
+      // Merge: for each agent key in cloud, update localStorage
+      var count = 0;
+      Object.keys(cloud).forEach(function(agentId) {
+        if (!Array.isArray(cloud[agentId])) return;
+        localStorage.setItem('ek_tix_' + agentId, JSON.stringify(cloud[agentId]));
+        count += cloud[agentId].length;
       });
-      if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
+      window.dispatchEvent(new Event('ek-import'));
       const t = new Date().toISOString();
-      setLastSync(t); localStorage.setItem('ekedp_last_sync', t);
-      toast('Pushed to OneDrive.');
-    } catch(e) {
-      toast('Push failed: ' + e.message, false);
-    } finally { setBusy(false); }
-  };
+      setLastSync(t); localStorage.setItem('ek_last_sync', t);
+      setPreview(cloud);
+      toast('✅ Pulled ' + count + ' tickets from ' + Object.keys(cloud).length + ' agent(s).');
+    } catch(e) { toast('Pull failed: ' + e.message, false); }
+    finally { setSaving(false); }
+  }
+
+  // ── PUSH — send all local tickets to JSONBin ──────────────────────
+  async function pushNow() {
+    if (!binId || !apiKey) { toast('Save your credentials first.', false); return; }
+    setSaving(true); toast('Pushing to cloud…');
+    try {
+      const local = collectLocal();
+      const res = await fetch(BASE + '/' + binId.trim(), {
+        method: 'PUT',
+        headers: headers(),
+        body: JSON.stringify(local),
+      });
+      if (res.status === 401) throw new Error('Invalid API key.');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const t = new Date().toISOString();
+      setLastSync(t); localStorage.setItem('ek_last_sync', t);
+      var total = Object.values(local).reduce(function(s,a){return s+a.length;},0);
+      toast('✅ Pushed ' + total + ' tickets (' + Object.keys(local).join(', ') + ') to cloud.');
+    } catch(e) { toast('Push failed: ' + e.message, false); }
+    finally { setSaving(false); }
+  }
+
+  const agentSummary = preview
+    ? Object.entries(preview).map(function([k,v]){ return k+': '+v.length; }).join(' · ')
+    : null;
 
   return (
-    <div style={{padding:'22px 28px', maxWidth:860}}>
+    <div style={{padding:'22px 28px', maxWidth:760}}>
+
       <div style={{marginBottom:18}}>
-        <h2 style={{font:'800 17px/1.2 Sora,sans-serif', color:'var(--text)', margin:0}}>☁️ OneDrive Sync</h2>
-        <p style={{font:'500 13px/1.45 Sora,sans-serif', color:'var(--muted)', margin:'4px 0 0'}}>
-          One shared JSON file in your OneDrive. Both the Managers Hub and all 5 Agents Hubs read &amp; write to it — 100% accurate data across machines.
+        <h2 style={{font:'800 12px/1.2 Sora,sans-serif', color:'var(--text)', margin:0}}>☁️ Cloud Sync — JSONBin</h2>
+        <p style={{font:'500 12px/1.5 Sora,sans-serif', color:'var(--muted)', margin:'4px 0 0'}}>
+          Shared cloud storage. All agents sync automatically — any device, any browser, no setup needed.
         </p>
       </div>
 
-      {statusMsg && (
+      {/* Status banner */}
+      {status.msg && (
         <div style={{
-          padding:'10px 16px', borderRadius:8, marginBottom:14,
-          background: statusOk ? 'rgba(22,163,74,.15)' : 'rgba(220,38,38,.15)',
-          border: statusOk ? '1px solid rgba(22,163,74,.3)' : '1px solid rgba(220,38,38,.3)',
-          font:'600 14px Sora,sans-serif',
-          color: statusOk ? '#4ADE80' : '#F87171',
-        }}>{statusMsg}</div>
+          padding:'10px 14px', borderRadius:8, marginBottom:14,
+          background: status.ok ? 'rgba(22,163,74,.15)' : 'rgba(220,38,38,.15)',
+          border: '1px solid ' + (status.ok ? 'rgba(22,163,74,.3)' : 'rgba(220,38,38,.3)'),
+          font:'600 12px Sora,sans-serif',
+          color: status.ok ? '#4ADE80' : '#F87171',
+        }}>{status.msg}</div>
       )}
 
-      <SyncCard num="1" title="Azure AD App Client ID">
-        <p style={hint}>Register a free app at <b style={{color:'#93C5FD'}}>portal.azure.com → App registrations</b>. Copy the Application (client) ID and paste below. Only once.</p>
-        <div style={{display:'flex', gap:8}}>
-          <input value={clientId} onChange={e=>setClientId(e.target.value)}
-            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            style={inp}/>
-          <Btn onClick={saveClientId} color="#001F5C">💾 Save</Btn>
+      {/* Sync card */}
+      <SyncCard num="1" title="Sync with Cloud">
+        <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16}}>
+          <StatTile label="Cloud"     value="JSONBin · EKEDP CX Live" color="#93C5FD"/>
+          <StatTile label="Last sync" value={lastSync ? new Date(lastSync).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' '+new Date(lastSync).toLocaleDateString('en-GB') : 'Auto-syncing…'} mono/>
+          <StatTile label="Status"    value="✅ Connected" color="#4ADE80"/>
         </div>
-      </SyncCard>
 
-      <SyncCard num="2" title="Sign in with Microsoft">
-        {account ? (
-          <div style={{display:'flex', alignItems:'center', gap:12}}>
-            <div style={{width:38, height:38, borderRadius:'50%', background:'linear-gradient(135deg,#60A5FA,#1D4ED8)', display:'flex', alignItems:'center', justifyContent:'center', font:'800 16px Sora,sans-serif', color:'#fff'}}>
-              {(account.name||'L')[0]}
-            </div>
-            <div>
-              <div style={{font:'700 15px Sora,sans-serif', color:'var(--text)'}}>{account.name}</div>
-              <div style={{font:'500 13px Sora,sans-serif', color:'var(--muted)'}}>{account.username}</div>
-            </div>
-            <Btn onClick={signOut} color="#DC2626" style={{marginLeft:'auto'}}>Sign out</Btn>
+        {agentSummary && (
+          <div style={{padding:'8px 12px', background:'rgba(59,130,246,.08)', border:'1px solid rgba(59,130,246,.2)', borderRadius:7, font:'500 11px Sora,sans-serif', color:'#93C5FD', marginBottom:14}}>
+            ☁ Cloud has: {agentSummary}
           </div>
-        ) : (
-          <Btn onClick={signIn} color="#0078D4" disabled={busy}>
-            {busy ? '⏳ Signing in...' : '🔑 Sign in with Microsoft (EKEDP email)'}
-          </Btn>
         )}
+
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14}}>
+          <button onClick={pullNow} disabled={saving} style={{
+            padding:'16px', background: saving ? 'rgba(255,255,255,.06)' : '#16A34A',
+            color:'#fff', border:'none', borderRadius:10,
+            font:'800 12px Sora,sans-serif', cursor: saving ? 'not-allowed' : 'pointer',
+            display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+            boxShadow: saving ? 'none' : '0 4px 14px rgba(22,163,74,.35)',
+            opacity: saving ? .6 : 1,
+          }}>
+            <span style={{fontSize:24}}>⬇</span>
+            <span>Pull from Cloud</span>
+            <small style={{fontWeight:500, opacity:.8}}>Get everyone's latest tickets</small>
+          </button>
+          <button onClick={pushNow} disabled={saving} style={{
+            padding:'16px', background: saving ? 'rgba(255,255,255,.06)' : '#1D4ED8',
+            color:'#fff', border:'none', borderRadius:10,
+            font:'800 12px Sora,sans-serif', cursor: saving ? 'not-allowed' : 'pointer',
+            display:'flex', flexDirection:'column', alignItems:'center', gap:6,
+            boxShadow: saving ? 'none' : '0 4px 14px rgba(29,78,216,.35)',
+            opacity: saving ? .6 : 1,
+          }}>
+            <span style={{fontSize:24}}>⬆</span>
+            <span>Push to Cloud</span>
+            <small style={{fontWeight:500, opacity:.8}}>Upload your tickets for all to see</small>
+          </button>
+        </div>
+
+        <div style={{font:'500 11px/1.6 Sora,sans-serif', color:'var(--muted)', background:'rgba(255,255,255,.03)', borderRadius:8, padding:'10px 12px'}}>
+          💡 <b style={{color:'var(--text)'}}>Auto-syncs when you open the app.</b> After adding tickets, hit <b style={{color:'#4ADE80'}}>Push</b> so everyone sees your updates. Hit <b style={{color:'#93C5FD'}}>Pull</b> to get the latest from other agents.
+        </div>
       </SyncCard>
 
-      <SyncCard num="3" title="Sync">
-        <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14}}>
-          <StatTile label="Status"    value={account ? 'Connected' : 'Not signed in'} color={account ? '#4ADE80' : '#F87171'}/>
-          <StatTile label="Last sync" value={lastSync ? new Date(lastSync).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' ' + new Date(lastSync).toLocaleDateString('en-GB') : '—'} mono/>
-          <StatTile label="File"      value={FOLDER + '/' + FILENAME}/>
-        </div>
-        <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
-          <Btn onClick={syncNow}  color="#16A34A" disabled={!account||busy}>⟳ Pull from OneDrive</Btn>
-          <Btn onClick={pushData} color="#001F5C" disabled={!account||busy}>↑ Push to OneDrive</Btn>
-        </div>
-      </SyncCard>
-
-      <div style={{
-        background:'rgba(59,130,246,.06)', border:'1px dashed rgba(59,130,246,.25)',
-        borderRadius:10, padding:'14px 16px',
-        font:'500 14px/1.6 Sora,sans-serif', color:'rgba(240,244,255,.80)',
-      }}>
-        <b style={{color:'var(--text)'}}>How it works:</b> Both hubs sign in with EKEDP Microsoft accounts and read/write the same <span style={{fontFamily:'JetBrains Mono,monospace', color:'#93C5FD'}}>ekedp-cx-live.json</span> in your OneDrive. No shared passwords or copy-paste URLs — just work logins.
-      </div>
     </div>
   );
 };
 
+
 const SyncCard = ({num, title, children}) => (
   <div style={{background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, padding:'16px 18px', marginBottom:12}}>
     <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:12}}>
-      <div style={{width:24, height:24, borderRadius:'50%', background:'#E30613', color:'#fff', font:'900 14px Sora,sans-serif', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{num}</div>
-      <div style={{font:'800 15px Sora,sans-serif', color:'var(--text)'}}>{title}</div>
+      <div style={{width:24, height:24, borderRadius:'50%', background:'#E30613', color:'#fff', font:'900 12px Sora,sans-serif', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>{num}</div>
+      <div style={{font:'800 12px Sora,sans-serif', color:'var(--text)'}}>{title}</div>
     </div>
     {children}
   </div>
@@ -1677,7 +1845,7 @@ const SyncCard = ({num, title, children}) => (
 const StatTile = ({label, value, color='var(--text)', mono}) => (
   <div style={{background:'rgba(255,255,255,.03)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 12px'}}>
     <div style={{font:'700 10px Sora,sans-serif', color:'var(--muted)', textTransform:'uppercase', letterSpacing:'.10em'}}>{label}</div>
-    <div style={{font:'700 14px/1.3 '+(mono?'JetBrains Mono,monospace':'Sora,sans-serif'), color, marginTop:4, wordBreak:'break-all'}}>{value}</div>
+    <div style={{font:'700 12px/1.3 '+(mono?'JetBrains Mono,monospace':'Sora,sans-serif'), color, marginTop:4, wordBreak:'break-all'}}>{value}</div>
   </div>
 );
 
@@ -1685,13 +1853,13 @@ const Btn = ({children, onClick, color='#001F5C', disabled, style={}}) => (
   <button onClick={onClick} disabled={disabled} style={{
     padding:'10px 16px', background: disabled ? 'rgba(255,255,255,.06)' : color,
     color:'#fff', border:'none', borderRadius:8,
-    font:'800 14px Sora,sans-serif', cursor: disabled ? 'not-allowed' : 'pointer',
+    font:'800 12px Sora,sans-serif', cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? .5 : 1, ...style,
   }}>{children}</button>
 );
 
-const hint = {font:'500 13px/1.5 Sora,sans-serif', color:'var(--muted)', marginBottom:10};
-const inp  = {flex:1, padding:'9px 11px', background:'var(--bg)', color:'var(--text)', border:'1px solid var(--border)', borderRadius:8, fontFamily:'JetBrains Mono,monospace', fontSize:16, outline:'none'};
+const hint = {font:'500 12px/1.5 Sora,sans-serif', color:'var(--muted)', marginBottom:10};
+const inp  = {flex:1, padding:'9px 11px', background:'var(--bg)', color:'var(--text)', border:'1px solid var(--border)', borderRadius:8, fontFamily:'JetBrains Mono,monospace', fontSize:11, outline:'none'};
 
 // AllComplaints — 10-col view + expandable rows showing all 20 fields
 // Columns: S/N · TICKET · TIME · DAY · CUSTOMER · PHONE · BU · CATEGORY · STATUS · NOTE
@@ -1760,7 +1928,7 @@ var ACUpdateWidget = function(props) {
         </div>
         {onDelete && (
           <button onClick={function(){ if(confirm('Delete ticket #'+t.num+' from All Complaints? This cannot be undone.')) onDelete(t.num); }}
-            style={{padding:'6px 12px', background:'rgba(220,38,38,.12)', color:'#F87171', border:'1px solid rgba(220,38,38,.3)', borderRadius:7, fontFamily:'Sora,sans-serif', fontSize:13, fontWeight:700, cursor:'pointer'}}>
+            style={{padding:'6px 12px', background:'rgba(220,38,38,.12)', color:'#F87171', border:'1px solid rgba(220,38,38,.3)', borderRadius:7, fontFamily:'Sora,sans-serif', fontSize:11, fontWeight:700, cursor:'pointer'}}>
             🗑 Delete
           </button>
         )}
@@ -1771,19 +1939,19 @@ var ACUpdateWidget = function(props) {
         <div style={{font:'700 10px/1 Sora,sans-serif', color:'var(--sub)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:5}}>📂 Category</div>
         {catList.length > 0
           ? <select value={curCat} onChange={onCatChange}
-              style={{width:'100%', padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:13, cursor:'pointer', outline:'none'}}>
+              style={{width:'100%', padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:11, cursor:'pointer', outline:'none'}}>
               {catList.map(function(c){ return <option key={c} value={c}>{c}</option>; })}
               {curCat && catList.indexOf(curCat) === -1 && <option value={curCat}>{curCat}</option>}
             </select>
           : <input value={curCat} onChange={onCatChange}
               placeholder="Category"
-              style={{width:'100%', padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:13, outline:'none', boxSizing:'border-box'}}/>
+              style={{width:'100%', padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:11, outline:'none', boxSizing:'border-box'}}/>
         }
       </div>
 
       <div style={{display:'flex', gap:10, alignItems:'flex-start', flexWrap:'wrap'}}>
         <select value={curStatus} onChange={onStatusChange}
-          style={{padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:16, cursor:'pointer', outline:'none'}}>
+          style={{padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:11, cursor:'pointer', outline:'none'}}>
           <option value="unresolved">🔴 Unresolved</option>
           <option value="progress">⏳ In Progress</option>
           <option value="resolved">✅ Resolved</option>
@@ -1793,10 +1961,10 @@ var ACUpdateWidget = function(props) {
           onChange={onNoteChange}
           placeholder="Add action taken / resolution note…"
           rows={2}
-          style={{flex:1, minWidth:220, padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:16, outline:'none', resize:'vertical'}}
+          style={{flex:1, minWidth:220, padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:11, outline:'none', resize:'vertical'}}
         />
         <button onClick={onSave}
-          style={{padding:'8px 18px', background:'#E30613', color:'#fff', border:'none', borderRadius:8, font:'800 14px Sora,sans-serif', cursor:'pointer', boxShadow:'0 4px 12px rgba(227,6,19,.3)', whiteSpace:'nowrap'}}>
+          style={{padding:'8px 18px', background:'#E30613', color:'#fff', border:'none', borderRadius:8, font:'800 12px Sora,sans-serif', cursor:'pointer', boxShadow:'0 4px 12px rgba(227,6,19,.3)', whiteSpace:'nowrap'}}>
           💾 Save Update
         </button>
       </div>
@@ -2027,8 +2195,8 @@ const AllComplaints = ({agent}) => {
       {/* ── Header ── */}
       <div style={{marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12}}>
         <div>
-          <h2 style={{font:'800 17px/1 Sora,sans-serif', color:'#fff', margin:0}}>📨 All Complaints</h2>
-          <p style={{font:'500 13px/1.4 Sora,sans-serif', color:'var(--muted)', margin:'3px 0 0'}}>
+          <h2 style={{font:'800 12px/1 Sora,sans-serif', color:'#fff', margin:0}}>📨 All Complaints</h2>
+          <p style={{font:'500 12px/1.4 Sora,sans-serif', color:'var(--muted)', margin:'3px 0 0'}}>
             All days · all statuses · {allTickets.length} complaints · 50 per page · click any row to expand
           </p>
         </div>
@@ -2036,14 +2204,14 @@ const AllComplaints = ({agent}) => {
           <button onClick={exportCSV} style={{
             padding:'9px 18px', borderRadius:6, border:'none',
             background:'#E30613', color:'#fff',
-            font:'800 14px Sora,sans-serif', cursor:'pointer',
+            font:'800 12px Sora,sans-serif', cursor:'pointer',
             boxShadow:'0 4px 14px rgba(227,6,19,.35)',
             display:'flex', alignItems:'center', gap:6,
           }}>⬇ Export CSV</button>
           <button onClick={exportJSON} style={{
             padding:'9px 18px', borderRadius:6, border:'none',
             background:'#1D4ED8', color:'#fff',
-            font:'800 14px Sora,sans-serif', cursor:'pointer',
+            font:'800 12px Sora,sans-serif', cursor:'pointer',
             boxShadow:'0 4px 14px rgba(29,78,216,.35)',
             display:'flex', alignItems:'center', gap:6,
           }}>⬇ Download JSON</button>
@@ -2060,8 +2228,8 @@ const AllComplaints = ({agent}) => {
         ].map(function(k){
           return (
             <div key={k.label} style={{background:k.bg, border:'1px solid '+k.color+'33', borderRadius:8, padding:'9px 14px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-              <span style={{font:'600 13px Sora,sans-serif', color:k.color}}>{k.label}</span>
-              <span style={{font:'800 20px/1 JetBrains Mono,monospace', color:k.color}}>{k.val}</span>
+              <span style={{font:'600 12px Sora,sans-serif', color:k.color}}>{k.label}</span>
+              <span style={{font:'800 12px/1 JetBrains Mono,monospace', color:k.color}}>{k.val}</span>
             </div>
           );
         })}
@@ -2075,7 +2243,7 @@ const AllComplaints = ({agent}) => {
             flex:1, minWidth:260, padding:'10px 14px',
             background:'var(--card)', color:'var(--text)',
             border:'1px solid var(--border)', borderRadius:10,
-            fontFamily:'Sora,sans-serif', fontSize:16, outline:'none',
+            fontFamily:'Sora,sans-serif', fontSize:11, outline:'none',
           }}/>
         <ACSelect value={stat} onChange={function(v){setStat(v); setPage(1); setExpanded(null);setExpanded(null);}} options={[
           ['','All statuses'],['resolved','✅ Resolved'],['progress','⏳ In Progress'],['unresolved','🔴 Unresolved'],
@@ -2087,16 +2255,16 @@ const AllComplaints = ({agent}) => {
       {/* ── Table ── */}
       <div style={{background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, overflow:'hidden'}}>
         <div style={{padding:'13px 18px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-          <h3 style={{font:'700 15px/1.2 Sora,sans-serif', color:'#fff', margin:0}}>
+          <h3 style={{font:'700 12px/1.2 Sora,sans-serif', color:'#fff', margin:0}}>
             Tickets · {filtered.length}{filtered.length !== allTickets.length ? ' (filtered)' : ''}
           </h3>
-          <span style={{font:'500 13px Sora,sans-serif', color:'var(--muted)'}}>
+          <span style={{font:'500 12px Sora,sans-serif', color:'var(--muted)'}}>
             Sorted newest first · {expanded !== null ? 'Row expanded — click again to close' : 'Click row to see all 20 fields'}
           </span>
         </div>
 
         <div style={{overflowX:'auto', maxHeight:'68vh', overflowY:'auto'}}>
-          <table style={{width:'100%', borderCollapse:'collapse', fontSize:16, fontFamily:'Sora,sans-serif'}}>
+          <table style={{width:'100%', borderCollapse:'collapse', fontSize:11, fontFamily:'Sora,sans-serif'}}>
             <thead>
               <tr style={{background:'rgba(0,0,0,.45)', position:'sticky', top:0, zIndex:2}}>
                 <ACTh w={32}>#</ACTh>
@@ -2122,10 +2290,10 @@ const AllComplaints = ({agent}) => {
                   <React.Fragment key={i}>
                     {/* ── Main row ── */}
                     <tr onClick={function(){toggleRow(i);}} style={{background:rowBg, cursor:'pointer', borderLeft: isExp?'3px solid #3B82F6':'3px solid transparent', transition:'background .15s'}}>
-                      <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', color:'var(--sub)', fontSize:16}}>{t.sn||String(i+1).padStart(2,'0')}</span></ACTd>
+                      <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', color:'var(--sub)', fontSize:11}}>{t.sn||String(i+1).padStart(2,'0')}</span></ACTd>
                       <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', fontWeight:700, color: isExp?'#60A5FA':'#93C5FD'}}>#{t.num}</span></ACTd>
                       <ACTd style={{color:'var(--muted)', whiteSpace:'nowrap'}}>{t.time}</ACTd>
-                      <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', color:'var(--muted)', fontSize:16}}>{(function(){
+                      <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', color:'var(--muted)', fontSize:11}}>{(function(){
                         var r=t.received||t.created||'';
                         var mA=String(r).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
                         if(mA){var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return mA[2].padStart(2,'0')+' '+(mo[parseInt(mA[1])-1]||mA[1]);}
@@ -2134,20 +2302,20 @@ const AllComplaints = ({agent}) => {
                         return t.day?'D'+t.day:'—';
                       })()}</span></ACTd>
                       <ACTd style={{fontWeight:600, color:'var(--text)', maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{t.name||'—'}</ACTd>
-                      <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', color:'var(--muted)', fontSize:16}}>+{t.phone}</span></ACTd>
+                      <ACTd><span style={{fontFamily:'JetBrains Mono,monospace', color:'var(--muted)', fontSize:11}}>+{t.phone}</span></ACTd>
                       <ACTd>
                         <span style={{display:'inline-block', padding:'2px 7px', borderRadius:7, background:'rgba(59,130,246,.12)', color:'#93C5FD', font:'700 10.5px/1.4 Sora,sans-serif', textTransform:'uppercase', letterSpacing:'.03em', whiteSpace:'nowrap'}}>{t.bu}</span>
                       </ACTd>
                       <ACTd>
                         <div style={{fontWeight:600, color:'var(--text)', lineHeight:1.3}}>{t.category}</div>
-                        {t.subcategory && <div style={{fontSize:16.5, color:'var(--muted)', marginTop:1}}>{t.subcategory}</div>}
+                        {t.subcategory && <div style={{fontSize:12, color:'var(--muted)', marginTop:1}}>{t.subcategory}</div>}
                       </ACTd>
                       <ACTd>
                         <span style={{display:'inline-flex', padding:'3px 9px', borderRadius:12, font:'700 12px/1 Sora,sans-serif', textTransform:'uppercase', letterSpacing:'.04em', background:statusBg, color:statusColor, whiteSpace:'nowrap'}}>{statusLabel}</span>
                       </ACTd>
                       <ACTd style={{color:'rgba(240,244,255,.6)', maxWidth:240, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
                         {t.note||'—'}
-                        <span style={{marginLeft:6, color:'#3B82F6', fontSize:16}}>{isExp ? '▲ close' : '▼ details'}</span>
+                        <span style={{marginLeft:6, color:'#3B82F6', fontSize:11}}>{isExp ? '▲ close' : '▼ details'}</span>
                       </ACTd>
                     </tr>
 
@@ -2177,7 +2345,7 @@ const AllComplaints = ({agent}) => {
                             {t.complaint && (
                               <div style={{marginBottom:10}}>
                                 <div style={{font:'700 10px/1 Sora,sans-serif', color:'var(--sub)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:5}}>📝 Complaint Description</div>
-                                <div style={{background:'rgba(0,0,0,.25)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 14px', font:'500 13px/1.55 Sora,sans-serif', color:'rgba(240,244,255,.8)'}}>{t.complaint}</div>
+                                <div style={{background:'rgba(0,0,0,.25)', border:'1px solid var(--border)', borderRadius:8, padding:'10px 14px', font:'500 12px/1.55 Sora,sans-serif', color:'rgba(240,244,255,.8)'}}>{t.complaint}</div>
                               </div>
                             )}
 
@@ -2185,7 +2353,7 @@ const AllComplaints = ({agent}) => {
                             {t.note && (
                               <div style={{marginBottom:14}}>
                                 <div style={{font:'700 10px/1 Sora,sans-serif', color:'var(--sub)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:5}}>🛠 Action Taken</div>
-                                <div style={{background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', borderRadius:8, padding:'10px 14px', font:'500 13px/1.55 Sora,sans-serif', color:'rgba(240,244,255,.8)', whiteSpace:'pre-wrap'}}>{t.note}</div>
+                                <div style={{background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', borderRadius:8, padding:'10px 14px', font:'500 12px/1.55 Sora,sans-serif', color:'rgba(240,244,255,.8)', whiteSpace:'pre-wrap'}}>{t.note}</div>
                               </div>
                             )}
 
@@ -2218,7 +2386,7 @@ const AllComplaints = ({agent}) => {
               display:'flex', alignItems:'center', justifyContent:'space-between',
               flexWrap:'wrap', gap:10,
             }}>
-              <span style={{font:'500 13px Sora,sans-serif', color:'var(--muted)'}}>
+              <span style={{font:'500 12px Sora,sans-serif', color:'var(--muted)'}}>
                 Page <strong style={{color:'#93C5FD'}}>{safePage}</strong> of <strong style={{color:'#93C5FD'}}>{totalPages}</strong>
                 &nbsp;·&nbsp;Showing <strong style={{color:'#fff'}}>{(safePage-1)*PAGE_SIZE+1}–{Math.min(safePage*PAGE_SIZE,filtered.length)}</strong> of <strong style={{color:'#fff'}}>{filtered.length}</strong> complaints
               </span>
@@ -2226,12 +2394,12 @@ const AllComplaints = ({agent}) => {
                 <button onClick={function(){goPage(1);}} disabled={safePage===1} style={{
                   padding:'6px 10px', borderRadius:6, border:'1px solid var(--border)',
                   background:safePage===1?'transparent':'var(--card)', color:safePage===1?'var(--muted)':'#fff',
-                  font:'700 13px Sora,sans-serif', cursor:safePage===1?'default':'pointer',
+                  font:'700 12px Sora,sans-serif', cursor:safePage===1?'default':'pointer',
                 }}>« First</button>
                 <button onClick={function(){goPage(safePage-1);}} disabled={safePage<=1} style={{
                   padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)',
                   background:safePage<=1?'transparent':'var(--card)', color:safePage<=1?'var(--muted)':'#fff',
-                  font:'700 13px Sora,sans-serif', cursor:safePage<=1?'default':'pointer',
+                  font:'700 12px Sora,sans-serif', cursor:safePage<=1?'default':'pointer',
                 }}>‹ Prev</button>
                 {Array.from({length:totalPages},function(_,i){return i+1;}).filter(function(p){
                   return p===1||p===totalPages||Math.abs(p-safePage)<=2;
@@ -2239,14 +2407,14 @@ const AllComplaints = ({agent}) => {
                   if(idx>0&&arr[idx-1]!==p-1) acc.push('…');
                   acc.push(p); return acc;
                 },[]).map(function(p,i){
-                  if(p==='…') return <span key={'e'+i} style={{color:'var(--muted)',font:'500 14px Sora,sans-serif',padding:'0 4px'}}>…</span>;
+                  if(p==='…') return <span key={'e'+i} style={{color:'var(--muted)',font:'500 12px Sora,sans-serif',padding:'0 4px'}}>…</span>;
                   return (
                     <button key={p} onClick={function(){goPage(p);}} style={{
                       padding:'6px 11px', borderRadius:6,
                       border: p===safePage ? '1px solid #3B82F6' : '1px solid var(--border)',
                       background: p===safePage ? '#3B82F6' : 'var(--card)',
                       color: p===safePage ? '#fff' : 'rgba(240,244,255,.7)',
-                      font:'700 13px Sora,sans-serif', cursor:'pointer',
+                      font:'700 12px Sora,sans-serif', cursor:'pointer',
                       boxShadow: p===safePage ? '0 2px 8px rgba(59,130,246,.4)' : 'none',
                     }}>{p}</button>
                   );
@@ -2254,18 +2422,18 @@ const AllComplaints = ({agent}) => {
                 <button onClick={function(){goPage(safePage+1);}} disabled={safePage>=totalPages} style={{
                   padding:'6px 12px', borderRadius:6, border:'1px solid var(--border)',
                   background:safePage>=totalPages?'transparent':'var(--card)', color:safePage>=totalPages?'var(--muted)':'#fff',
-                  font:'700 13px Sora,sans-serif', cursor:safePage>=totalPages?'default':'pointer',
+                  font:'700 12px Sora,sans-serif', cursor:safePage>=totalPages?'default':'pointer',
                 }}>Next ›</button>
                 <button onClick={function(){goPage(totalPages);}} disabled={safePage===totalPages} style={{
                   padding:'6px 10px', borderRadius:6, border:'1px solid var(--border)',
                   background:safePage===totalPages?'transparent':'var(--card)', color:safePage===totalPages?'var(--muted)':'#fff',
-                  font:'700 13px Sora,sans-serif', cursor:safePage===totalPages?'default':'pointer',
+                  font:'700 12px Sora,sans-serif', cursor:safePage===totalPages?'default':'pointer',
                 }}>Last »</button>
               </div>
             </div>
           )}
           {totalPages <= 1 && filtered.length > 0 && (
-            <div style={{padding:'10px 18px', font:'500 13px Sora,sans-serif', color:'var(--muted)', borderTop:'1px solid var(--border)'}}>
+            <div style={{padding:'10px 18px', font:'500 12px Sora,sans-serif', color:'var(--muted)', borderTop:'1px solid var(--border)'}}>
               {filtered.length} complaint{filtered.length!==1?'s':''} · all on this page
             </div>
           )}
@@ -2294,7 +2462,7 @@ const ACSelect = function({value, onChange, options}) {
     <select value={value} onChange={function(e){onChange(e.target.value);}} style={{
       padding:'10px 12px', background:'var(--card)', color:'var(--text)',
       border:'1px solid var(--border)', borderRadius:10,
-      fontFamily:'Sora,sans-serif', fontSize:16, outline:'none', cursor:'pointer',
+      fontFamily:'Sora,sans-serif', fontSize:11, outline:'none', cursor:'pointer',
     }}>
       {options.map(function(o){ return <option key={o[0]} value={o[0]}>{o[1]}</option>; })}
     </select>
