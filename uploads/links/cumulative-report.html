@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EKEDP CX — Cumulative Report</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23001F5C'/><path d='M36 8 L18 36 H30 L26 56 L46 26 H34 Z' fill='%23FFC72C' stroke='%23E30613' stroke-width='1.5' stroke-linejoin='round'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#001F5C;--navy2:#002E7A;--navy3:#0A1A4F;
+  --red:#E30613;--gold:#FFC72C;
+  --bg:#F0F4FA;--card:#fff;--border:#E2E8F0;
+  --text:#0F172A;--muted:#64748B;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+
+.hdr{background:linear-gradient(135deg,var(--navy3),var(--navy) 55%,#1a3a8f);color:#fff;padding:24px 36px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 4px 22px rgba(0,12,40,.2);}
+.hdr-logo{width:52px;height:52px;background:#fff;border-radius:10px;padding:6px 8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.hdr-logo svg{width:100%;height:100%;}
+.hdr-body{flex:1;}
+.hdr-org{font-size:10.5px;font-weight:700;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;}
+.hdr-title{font-family:Montserrat,sans-serif;font-weight:900;font-size:21px;margin-top:4px;}
+.hdr-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:3px;}
+.hdr-meta{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:14px;font-size:11.5px;font-weight:700;color:#fff;}
+.chip b{color:var(--gold);}
+.tools{display:flex;gap:8px;}
+.tool-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.04em;}
+.tool-btn:hover{background:rgba(255,255,255,.18);}
+.tool-btn.primary{background:var(--red);border-color:var(--red);}
+
+/* STATUS BAR */
+.status-bar{background:var(--card);border-bottom:1px solid var(--border);padding:12px 36px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600;flex-wrap:wrap;}
+.status-bar b{color:var(--navy);}
+#statusDot{width:7px;height:7px;border-radius:50%;background:#6B7280;display:inline-block;}
+#statusDot.live{background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.25);}
+#statusDot.err{background:#EF4444;}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:22px 36px;max-width:1100px;margin:0 auto;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px 18px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;overflow:hidden;}
+.kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.total::before{background:var(--navy);}
+.kpi.res::before{background:#10B981;}
+.kpi.prog::before{background:#F59E0B;}
+.kpi.unr::before{background:var(--red);}
+.kpi .n{font-family:Montserrat,sans-serif;font-weight:900;font-size:42px;line-height:1;margin-top:8px;}
+.kpi.total .n{color:var(--navy);}
+.kpi.res .n{color:#065F46;}
+.kpi.prog .n{color:#92400E;}
+.kpi.unr .n{color:#991B1B;}
+.kpi .l{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-top:10px;}
+
+/* MAIN */
+.page{max-width:1100px;margin:0 auto;padding:0 36px 60px;}
+
+.section-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 0 10px;}
+.section-ttl{font-family:Montserrat,sans-serif;font-weight:900;font-size:14px;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;}
+.section-sub{font-size:11.5px;color:var(--muted);font-weight:600;}
+
+/* RESPONSIBLE PARTY TABLE */
+.rp-block{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.rp-tbl{width:100%;border-collapse:collapse;}
+.rp-tbl th{background:var(--navy);color:rgba(255,255,255,.9);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:9px 13px;text-align:center;white-space:nowrap;}
+.rp-tbl th:first-child{text-align:left;width:36px;}
+.rp-tbl th.left{text-align:left;}
+.rp-tbl td{padding:12px 13px;border-bottom:1px solid var(--border);font-size:13px;text-align:center;vertical-align:middle;}
+.rp-tbl td:first-child{text-align:center;font-weight:800;color:var(--navy);}
+.rp-tbl td.name{text-align:left;font-weight:700;color:var(--navy);}
+.rp-tbl td.cat{text-align:left;font-size:11.5px;color:var(--muted);font-weight:600;}
+.rp-tbl tbody tr:last-child td{border-bottom:none;}
+.rp-tbl tbody tr:hover td{background:#FAFBFE;}
+.big-num{font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;}
+.big-num.hi{color:var(--red);}
+.big-num.ok{color:#065F46;}
+.big-num.warn{color:#92400E;}
+.pct-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:800;}
+.pct-badge.hi{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;}
+.pct-badge.mid{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;}
+.pct-badge.lo{background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;}
+
+/* GRAND TOTAL ROW */
+.grand-row td{background:#F8FAFC;font-weight:800;color:var(--navy);border-top:2px solid var(--border);font-family:Montserrat,sans-serif;}
+
+/* LOAD AREA */
+.load-area{background:var(--card);border:2px dashed var(--border);border-radius:14px;padding:40px;text-align:center;margin:24px 0;}
+.load-area h3{font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;color:var(--navy);margin-bottom:8px;}
+.load-area p{font-size:12.5px;color:var(--muted);max-width:400px;margin:0 auto 16px;}
+.load-btn{background:var(--navy);color:#fff;border:none;padding:10px 22px;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;}
+.load-btn:hover{background:var(--navy2);}
+
+@media print{
+  .hdr .tools,.status-bar,#fileInput,.load-area{display:none!important;}
+  .hdr{padding:14px 20px;box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .kpi-row,.page{padding:10px 16px;}
+  .kpi .n{font-size:28px!important;}
+  @page{size:A4 landscape;margin:8mm;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="8" fill="#001F5C"/><path d="M36 8 L18 36 H30 L26 56 L46 26 H34 Z" fill="#FFC72C" stroke="#E30613" stroke-width="1.5" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="hdr-body">
+    <div class="hdr-org">Eko Electricity Distribution PLC · Customer Experience</div>
+    <div class="hdr-title">Cumulative Complaints Report</div>
+    <div class="hdr-sub" id="hdrSub">Responsible Party Summary — Load a JSON snapshot to populate</div>
+  </div>
+  <div class="hdr-meta">
+    <div class="chip">📅 <b id="hdrDate">—</b></div>
+    <div class="tools">
+      <button class="tool-btn" onclick="document.getElementById('fileInput').click()">📂 Load Snapshot</button>
+      <button class="tool-btn" onclick="exportCumulativeExcel()" style="background:rgba(21,128,61,.8);border-color:#16A34A;">📊 Export Excel</button>
+      <button class="tool-btn primary" onclick="window.print()">🖨 Print / PDF</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="fileInput" accept="application/json" style="display:none" onchange="loadFile(event)">
+
+<!-- STATUS -->
+<div class="status-bar">
+  <span id="statusDot"></span>
+  <span id="statusTxt">No data loaded — click "Load Snapshot" to begin</span>
+  <span style="margin-left:auto;font-size:11px;" id="periodLbl"></span>
+</div>
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi total"><div class="l">Grand Total</div><div class="n" id="kTotal">—</div></div>
+  <div class="kpi res"><div class="l">Cumulative Resolved</div><div class="n" id="kRes">—</div></div>
+  <div class="kpi prog"><div class="l">Cumulative In Progress</div><div class="n" id="kProg">—</div></div>
+  <div class="kpi unr"><div class="l">Cumulative Unresolved</div><div class="n" id="kUnr">—</div></div>
+</div>
+
+<!-- MAIN TABLE -->
+<div class="page">
+  <div id="loadArea" class="load-area">
+    <h3>Load a Snapshot JSON</h3>
+    <p>Click "Load Snapshot" in the header to import your <b>EKEDP_PowerApp_snapshot_*.json</b> file. The report generates instantly.</p>
+    <button class="load-btn" onclick="document.getElementById('fileInput').click()">📂 Load Snapshot</button>
+  </div>
+  <div id="reportArea" style="display:none;">
+    <div class="section-hd">
+      <div class="section-ttl">Responsible Party Summary</div>
+      <div class="section-sub" id="cumPeriod">Days 1–? cumulative</div>
+    </div>
+    <div id="rpTable"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const RESP = [
+  { name:'Nonye Angelina Nnadozie', assignees:['Nonye','NONYE','BAND'],         cats:['BAND RECLASSIFICATION'] },
+  { name:'Mojibola Adefuwa',        assignees:['BILLING','Mojibola'],            cats:['BILLING','REFUND'] },
+  { name:'Ogheneyoreme Agbroko',    assignees:['TECHNICAL','Ogheneyoreme'],      cats:['DISCONNECTION','INTERRUPTION','VOLTAGE','SAFETY ISSUES','SAFETY'] },
+  { name:'Holyland Unude',          assignees:['METERING','CUSTOMER ONBOARDING','Holyland'], cats:['METERING','METER'] },
+  { name:'Adetoun Adebayo',         assignees:['PPM SUPPORT','Adetoun'],         cats:['PPM SUPPORT','GENERAL','GENERAL(FIRST CONTACT RESOLUTION)'] },
+  { name:'Olusegun Owokade',        assignees:['PPM MAINTENANCE','Olusegun'],    cats:['PPM MAINTENANCE','PPM MAINTANCE','PPM MIANTANCE'] },
+  { name:'Customer Onboarding',     assignees:['CUSTOMER ONBOARDING','Rasheed'], cats:['CHANGE NAME','NEW SERVICE','REQUEST FOR METER'] },
+];
+
+function catMatch(t, cats, assignees){
+  const as = (t.assignee||'').toUpperCase().trim();
+  const tc = (t.category||'').toUpperCase().trim();
+  const sc = (t.subcategory||'').toUpperCase().trim();
+  // 1. Match by assignee
+  if(as && as!=='NONE' && as!=='CX' && assignees.some(a=>as.includes(a.toUpperCase())||a.toUpperCase().includes(as))) return true;
+  // 2. Match compound category "CATEGORY: X — Y"
+  if(tc.startsWith('CATEGORY:')){ const base=tc.replace('CATEGORY:','').split('—')[0].trim(); return cats.some(c=>base.includes(c)||c.includes(base)); }
+  // 3. Direct category match
+  return cats.some(c=>tc.includes(c)||c.includes(tc));
+}
+function isRes(t){ const s=(t.status||'').toLowerCase(); return s==='resolved'||s==='closed'; }
+function isProg(t){ const s=(t.status||'').toLowerCase(); return ['progress','crr','assigned','reassigned','in progress'].includes(s); }
+function isUnr(t){ return !isRes(t)&&!isProg(t); }
+function pctBadge(pct){
+  const cls = pct>=80?'hi':pct>=50?'mid':'lo';
+  return `<span class="pct-badge ${cls}">${pct}%</span>`;
+}
+
+function render(days){
+  // Deduplicate by dateBig — merge tickets for same date (handles auto-created duplicate days)
+  const dateMap = {};
+  days.forEach(d=>{
+    const key = d.dateBig.trim().toUpperCase();
+    if(!dateMap[key]) dateMap[key] = {...d, tickets:[...d.tickets]};
+    else dateMap[key].tickets.push(...d.tickets);
+  });
+  const dedupedDays = Object.values(dateMap).sort((a,b)=>a.dayNum-b.dayNum);
+
+  // Last deduped day with tickets = today
+  const daysWithTickets = dedupedDays.filter(d=>d.tickets.length>0);
+  const lastDay = daysWithTickets[daysWithTickets.length-1] || dedupedDays[dedupedDays.length-1];
+  const lastDayIdx = dedupedDays.indexOf(lastDay);
+  const todayTickets = lastDay ? lastDay.tickets : [];
+  const prevDays = dedupedDays.slice(0, lastDayIdx).filter(d=>d.tickets.length>0);
+  const prevTickets = prevDays.flatMap(d=>d.tickets);
+
+  document.getElementById('hdrDate').textContent = lastDay ? lastDay.dateBig+' 2026' : '—';
+  document.getElementById('hdrSub').textContent = `Day ${lastDay?.dayNum||'?'} · Cumulative Days 1–${prevDays.length}`;
+  document.getElementById('cumPeriod').textContent = `Cumulative Days 1–${prevDays.length} + Today (${lastDay?.dateBig})`;
+  document.getElementById('periodLbl').textContent = `${daysWithTickets.length} active days · ${daysWithTickets.reduce((s,d)=>s+d.tickets.length,0)} total tickets`;
+
+  // KPIs — all deduped days
+  const all = dedupedDays.flatMap(d=>d.tickets);
+  document.getElementById('kTotal').textContent = all.length;
+  document.getElementById('kRes').textContent = all.filter(isRes).length;
+  document.getElementById('kProg').textContent = all.filter(isProg).length;
+  document.getElementById('kUnr').textContent = all.filter(isUnr).length;
+
+  // Status
+  document.getElementById('statusDot').className = 'live';
+  document.getElementById('statusTxt').textContent = `Snapshot loaded — ${days.length} days, ${all.length} tickets`;
+
+  // Table
+  const COL_HDR = `<tr>
+    <th>S/N</th>
+    <th class="left">Responsible Party</th>
+    <th class="left">Complaint Category</th>
+    <th title="Unresolved+In Progress from previous days">Cumulative<br>Previous<br>Outstanding</th>
+    <th title="Received on current day">Received<br>Today</th>
+    <th>Cumulative<br>In Progress</th>
+    <th>Cumulative<br>Unresolved</th>
+    <th>Cumulative<br>Resolved</th>
+    <th>%<br>Resolution</th>
+    <th>Grand<br>Total</th>
+  </tr>`;
+
+  let html = '';
+  let grandPrev=0, grandToday=0, grandProg=0, grandUnr=0, grandRes=0, grandTotal=0;
+
+  RESP.forEach((party, idx) => {
+    const cumT  = prevTickets.filter(t=>catMatch(t,party.cats,party.assignees));
+    const todT  = todayTickets.filter(t=>catMatch(t,party.cats,party.assignees));
+    const cumRes  = cumT.filter(isRes).length;
+    const cumProg = cumT.filter(isProg).length;
+    const cumUnr  = cumT.filter(isUnr).length;
+    const prevOut = cumProg + cumUnr;
+    const today   = todT.length;
+    const grand   = cumT.length + today;
+    const pct     = grand>0 ? Math.round(cumRes/grand*100) : 0;
+    const catLabel = party.cats[0];
+
+    grandPrev  += prevOut;
+    grandToday += today;
+    grandProg  += cumProg;
+    grandUnr   += cumUnr;
+    grandRes   += cumRes;
+    grandTotal += grand;
+
+    html += `<div class="rp-block"><table class="rp-tbl"><thead>${COL_HDR}</thead><tbody><tr>
+      <td>${idx+1}</td>
+      <td class="name">${party.name}</td>
+      <td class="cat">${catLabel}</td>
+      <td><span class="big-num${prevOut>10?' hi':''}">${prevOut}</span></td>
+      <td><span class="big-num">${today}</span></td>
+      <td><span class="big-num${cumProg>5?' warn':''}">${cumProg}</span></td>
+      <td><span class="big-num${cumUnr>10?' hi':''}">${cumUnr}</span></td>
+      <td><span class="big-num ok">${cumRes}</span></td>
+      <td>${pctBadge(pct)}</td>
+      <td><span class="big-num">${grand}</span></td>
+    </tr></tbody></table></div>`;
+  });
+
+  const grandPct = grandTotal>0 ? Math.round(grandRes/grandTotal*100) : 0;
+  html += `<div class="rp-block"><table class="rp-tbl"><thead>${COL_HDR}</thead><tbody><tr class="grand-row">
+    <td></td>
+    <td class="name">GRAND TOTAL</td>
+    <td class="cat">All Categories</td>
+    <td><span class="big-num hi">${grandPrev}</span></td>
+    <td><span class="big-num">${grandToday}</span></td>
+    <td><span class="big-num warn">${grandProg}</span></td>
+    <td><span class="big-num hi">${grandUnr}</span></td>
+    <td><span class="big-num ok">${grandRes}</span></td>
+    <td>${pctBadge(grandPct)}</td>
+    <td><span class="big-num">${grandTotal}</span></td>
+  </tr></tbody></table></div>`;
+  document.getElementById('rpTable').innerHTML = html;
+  document.getElementById('loadArea').style.display = 'none';
+  document.getElementById('reportArea').style.display = 'block';
+}
+
+function exportCumulativeExcel(){
+  if(!window._lastDays){ alert('Load a snapshot first.'); return; }
+  if(typeof XLSX==='undefined'){ alert('Excel library loading, try again.'); return; }
+  const days = window._lastDays;
+  // Deduplicate same as render()
+  const dateMap={};
+  days.forEach(d=>{ const k=(d.dateBig||'').trim().toUpperCase(); if(!dateMap[k]) dateMap[k]={...d,tickets:[...d.tickets]}; else dateMap[k].tickets.push(...d.tickets); });
+  const dd=Object.values(dateMap).sort((a,b)=>a.dayNum-b.dayNum);
+  const withT=dd.filter(d=>d.tickets.length>0);
+  const lastDay=withT[withT.length-1]||dd[dd.length-1];
+  const todayTickets=lastDay?lastDay.tickets:[];
+  const prevTickets=dd.slice(0,dd.indexOf(lastDay)).filter(d=>d.tickets.length>0).flatMap(d=>d.tickets);
+  const now=new Date();
+  const wb=XLSX.utils.book_new();
+  const ws1Data=[];
+  ws1Data.push(['EKEDP MOBILE APP — CUMULATIVE REPORT · '+(lastDay?lastDay.dateBig:'').toUpperCase()+' 2026','','','','','','','','','']);
+  ws1Data.push(['Customer Experience Dept  |  Generated: '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' WAT','','','','','','','','','']);
+  ws1Data.push([]);
+  const COL=['S/N','Responsible Party','Complaint Category','Cumulative Previous Outstanding','Received Today','Cumulative In Progress','Cumulative Unresolved','Cumulative Resolved','% Resolution','Grand Total'];
+  let sn=1,gP=0,gT=0,gPr=0,gU=0,gR=0,gTot=0;
+  RESP.forEach(party=>{
+    const ct=prevTickets.filter(t=>catMatch(t,party.cats,party.assignees));
+    const td=todayTickets.filter(t=>catMatch(t,party.cats,party.assignees));
+    const r=ct.filter(isRes).length,prog=ct.filter(isProg).length,u=ct.filter(isUnr).length;
+    const prev=prog+u,today=td.length,grand=ct.length+today;
+    const pct=grand>0?Math.round(r/grand*100)+'%':'0%';
+    gP+=prev;gT+=today;gPr+=prog;gU+=u;gR+=r;gTot+=grand;
+    ws1Data.push(COL);
+    ws1Data.push([sn++,party.name,party.cats[0],prev,today,prog,u,r,pct,grand]);
+    ws1Data.push([]);
+  });
+  const gp=gTot>0?Math.round(gR/gTot*100)+'%':'0%';
+  ws1Data.push(COL);
+  ws1Data.push(['','GRAND TOTAL','All Categories',gP,gT,gPr,gU,gR,gp,gTot]);
+  const ws=XLSX.utils.aoa_to_sheet(ws1Data);
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}}];
+  ws['!cols']=[{wch:5},{wch:26},{wch:30},{wch:16},{wch:14},{wch:16},{wch:18},{wch:18},{wch:13},{wch:13}];
+  XLSX.utils.book_append_sheet(wb,ws,'Cumulative Summary');
+  XLSX.writeFile(wb,'EKEDP_Cumulative_'+(lastDay?lastDay.dateBig:'').replace(' ','')+'.xlsx');
+}
+
+function loadFile(e){
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try{
+      const j = JSON.parse(ev.target.result);
+      if(j.days && Array.isArray(j.days)){
+        render(j.days);
+        window._lastDays = j.days;
+      } else { alert('Invalid snapshot format. Expected {days:[...]}'); }
+    } catch(err){ alert('Could not parse JSON: '+err.message); }
+  };
+  r.readAsText(f);
+}
+</script>
+</body>
+</html>

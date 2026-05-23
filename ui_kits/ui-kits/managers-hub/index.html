@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EKEDP Power App — Managers Hub</title>
+<link rel="icon" type="image/png" href="../../assets/ekedp-app-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── BASE THEME TOKENS (Midnight = default) ─────────────── */
+:root{
+  --bg:#060E2B;--surface:#0D1B45;--card:#111D4A;--border:#1E3070;
+  --text:#F0F4FF;--muted:#6B85C0;--sub:#3A5299;
+  --accent:#E30613;--navy:#001F5C;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  background:var(--bg);color:var(--text);
+  font-family:'Sora',sans-serif;min-height:100vh;
+  transition:background .35s,color .35s;
+}
+
+/* ── THEME OVERRIDES ───────────────────────────────────── */
+body[data-theme="daylight"]{
+  --bg:#F4F6FB;--surface:#FFFFFF;--card:#FFFFFF;--border:#E2E8F0;
+  --text:#0F172A;--muted:#64748B;--sub:#94A3B8;--accent:#1D4ED8;
+}
+body[data-theme="solar"]{
+  --bg:#2A1A06;--surface:#3F2C12;--card:#52391B;--border:#7A5A28;
+  --text:#FFF7E5;--muted:#E8C98A;--sub:#C9A968;--accent:#F59E0B;
+}
+body[data-theme="green"]{
+  --bg:#071A10;--surface:#0D2B18;--card:#153D24;--border:#1E5434;
+  --text:#F0FFF4;--muted:#86EFAC;--sub:#4ADE80;--accent:#22C55E;
+}
+body[data-theme="violet"]{
+  --bg:#0C0118;--surface:#1B0444;--card:#220855;--border:rgba(180,100,255,.22);
+  --text:#F0EAFF;--muted:#9B7FD4;--sub:#6B45B8;--accent:#FFC72C;
+}
+
+/* ── NAV PER THEME ────────────────────────────────────── */
+body[data-theme="daylight"] #ek-nav{background:rgba(255,255,255,.95);border-right-color:#E2E8F0;}
+body[data-theme="daylight"] #ek-nav .nav-tab-item{color:#475569;}
+body[data-theme="daylight"] #ek-nav .nav-tab-item.on{color:#0F172A;border-left-color:#1D4ED8;background:rgba(29,78,216,.08);}
+body[data-theme="daylight"] #ek-nav .nav-footer-btn{background:#F1F5F9;color:#0F172A;border-color:#E2E8F0;}
+body[data-theme="solar"] #ek-nav .nav-tab-item.on{border-left-color:#F59E0B;background:rgba(245,158,11,.12);}
+body[data-theme="green"] #ek-nav .nav-tab-item.on{border-left-color:#22C55E;background:rgba(34,197,94,.12);}
+body[data-theme="violet"] #ek-nav{background:rgba(12,1,24,.97);border-right-color:rgba(180,100,255,.20);}
+body[data-theme="violet"] #ek-nav .nav-tab-item.on{border-left-color:#FFC72C;background:rgba(255,199,44,.10);}
+body[data-theme="violet"] #ek-nav .nav-footer-btn{background:rgba(255,255,255,.06);color:#F0EAFF;border-color:rgba(180,100,255,.25);}
+
+/* ── HERO PER THEME ───────────────────────────────────── */
+body[data-theme="daylight"] .dash-hero-bg{background:linear-gradient(135deg,#DBEAFE 0%,#BFDBFE 50%,#E0E7FF 100%)!important;}
+body[data-theme="daylight"] .dash-hero-bg h1{color:#0F172A!important;}
+body[data-theme="daylight"] .dash-hero-bg p{color:#475569!important;}
+body[data-theme="daylight"] .day-badge-box{background:rgba(255,255,255,.7)!important;border-color:rgba(15,23,42,.1)!important;}
+body[data-theme="daylight"] .day-badge-box .dn{color:#D97706!important;}
+body[data-theme="solar"] .dash-hero-bg{background:linear-gradient(135deg,#52391B 0%,#92400E 45%,#F59E0B 110%)!important;}
+body[data-theme="green"] .dash-hero-bg{background:linear-gradient(135deg,#071A10 0%,#14532D 50%,#052e16 100%)!important;}
+body[data-theme="violet"] .dash-hero-bg{background:linear-gradient(135deg,#0C0118 0%,#1B0444 55%,#2E0B72 100%)!important;}
+body[data-theme="violet"] .dash-hero-bg h1{color:#F0EAFF!important;}
+body[data-theme="violet"] .dash-hero-bg p{color:#9B7FD4!important;}
+body[data-theme="violet"] .day-badge-box{background:rgba(180,100,255,.15)!important;border-color:rgba(180,100,255,.25)!important;}
+body[data-theme="violet"] .day-badge-box .dn{color:#FFC72C!important;}
+
+/* ── GLOBAL UTILITY ──────────────────────────────────── */
+.ek-screen{background:var(--bg);min-height:100vh;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--sub);border-radius:3px;}
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body data-screen-label="Managers Hub">
+  <div id="root"></div>
+  <!-- MSAL loaded from CDN with fallback -->
+  <script>
+    // Load MSAL — if CDN fails the SyncScreen shows a graceful warning
+    (function(){
+      var s=document.createElement('script');
+      s.src='https://alcdn.msauth.net/browser/2.39.0/js/msal-browser.min.js';
+      s.onerror=function(){ console.warn('MSAL CDN blocked — sync will use direct URL fallback.'); };
+      document.head.appendChild(s);
+    })();
+  </script>
+  <script src="../../data/canonical.js"></script>
+  <script src="SampleData.js"></script>
+  <script src="SharedDataBus.js"></script>
+  <script src="SampleData_BusInit.js"></script>
+  <script type="text/babel" src="Components.jsx"></script>
+  <script type="text/babel" src="Nav.jsx"></script>
+  <script type="text/babel" src="Signin.jsx"></script>
+  <script type="text/babel" src="Dashboard.jsx"></script>
+  <script type="text/babel" src="DailyReport.jsx"></script>
+  <script type="text/babel" src="AllComplaints.jsx"></script>
+  <script type="text/babel" src="Cumulative.jsx"></script>
+  <script type="text/babel" src="Analytics.jsx"></script>
+  <script type="text/babel" src="Settings.jsx"></script>
+  <script type="text/babel" src="LogTicket.jsx"></script>
+  <script type="text/babel" src="AgentsScreen.jsx"></script>
+  <script type="text/babel" src="ReportsScreen.jsx"></script>
+  <script type="text/babel" src="SyncScreen2.jsx"></script>
+  <script type="text/babel" src="App.jsx"></script>
+<script>
+// ── 30-MIN INACTIVITY TIMEOUT ───────────────────────────────
+(function(){
+  var TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  var WARN    = 25 * 60 * 1000; // warn at 25 minutes
+  var HOME    = '../../index.html';
+  var timer, warnTimer;
+  var warned  = false;
+  var banner  = null;
+
+  function reset() {
+    clearTimeout(timer);
+    clearTimeout(warnTimer);
+    if (banner) { banner.remove(); banner = null; warned = false; }
+    warnTimer = setTimeout(showWarn, WARN);
+    timer     = setTimeout(function(){ window.location.href = HOME; }, TIMEOUT);
+  }
+
+  function showWarn() {
+    if (warned) return;
+    warned = true;
+    banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(217,119,6,.95);color:#fff;padding:14px 22px;border-radius:12px;font:700 13px Sora,sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.4);display:flex;align-items:center;gap:14px;white-space:nowrap;';
+    banner.innerHTML = '⏱️ Session ending in 5 minutes due to inactivity. <button onclick="window.__ekResetTimer()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:6px 14px;border-radius:8px;font:700 12px Sora,sans-serif;cursor:pointer;margin-left:4px;">Stay signed in</button>';
+    document.body.appendChild(banner);
+  }
+
+  window.__ekResetTimer = reset;
+  ['mousemove','mousedown','keydown','touchstart','click','scroll'].forEach(function(e){
+    document.addEventListener(e, reset, {passive:true});
+  });
+  reset();
+})();
+</script>
+</body>
+</html>

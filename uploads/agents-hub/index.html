@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EKEDP Power App — Agents Hub</title>
+<link rel="icon" type="image/png" href="../../assets/ekedp-app-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#060E2B;font-family:'Sora',sans-serif;color:#F0F4FF;min-height:100vh;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:#060E2B;}
+  ::-webkit-scrollbar-thumb{background:#3A5299;border-radius:3px;}
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body data-screen-label="Agents Hub">
+  <div id="root"></div>
+  <script src="../../data/canonical.js"></script>
+  <script src="SampleData.js"></script>
+  <script src="AgentPhotos.js"></script>
+  <script type="text/babel" src="Signin.jsx"></script>
+  <script type="text/babel" src="Shell.jsx"></script>
+  <script type="text/babel" src="TicketScreens.jsx"></script>
+  <script type="text/babel" src="SlotInboxExport.jsx"></script>
+  <script type="text/babel" src="App.jsx"></script>
+</body>
+</html>

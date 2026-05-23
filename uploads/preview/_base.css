@@ -1,0 +1,32 @@
+/* Preview-card base. Each card is ~700×whatever, no chrome. */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Montserrat:wght@700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap");
+@import url("../colors_and_type.css");
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { font-family: var(--ek-font); background: #fff; color: var(--ek-text); }
+
+/* a card wrapper — keeps everything inside the design width */
+.pc {
+  width: 700px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pc.dark {
+  background: var(--ek-navy-deep);
+  color: var(--ek-text-dark);
+}
+
+/* helpers */
+.row { display: flex; gap: 12px; align-items: stretch; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.wrap { display: flex; flex-wrap: wrap; gap: 10px; }
+.grid { display: grid; gap: 10px; }
+.tag {
+  font: 700 9px/1 var(--ek-font);
+  text-transform: uppercase;
+  letter-spacing: .10em;
+  color: var(--ek-muted);
+}
+.tag.dark { color: var(--ek-muted-dark); }
