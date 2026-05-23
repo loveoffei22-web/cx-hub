@@ -19,16 +19,11 @@ const Signin = ({onSubmit}) => {
         boxShadow:'0 20px 60px rgba(15,30,79,.15), 0 0 0 1px rgba(15,30,79,.06)',
         position:'relative',
       }}>
-        <div style={{marginBottom:16}}>
-          <a href="../../index.html" style={{display:'inline-flex',alignItems:'center',gap:6,font:'700 11px/1 Sora,sans-serif',color:'#64748B',textDecoration:'none',padding:'6px 12px',borderRadius:8,background:'#F1F5F9',border:'1px solid #E2E8F0'}}>
-            ← Home
-          </a>
-        </div>
         <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:10, marginBottom:28}}>
 
           {/* EKEDP Logo — no clipping, blends naturally */}
           <img
-            src="../../assets/ekedp-app-icon.png"
+            src="../assets/ekedp-app-icon.png"
             alt="EKEDP Power App"
             style={{
               width:90, height:90,
@@ -50,9 +45,6 @@ const Signin = ({onSubmit}) => {
         </div>
 
         <div style={{font:'800 20px/1 Sora,sans-serif', color:'#0F1E4F', marginBottom:4}}>Welcome back 👋</div>
-        <div style={{font:'500 13px/1.45 Sora,sans-serif', color:'#475569', marginBottom:4}}>
-          For Love &amp; supervisors only.
-        </div>
         <div style={{font:'500 13px/1.45 Sora,sans-serif', color:'#475569', marginBottom:18}}>
           Sign in to your access.
         </div>

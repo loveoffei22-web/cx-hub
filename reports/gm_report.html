@@ -212,14 +212,6 @@ function render(slotId){
       </div>
     </div>
 
-    <div class="kpi-row">
-      <div class="kpi tot"><div class="kl">Total Complaints</div><div class="kv">${tot.grand}</div></div>
-      <div class="kpi res"><div class="kl">Resolved</div><div class="kv">${tot.res}</div></div>
-      <div class="kpi prg"><div class="kl">In Progress</div><div class="kv">${tot.prg}</div></div>
-      <div class="kpi unr"><div class="kl">Unresolved</div><div class="kv">${tot.unr}</div></div>
-      <div class="kpi pct"><div class="kl">% Resolution</div><div class="kv">${tot.pct}%</div></div>
-    </div>
-
     ${noteHtml}
 
     <div class="tbl-wrap">
@@ -247,17 +239,6 @@ function render(slotId){
               <td class="r"><span class="pct-pill ${pctClass(r.pct)}">${r.pct}%</span></td>
             </tr>`).join('')}
         </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2" style="text-align:right;letter-spacing:.10em;">TOTAL</td>
-            <td class="r">${tot.today}</td>
-            <td class="r">${tot.res}</td>
-            <td class="r">${tot.prg}</td>
-            <td class="r">${tot.unr}</td>
-            <td class="r">${tot.grand}</td>
-            <td class="r">${tot.pct}%</td>
-          </tr>
-        </tfoot>
       </table>
     </div>
 
