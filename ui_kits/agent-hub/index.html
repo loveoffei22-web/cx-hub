@@ -241,7 +241,7 @@ function SignIn({onLogin}){
 }
 
 // ── NAV ────────────────────────────────────────────────────────────
-const TABS=[{id:'tickets',icon:'📋',label:'My Tickets'},{id:'all',icon:'📨',label:'All Complaints'},{id:'add',icon:'➕',label:'Add Ticket'},{id:'slot',icon:'🌤',label:'Slot Reports'},{id:'import',icon:'📂',label:'Import JSON'},{id:'export',icon:'📤',label:'Export Day'},{id:'sync',icon:'☁️',label:'OneDrive Sync'}];
+const TABS=[{id:'dashboard',icon:'🏠',label:'Dashboard'},{id:'tickets',icon:'📋',label:'My Tickets'},{id:'all',icon:'📨',label:'All Complaints'},{id:'add',icon:'➕',label:'Add Ticket'},{id:'slot',icon:'🌤',label:'Slot Reports'},{id:'import',icon:'📂',label:'Import JSON'},{id:'export',icon:'📤',label:'Export Day'},{id:'sync',icon:'☁️',label:'OneDrive Sync'}];
 const THEMES=[{id:'midnight',sw:'linear-gradient(135deg,#001040,#001F5C)',light:false},{id:'daylight',sw:'linear-gradient(135deg,#DBEAFE,#BFDBFE)',light:true},{id:'solar',sw:'linear-gradient(135deg,#52391B,#F59E0B)',light:false},{id:'forest',sw:'linear-gradient(135deg,#071A10,#14532D)',light:false},{id:'violet',sw:'linear-gradient(135deg,#0C0118,#2E0B72)',light:false}];
 
 function Nav({agent,active,onChange,onSignOut,theme,onTheme,collapsed,onToggle}){
@@ -744,6 +744,13 @@ function SlotReports({agent,tickets}){
     XLSX.writeFile(wb,`EKEDP_Agent_${agent.id}_${cur.id}_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
+  const GM_EMAILS = 'love.offei@ekedp.com';
+  function doEmailGMs() {
+    var subject = encodeURIComponent('EKEDP ' + cur.label.toUpperCase() + ' UPDATE — ' + wat.dayLong);
+    var body = encodeURIComponent(msg);
+    window.location.href = 'mailto:' + GM_EMAILS + '?subject=' + subject + '&body=' + body;
+  }
+
   return(
     <div style={{padding:'22px 28px',maxWidth:1100}}>
       <div style={{marginBottom:16}}><h2 style={{fontSize:17,fontWeight:800}}>🌤 Slot Reports</h2><p style={{fontSize:16,color:'var(--muted,#6B85C0)',marginTop:3}}>Generate WhatsApp updates and PDF reports for your shift slot</p></div>
@@ -762,6 +769,11 @@ function SlotReports({agent,tickets}){
         ))}
       </div>
 
+      {/* Email schedule notice */}
+      <div style={{marginBottom:14,padding:'10px 14px',background:'rgba(59,130,246,.08)',border:'1px solid rgba(59,130,246,.25)',borderRadius:8,font:'500 13px/1.5 Sora,sans-serif',color:'rgba(240,244,255,.8)'}}>
+        📧 <strong style={{color:'#93C5FD'}}>GM Report Schedule:</strong> Send by <strong>9:00 AM</strong> · <strong>12:00 PM</strong> · <strong>4:00 PM</strong> WAT each day. Click <em>Email GMs</em> to open your mail client with this report pre-filled.
+      </div>
+
       {/* KPIs */}
       <div className="kpi-strip">
         <Kpi label="Total" v={filtered.length} c="#3B82F6"/>
@@ -771,7 +783,7 @@ function SlotReports({agent,tickets}){
       </div>
 
       {/* Action buttons */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:18}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:18}}>
         <button onClick={doPDF} style={{padding:'14px 10px',background:'var(--red,#E30613)',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
           <span style={{fontSize:24}}>📄</span>
           <span>PDF Report</span>
@@ -786,6 +798,11 @@ function SlotReports({agent,tickets}){
           <span style={{fontSize:24}}>📊</span>
           <span>Excel Export</span>
           <small style={{fontSize:16,fontWeight:500,opacity:.85}}>4 sheets</small>
+        </button>
+        <button onClick={doEmailGMs} style={{padding:'14px 10px',background:'#7C3AED',color:'#fff',border:'none',borderRadius:10,fontFamily:'inherit',fontSize:16,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+          <span style={{fontSize:24}}>📧</span>
+          <span>Email GMs</span>
+          <small style={{fontSize:16,fontWeight:500,opacity:.85}}>9AM · 12PM · 4PM</small>
         </button>
       </div>
 
@@ -1014,6 +1031,274 @@ function UpdateTicket({ticket,agent,onClose,onSave,onDelete}){
   );
 }
 
+// ── AGENT DASHBOARD ────────────────────────────────────────────────
+const AgentDashboard = ({agent, tickets, onChange}) => {
+  const AGENTS = window.EK_AGENTS  || [];
+  const PHOTOS = window.EK_AGENT_PHOTOS || window.EK_TEAM_PHOTOS || {};
+
+  // All agents' tickets from localStorage
+  const allTix = React.useMemo(()=>{
+    const t={};
+    try{(window.EK_AGENTS||[]).forEach(a=>{
+      const s=localStorage.getItem('ek_tix_'+a.id);
+      t[a.id]=s?JSON.parse(s):[];
+    });}catch(e){}
+    return t;
+  },[]);
+
+  // Roster: array of {TitleDate, AgentName, ShiftType} from Managers Hub CSV
+  const roster = React.useMemo(()=>{
+    try{
+      const raw=localStorage.getItem('po_roster');
+      if(!raw)return[];
+      const p=JSON.parse(raw);
+      return Array.isArray(p)?p:[];
+    }catch(e){return[];}
+  },[]);
+
+  const [weekOffset,setWeekOffset] = React.useState(0);
+
+  // WAT now
+  const watNow = new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+
+  // YYYY-MM-DD from a Date
+  function ds(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+
+  const todayStr = ds(watNow);
+
+  // Mon-Sun dates for current week offset
+  const weekDates = React.useMemo(()=>{
+    const base=new Date(watNow);
+    const dow=base.getDay(); // 0=Sun
+    const mon=new Date(base);
+    mon.setDate(base.getDate()-(dow===0?6:dow-1)+(weekOffset*7));
+    return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+  },[weekOffset]);
+
+  // Get roster entries for an agent on a date string
+  function getRosterEntries(agentName, dateStr){
+    return roster.filter(r=>{
+      if(r.AgentName!==agentName)return false;
+      // SP dates are UTC — shift +1 day to get local date
+      const dt=new Date(r.TitleDate);
+      dt.setDate(dt.getDate()+1);
+      const d=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+      return d===dateStr||(r.TitleDate||'').split('T')[0]===dateStr;
+    });
+  }
+
+  const SHIFT = {
+    Day:      {icon:'☀️', label:'Day Shift',   time:'08:00 – 17:00', color:'#FCD34D', bg:'rgba(252,211,77,.15)',   cellBg:'rgba(29,78,216,.22)',   cellLabel:'Day'},
+    Night:    {icon:'🌙', label:'Night Shift',  time:'17:00 – 08:00', color:'#A78BFA', bg:'rgba(167,139,250,.15)', cellBg:'rgba(139,92,246,.18)',  cellLabel:'Night'},
+    Shadowing:{icon:'🌙', label:'Night Shift',  time:'17:00 – 08:00', color:'#A78BFA', bg:'rgba(167,139,250,.15)', cellBg:'rgba(139,92,246,.18)',  cellLabel:'Night\n+SHADOW', shadow:true},
+    Off:      {icon:'🔴', label:'Day Off',      time:null,            color:'#9CA3AF', bg:'rgba(148,163,184,.08)', cellBg:'rgba(15,23,42,.30)',    cellLabel:'Off'},
+    OnLeave:  {icon:'🏖️',label:'On Leave',     time:null,            color:'#34D399', bg:'rgba(16,185,129,.12)', cellBg:'rgba(16,185,129,.12)',  cellLabel:'Leave'},
+  };
+
+  const DAY_NAMES=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+  const weekLabel='WEEK OF '+weekDates[0].toLocaleDateString('en-GB',{day:'numeric',month:'long'}).toUpperCase();
+  const todayLong=watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // On-shift count today
+  const onShiftCount=AGENTS.filter(a=>{
+    const e=getRosterEntries(a.name,todayStr);
+    const st=e[0]?.ShiftType||'Off';
+    return st==='Day'||st==='Night'||st==='Shadowing';
+  }).length;
+
+  // My shift today
+  const myEntries=getRosterEntries(agent.name,todayStr);
+  const myShiftType=myEntries[0]?.ShiftType||'Off';
+  const mySM=SHIFT[myShiftType]||SHIFT.Off;
+
+  return(
+    <div style={{padding:'22px 28px',maxWidth:1400}}>
+
+      {/* ── Header ── */}
+      <div style={{marginBottom:18}}>
+        <div style={{font:'700 10px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:4}}>
+          EKEDP CUSTOMER EXPERIENCE · MARINA HQ
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',flexWrap:'wrap',gap:10}}>
+          <div>
+            <h2 style={{font:'800 20px/1.2 Sora,sans-serif',color:'#fff',margin:0}}>👥 Agents Roster</h2>
+            <p style={{font:'500 12px/1.4 Sora,sans-serif',color:'#6B85C0',margin:'4px 0 0'}}>
+              {todayLong} · <span style={{color:'#4ADE80',fontWeight:700}}>{onShiftCount} on shift</span> · <span style={{color:'#9CA3AF'}}>{AGENTS.length-onShiftCount} off</span>
+            </p>
+          </div>
+          {/* YOU TODAY */}
+          <div style={{display:'flex',alignItems:'center',gap:8,background:'rgba(255,255,255,.06)',border:'1px solid rgba(255,255,255,.12)',borderRadius:10,padding:'8px 16px'}}>
+            <span style={{font:'700 10px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.1em'}}>YOU TODAY</span>
+            <span style={{fontSize:15}}>{mySM.icon}</span>
+            <span style={{font:'700 13px/1 Sora,sans-serif',color:mySM.color}}>{mySM.label}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Info banner ── */}
+      <div style={{display:'flex',alignItems:'flex-start',gap:12,padding:'12px 16px',background:'rgba(59,130,246,.10)',border:'1px solid rgba(59,130,246,.25)',borderRadius:10,marginBottom:22,font:'500 12.5px/1.55 Sora,sans-serif',color:'rgba(240,244,255,.80)'}}>
+        <span style={{fontSize:16,flexShrink:0}}>ℹ️</span>
+        <span>This roster is set by Love (Managers Hub) and synced here automatically. View only — to change your shift, message Love.</span>
+      </div>
+
+      {/* ── TODAY label ── */}
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+        <span style={{fontSize:16}}>📅</span>
+        <span style={{font:'700 11px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.12em'}}>
+          TODAY · {watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase()}
+        </span>
+      </div>
+
+      {/* ── Agent cards (5 in a row) ── */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:28}}>
+        {AGENTS.map(a=>{
+          const isMe=a.id===agent.id;
+          const entries=getRosterEntries(a.name,todayStr);
+          const shiftType=entries[0]?.ShiftType||'Off';
+          const sm=SHIFT[shiftType]||SHIFT.Off;
+          const agTix=allTix[a.id]||(isMe?tickets:[]);
+          const total=agTix.length;
+          const res=agTix.filter(t=>t.status==='resolved').length;
+          const rate=total?Math.round(res/total*100):0;
+          const photo=PHOTOS[a.id];
+          return(
+            <div key={a.id} style={{background:'#111D4A',border:`2px solid ${a.color}`,borderRadius:14,overflow:'hidden',boxShadow:isMe?`0 0 0 1px ${a.color}55,0 8px 28px ${a.color}30`:'none'}}>
+              <div style={{height:4,background:a.color}}/>
+              <div style={{padding:'14px 16px'}}>
+                {/* Identity */}
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+                  {photo
+                    ?<img src={photo} alt={a.name} style={{width:48,height:48,borderRadius:'50%',objectFit:'cover',border:`2.5px solid ${a.color}`,flexShrink:0}}/>
+                    :<div style={{width:48,height:48,borderRadius:'50%',background:a.tint,border:`2.5px solid ${a.color}`,display:'flex',alignItems:'center',justifyContent:'center',font:'800 16px/1 Sora,sans-serif',color:'#fff',flexShrink:0}}>{a.initials}</div>
+                  }
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+                      <div style={{font:'800 13px/1.2 Sora,sans-serif',color:'#fff'}}>{a.name}</div>
+                      {isMe&&<span style={{font:'800 8px/1 Sora,sans-serif',padding:'3px 6px',borderRadius:5,background:a.color,color:'#fff',textTransform:'uppercase',letterSpacing:'.06em',flexShrink:0}}>YOU</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shift pill */}
+                <div style={{padding:'7px 10px',borderRadius:8,background:sm.bg,marginBottom:sm.shadow?6:12}}>
+                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                    <span style={{fontSize:13}}>{sm.icon}</span>
+                    <div>
+                      <div style={{font:'700 12px/1.2 Sora,sans-serif',color:sm.color}}>{sm.label}</div>
+                      {sm.time&&<div style={{font:'500 11px/1 Sora,sans-serif',color:sm.color,opacity:.75,marginTop:2}}>{sm.time}</div>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shadow row */}
+                {sm.shadow&&(
+                  <div style={{padding:'6px 10px',borderRadius:8,background:'rgba(59,130,246,.12)',marginBottom:12}}>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      <span style={{fontSize:13}}>🌙</span>
+                      <div style={{font:'500 11px/1.2 Sora,sans-serif',color:'#93C5FD'}}>Shadows Mycron (5PM–8AM)</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
+                  {[
+                    {label:'TIX',v:total,   color:'#3B82F6'},
+                    {label:'RES',v:res,     color:'#4ADE80'},
+                    {label:'%',  v:rate+'%',color:rate>=70?'#4ADE80':rate>=40?'#FCD34D':'#F87171'},
+                  ].map(s=>(
+                    <div key={s.label} style={{background:'rgba(255,255,255,.05)',border:'1px solid rgba(255,255,255,.07)',borderRadius:8,padding:'8px 4px',textAlign:'center'}}>
+                      <div style={{font:`800 18px/1 'JetBrains Mono',monospace`,color:s.color}}>{s.v}</div>
+                      <div style={{font:'700 8px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.10em',marginTop:4}}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Weekly calendar ── */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,flexWrap:'wrap',gap:10}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:16}}>📅</span>
+          <span style={{font:'700 11px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.12em'}}>{weekLabel}</span>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          {[['← Prev',()=>setWeekOffset(w=>w-1)],['This Week',()=>setWeekOffset(0)],['Next →',()=>setWeekOffset(w=>w+1)]].map(([lbl,fn],i)=>(
+            <button key={i} onClick={fn} style={{padding:'7px 14px',background:lbl==='This Week'&&weekOffset===0?'#1D4ED8':'var(--card,#111D4A)',border:'1px solid '+(lbl==='This Week'&&weekOffset===0?'#1D4ED8':'var(--border,#1E3070)'),borderRadius:8,color:'#fff',font:'700 12px Sora,sans-serif',cursor:'pointer'}}>{lbl}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{background:'var(--card,#111D4A)',border:'1px solid var(--border,#1E3070)',borderRadius:12,overflow:'hidden',marginBottom:16}}>
+        <table style={{width:'100%',borderCollapse:'collapse'}}>
+          <thead>
+            <tr style={{background:'rgba(0,31,92,.6)'}}>
+              <th style={{padding:'10px 14px',textAlign:'left',font:'700 11px/1 Sora,sans-serif',color:'#6B85C0',textTransform:'uppercase',letterSpacing:'.08em',borderBottom:'1px solid var(--border,#1E3070)',minWidth:140}}>AGENT</th>
+              {weekDates.map((d,i)=>{
+                const isToday=ds(d)===todayStr;
+                return(
+                  <th key={i} style={{padding:'10px 8px',textAlign:'center',font:'700 11px/1.3 Sora,sans-serif',color:isToday?'#60A5FA':'#6B85C0',textTransform:'uppercase',letterSpacing:'.06em',borderBottom:'1px solid var(--border,#1E3070)',background:isToday?'rgba(29,78,216,.22)':'transparent',minWidth:88}}>
+                    {DAY_NAMES[i]}<br/>
+                    <span style={{font:`800 18px/1.2 'JetBrains Mono',monospace`,color:isToday?'#60A5FA':'var(--text,#F0F4FF)'}}>{d.getDate()}</span>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {AGENTS.map((a,ai)=>(
+              <tr key={a.id} style={{borderBottom:ai<AGENTS.length-1?'1px solid var(--border,#1E3070)':'none'}}>
+                <td style={{padding:'10px 14px',borderRight:'1px solid var(--border,#1E3070)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    {PHOTOS[a.id]
+                      ?<img src={PHOTOS[a.id]} alt={a.name} style={{width:32,height:32,borderRadius:'50%',objectFit:'cover',border:`2px solid ${a.color}`,flexShrink:0}}/>
+                      :<div style={{width:32,height:32,borderRadius:'50%',background:a.tint,border:`2px solid ${a.color}`,display:'flex',alignItems:'center',justifyContent:'center',font:'800 11px/1 Sora,sans-serif',color:'#fff',flexShrink:0}}>{a.initials}</div>
+                    }
+                    <div style={{minWidth:0}}>
+                      <div style={{font:'700 12px/1.2 Sora,sans-serif',color:'#fff',whiteSpace:'nowrap'}}>{a.name.split(' ')[0]}</div>
+                      <div style={{font:'500 10px/1 Sora,sans-serif',color:'#6B85C0',whiteSpace:'nowrap'}}>{a.name.split(' ').slice(1).join(' ')}</div>
+                    </div>
+                    {a.id===agent.id&&<span style={{font:'800 8px/1 Sora,sans-serif',padding:'2px 5px',borderRadius:4,background:a.color,color:'#fff',flexShrink:0}}>YOU</span>}
+                  </div>
+                </td>
+                {weekDates.map((d,di)=>{
+                  const dStr=ds(d);
+                  const isToday=dStr===todayStr;
+                  const entries=getRosterEntries(a.name,dStr);
+                  const st=entries[0]?.ShiftType||'Off';
+                  const sm=SHIFT[st]||SHIFT.Off;
+                  return(
+                    <td key={di} style={{padding:'10px 4px',textAlign:'center',background:isToday?'rgba(29,78,216,.12)':sm.cellBg,borderRight:di<6?'1px solid var(--border,#1E3070)':'none'}}>
+                      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                        <span style={{fontSize:18}}>{sm.icon}</span>
+                        <span style={{font:'600 9.5px/1.2 Sora,sans-serif',color:sm.color,whiteSpace:'pre-line',textAlign:'center'}}>{sm.cellLabel}</span>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Legend ── */}
+      <div style={{display:'flex',alignItems:'center',gap:20,padding:'10px 16px',background:'rgba(255,255,255,.03)',border:'1px solid var(--border,#1E3070)',borderRadius:8,font:'600 11px/1 Sora,sans-serif',color:'#6B85C0',flexWrap:'wrap'}}>
+        <span style={{font:'700 10px/1 Sora,sans-serif',textTransform:'uppercase',letterSpacing:'.08em'}}>LEGEND</span>
+        <span>☀️ <span style={{color:'#FCD34D'}}>Day</span> 08:00 – 17:00</span>
+        <span>🌙 <span style={{color:'#A78BFA'}}>Night</span> 17:00 – 08:00</span>
+        <span>🔴 <span style={{color:'#9CA3AF'}}>Off</span></span>
+        <span>🏖️ <span style={{color:'#34D399'}}>Leave</span></span>
+      </div>
+
+    </div>
+  );
+};
+
 // ── APP ────────────────────────────────────────────────────────────
 function App(){
   const[agent,setAgent]=useState(()=>loadAgentSession());
@@ -1173,6 +1458,7 @@ function App(){
 
   const myTix=getMyTickets();
   const screenEl={
+    dashboard:<AgentDashboard agent={agent} tickets={myTix} onChange={setScreen}/>,
     tickets:<MyTickets agent={agent} tickets={myTix} onEdit={setEditing}/>,
     add:<AddTicket agent={agent} onCreate={addTicket} onCreateMany={addTickets}/>,
     slot:<SlotReports agent={agent} tickets={myTix}/>,
@@ -1418,16 +1704,19 @@ var ACUpdateWidget = function(props) {
   var setEditMap = props.setEditMap;
   var edits    = props.edits;
   var saveEdit = props.saveEdit;
+  var onDelete = props.onDelete;
+  var catList  = props.catList || [];
 
   var cur      = editMap[t.num] || {};
   var curStatus = cur.status || t.status;
   var curNote  = cur.note !== undefined ? cur.note : (t.note || '');
+  var curCat   = cur.category !== undefined ? cur.category : (t.category || '');
 
   function onStatusChange(e) {
     var val = e.target.value;
     var num = t.num;
     setEditMap(function(m) {
-      var prev = m[num] || {note: t.note || ''};
+      var prev = m[num] || {note: t.note || '', category: t.category || ''};
       var next = Object.assign({}, prev, {status: val});
       return Object.assign({}, m, {[num]: next});
     });
@@ -1437,8 +1726,18 @@ var ACUpdateWidget = function(props) {
     var val = e.target.value;
     var num = t.num;
     setEditMap(function(m) {
-      var prev = m[num] || {status: t.status};
+      var prev = m[num] || {status: t.status, category: t.category || ''};
       var next = Object.assign({}, prev, {note: val});
+      return Object.assign({}, m, {[num]: next});
+    });
+  }
+
+  function onCatChange(e) {
+    var val = e.target.value;
+    var num = t.num;
+    setEditMap(function(m) {
+      var prev = m[num] || {status: t.status, note: t.note || ''};
+      var next = Object.assign({}, prev, {category: val});
       return Object.assign({}, m, {[num]: next});
     });
   }
@@ -1447,16 +1746,41 @@ var ACUpdateWidget = function(props) {
     var em = editMap[t.num] || {};
     var st = em.status || t.status;
     var nt = em.note !== undefined ? em.note : (t.note || '');
-    saveEdit(t.num, st, nt);
+    var ct = em.category !== undefined ? em.category : (t.category || '');
+    saveEdit(t.num, st, nt, ct);
   }
 
   var lastEdit = edits[t.num];
 
   return (
     <div style={{background:'rgba(59,130,246,.06)', border:'1px solid rgba(59,130,246,.25)', borderRadius:10, padding:'14px 16px'}}>
-      <div style={{font:'700 12px/1 Sora,sans-serif', color:'#93C5FD', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:10}}>
-        ✏️ Update This Ticket
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+        <div style={{font:'700 12px/1 Sora,sans-serif', color:'#93C5FD', textTransform:'uppercase', letterSpacing:'.1em'}}>
+          ✏️ Update This Ticket
+        </div>
+        {onDelete && (
+          <button onClick={function(){ if(confirm('Delete ticket #'+t.num+' from All Complaints? This cannot be undone.')) onDelete(t.num); }}
+            style={{padding:'6px 12px', background:'rgba(220,38,38,.12)', color:'#F87171', border:'1px solid rgba(220,38,38,.3)', borderRadius:7, fontFamily:'Sora,sans-serif', fontSize:13, fontWeight:700, cursor:'pointer'}}>
+            🗑 Delete
+          </button>
+        )}
       </div>
+
+      {/* Category edit */}
+      <div style={{marginBottom:10}}>
+        <div style={{font:'700 10px/1 Sora,sans-serif', color:'var(--sub)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:5}}>📂 Category</div>
+        {catList.length > 0
+          ? <select value={curCat} onChange={onCatChange}
+              style={{width:'100%', padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:13, cursor:'pointer', outline:'none'}}>
+              {catList.map(function(c){ return <option key={c} value={c}>{c}</option>; })}
+              {curCat && catList.indexOf(curCat) === -1 && <option value={curCat}>{curCat}</option>}
+            </select>
+          : <input value={curCat} onChange={onCatChange}
+              placeholder="Category"
+              style={{width:'100%', padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:13, outline:'none', boxSizing:'border-box'}}/>
+        }
+      </div>
+
       <div style={{display:'flex', gap:10, alignItems:'flex-start', flexWrap:'wrap'}}>
         <select value={curStatus} onChange={onStatusChange}
           style={{padding:'8px 12px', background:'#0D1B45', color:'#F0F4FF', border:'1px solid #1E3070', borderRadius:8, fontFamily:'Sora,sans-serif', fontSize:16, cursor:'pointer', outline:'none'}}>
@@ -1479,6 +1803,7 @@ var ACUpdateWidget = function(props) {
       {lastEdit && (
         <div style={{font:'500 12px Sora,sans-serif', color:'#6B85C0', marginTop:6}}>
           Last updated by {lastEdit.by || 'agent'} · {lastEdit.at}
+          {lastEdit.category && lastEdit.category !== t.category && <span style={{marginLeft:8, color:'#FCD34D'}}>Category changed</span>}
         </div>
       )}
     </div>
@@ -1501,6 +1826,37 @@ const AllComplaints = ({agent}) => {
   }, []);
   var saveEdit = function(num, status, note) {
     var next = Object.assign({}, edits, {[num]: {status: status, note: note, by: agent ? agent.name : '', at: new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})}});
+    setEdits(next);
+    localStorage.setItem('ek_ac_edits', JSON.stringify(next));
+    setEditMap(function(m){ var r=Object.assign({},m); delete r[num]; return r; });
+    window.EK_TOAST && window.EK_TOAST('✅ Ticket #' + num + ' updated.');
+  };
+
+  // Track locally-deleted tickets (persisted so they stay gone after refresh)
+  var loadDeleted = function() {
+    try { return JSON.parse(localStorage.getItem('ek_ac_deleted') || '[]'); } catch(e){ return []; }
+  };
+  var [deletedNums, setDeletedNums] = React.useState(loadDeleted);
+
+  var deleteFromAC = function(num) {
+    var next = deletedNums.concat([num]);
+    setDeletedNums(next);
+    localStorage.setItem('ek_ac_deleted', JSON.stringify(next));
+    // Also remove from any agent localStorage key we can find
+    try {
+      for (var k in localStorage) {
+        if (!k.startsWith('ek_tix_')) continue;
+        var arr = JSON.parse(localStorage.getItem(k) || '[]');
+        if (!Array.isArray(arr)) continue;
+        var filtered2 = arr.filter(function(t){ return t.num !== num; });
+        if (filtered2.length !== arr.length) localStorage.setItem(k, JSON.stringify(filtered2));
+      }
+    } catch(e) {}
+    window.EK_TOAST && window.EK_TOAST('🗑 Ticket #' + num + ' deleted.', 'warn');
+  };
+
+  var saveEditWithCategory = function(num, status, note, category) {
+    var next = Object.assign({}, edits, {[num]: {status: status, note: note, category: category, by: agent ? agent.name : '', at: new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})}});
     setEdits(next);
     localStorage.setItem('ek_ac_edits', JSON.stringify(next));
     setEditMap(function(m){ var r=Object.assign({},m); delete r[num]; return r; });
@@ -1585,11 +1941,12 @@ const AllComplaints = ({agent}) => {
   }
   let allTickets = Object.values(baseMap).sort(function(a,b){ return dateSortKey(b) - dateSortKey(a); });
 
-  // Apply saved edits on top
+  // Apply saved edits on top (including category overrides), filter deleted
+  allTickets = allTickets.filter(function(t) { return deletedNums.indexOf(t.num) === -1; });
   allTickets = allTickets.map(function(t) {
     var e = edits[t.num];
     if (!e) return t;
-    return Object.assign({}, t, {status: e.status, note: e.note, modified_by: e.by || t.modified_by});
+    return Object.assign({}, t, {status: e.status, note: e.note, category: e.category || t.category, modified_by: e.by || t.modified_by});
   });
 
   const [q, setQ]           = React.useState('');
@@ -1642,6 +1999,23 @@ const AllComplaints = ({agent}) => {
     document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
+  function exportJSON() {
+    var payload = {
+      exportedAt: new Date().toISOString(),
+      exportedBy: agent ? {name: agent.name, email: agent.email, id: agent.id} : {},
+      filter: {q: q||'', status: stat||'all', bu: bu||'all', category: cat||'all'},
+      total: filtered.length,
+      tickets: filtered
+    };
+    var json = JSON.stringify(payload, null, 2);
+    var blob = new Blob([json], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url;
+    a.download = 'EKEDP-All-Complaints-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    window.EK_TOAST && window.EK_TOAST('📥 JSON downloaded — ' + filtered.length + ' tickets.');
+  }
+
   // Status counts for mini-KPIs
   var totRes  = filtered.filter(function(t){return t.status==='resolved';}).length;
   var totProg = filtered.filter(function(t){return t.status==='progress';}).length;
@@ -1658,13 +2032,22 @@ const AllComplaints = ({agent}) => {
             All days · all statuses · {allTickets.length} complaints · 50 per page · click any row to expand
           </p>
         </div>
-        <button onClick={exportCSV} style={{
-          padding:'9px 18px', borderRadius:6, border:'none',
-          background:'#E30613', color:'#fff',
-          font:'800 14px Sora,sans-serif', cursor:'pointer',
-          boxShadow:'0 4px 14px rgba(227,6,19,.35)',
-          display:'flex', alignItems:'center', gap:6,
-        }}>⬇ Export Excel</button>
+        <div style={{display:'flex', gap:8}}>
+          <button onClick={exportCSV} style={{
+            padding:'9px 18px', borderRadius:6, border:'none',
+            background:'#E30613', color:'#fff',
+            font:'800 14px Sora,sans-serif', cursor:'pointer',
+            boxShadow:'0 4px 14px rgba(227,6,19,.35)',
+            display:'flex', alignItems:'center', gap:6,
+          }}>⬇ Export CSV</button>
+          <button onClick={exportJSON} style={{
+            padding:'9px 18px', borderRadius:6, border:'none',
+            background:'#1D4ED8', color:'#fff',
+            font:'800 14px Sora,sans-serif', cursor:'pointer',
+            boxShadow:'0 4px 14px rgba(29,78,216,.35)',
+            display:'flex', alignItems:'center', gap:6,
+          }}>⬇ Download JSON</button>
+        </div>
       </div>
 
       {/* ── Mini KPI strip ── */}
@@ -1812,7 +2195,9 @@ const AllComplaints = ({agent}) => {
                               editMap={editMap}
                               setEditMap={setEditMap}
                               edits={edits}
-                              saveEdit={saveEdit}
+                              saveEdit={saveEditWithCategory}
+                              onDelete={deleteFromAC}
+                              catList={catList}
                             />
 
                           </div>
