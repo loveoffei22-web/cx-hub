@@ -193,10 +193,7 @@ function render(slotId){
   tot.grand=tot.res+tot.prg+tot.unr;
   tot.pct=tot.grand?Math.round(tot.res/tot.grand*100):0;
 
-  const noteHtml = slotId==='9am' ? `
-    <div class="note-strip">
-      ℹ️ <b>9 AM Report:</b> "Complaints Received Today" counts new tickets logged <em>during today's shift</em> (from 8 AM weekdays / 10 AM weekends). Pre-shift resolutions are already captured in the Cumulative Resolved column.
-    </div>` : '';
+  const noteHtml = '';
 
   document.getElementById('doc').innerHTML = `
     <div class="hd">
@@ -222,7 +219,7 @@ function render(slotId){
       <div class="kpi pct"><div class="kl">% Resolution</div><div class="kv">${tot.pct}%</div></div>
     </div>
 
-    ${noteHtml}
+    
 
     <div class="tbl-wrap">
       <table class="t">
