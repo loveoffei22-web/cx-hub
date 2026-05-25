@@ -205,8 +205,8 @@ const AGENTS=[
 ];
 const BUS=['ISLAND','IJORA','MUSHIN','AJAH','LEKKI','APAPA','AGBARA','AJELE','OJO','FESTAC','ORILE','IBEJU-LEKKI'];
 const CATS=['Band Reclassification','Billing','Interruption / Voltage / Safety','Metering','PPM Support','PPM Maintenance','Onboarding','MYCRON','AMISA','General'];
-const RESP_LIST=['Holyland Umude','Mojibola Adefuwa','Ogheneyoreme Agbroko','Adetoun Adetola','Owokade Olusegun','Clara Olutola','Glory (BPS Africa)','Festus Moko','Nonye Angelina Nnadozie'];
-const RESP_MAP={'Band Reclassification':'Nonye Angelina Nnadozie','Billing':'Mojibola Adefuwa','Interruption':'Ogheneyoreme Agbroko','Voltage':'Ogheneyoreme Agbroko','Metering':'Holyland Umude','PPM Support':'Adetoun Adetola','PPM Maintenance':'Owokade Olusegun','Onboarding':'Clara Olutola','MYCRON':'Glory (BPS Africa)','AMISA':'Festus Moko'};
+const RESP_LIST=['Holyland Umude','Mojibola Adefuwa','Ogheneyoreme Agbroko','Adetoun Adetola','Owokade Olusegun','Clara Olutola','Glory (BPS Africa)','Festus Moko','Nonye Angelina Nnadozie','Customer Experience'];
+const RESP_MAP={'Band Reclassification':'Nonye Angelina Nnadozie','Billing':'Mojibola Adefuwa','Interruption':'Ogheneyoreme Agbroko','Voltage':'Ogheneyoreme Agbroko','Metering':'Holyland Umude','PPM Support':'Adetoun Adetola','PPM Maintenance':'Owokade Olusegun','Onboarding':'Clara Olutola','MYCRON':'Glory (BPS Africa)','AMISA':'Festus Moko','CX':'Customer Experience','Customer Experience':'Customer Experience','General':'Customer Experience'};
 function getResp(cat){const k=Object.keys(RESP_MAP).find(function(k){return(cat||'').includes(k);});return k?RESP_MAP[k]:'';}
 const THEMES=[
   {id:'midnight',label:'Midnight',sw:'linear-gradient(135deg,#001040,#001F5C)'},
@@ -293,11 +293,11 @@ function Signin({onSignIn}){
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
           {AGENTS.map(function(a){return(
             <div key={a.id} className={'agent-pick'+(sel?.id===a.id?' on':'')} onClick={function(){setSel(a);setErr('');}}
-              style={{borderColor:sel?.id===a.id?a.color:'var(--border)',background:sel?.id===a.id?a.tint:'transparent'}}>
+              style={{borderColor:a.color,background:sel?.id===a.id?a.tint:'transparent',boxShadow:sel?.id===a.id?'0 0 0 2px '+a.color+'55':'none'}}>
               <Av agent={a} size={32}/>
-              <span style={{font:'700 12px/1 Sora,sans-serif',color:'var(--text)'}}>{a.name.split(' ')[0]}</span>
+              <span style={{font:'700 12px/1 Sora,sans-serif',color:a.color}}>{a.name.split(' ')[0]}</span>
             </div>);})}
-          <a href="Home.html" style={{gridColumn:'span 2',display:'flex',alignItems:'center',justifyContent:'center',padding:'9px',border:'1px solid var(--border)',borderRadius:10,font:'600 11px Sora,sans-serif',color:'var(--muted)',textDecoration:'none',transition:'all .15s'}}
+          <a href="index.html" style={{gridColumn:'span 2',display:'flex',alignItems:'center',justifyContent:'center',padding:'9px',border:'1px solid var(--border)',borderRadius:10,font:'600 11px Sora,sans-serif',color:'var(--muted)',textDecoration:'none',transition:'all .15s'}}
             onMouseEnter={function(e){e.currentTarget.style.borderColor='var(--ek-gold)';}}
             onMouseLeave={function(e){e.currentTarget.style.borderColor='var(--border)';}}>
             ← Return to Home
@@ -541,6 +541,7 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
   const[fSt,setFSt]=useState('all');
   const[fBu,setFBu]=useState('all');
   const[fCat,setFCat]=useState('all');
+  const[sort,setSort]=useState('newest');
   const[expanded,setExpanded]=useState(null);
   const[editState,setEditState]=useState({});
   const[page,setPage]=useState(0);
@@ -551,7 +552,15 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
     if(fCat!=='all'&&t.category!==fCat)return false;
     if(search){const q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+(t.category||t.issue||'')+(t.addr||'')+t.status).toLowerCase().includes(q);}
     return true;
-  }).sort(function(a,b){return(b.created||'').localeCompare(a.created||'');});
+  }).sort(function(a,b){
+    const ad=(a.created||'')+' '+(a.time||'');
+    const bd=(b.created||'')+' '+(b.time||'');
+    const an=parseInt(a.num,10)||0;const bn=parseInt(b.num,10)||0;
+    if(sort==='oldest')   return ad.localeCompare(bd);
+    if(sort==='num_desc') return bn-an;
+    if(sort==='num_asc')  return an-bn;
+    /* newest */          return bd.localeCompare(ad);
+  });
   const totalPages=Math.ceil(filt.length/PAGE)||1;
   const paged=filt.slice(page*PAGE,(page+1)*PAGE);
   const res=filt.filter(function(t){return t.status==='resolved';}).length;
@@ -628,11 +637,17 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
           <select className="sel" style={{width:160}} value={fCat} onChange={function(e){setFCat(e.target.value);setPage(0);}}>
             <option value="all">All categories</option>{CATS.map(function(c){return <option key={c} value={c}>{c.split('/')[0].trim()}</option>;})}
           </select>
+          <select className="sel" style={{width:160}} value={sort} onChange={function(e){setSort(e.target.value);setPage(0);}}>
+            <option value="newest">↓ Newest first</option>
+            <option value="oldest">↑ Oldest first</option>
+            <option value="num_desc">Ticket # high → low</option>
+            <option value="num_asc">Ticket # low → high</option>
+          </select>
         </div>
         <div style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderRadius:10,overflow:'hidden',marginBottom:10}}>
           <div style={{padding:'8px 14px',background:'rgba(0,0,0,.3)',font:'600 11px Sora,sans-serif',color:'var(--muted)',display:'flex',justifyContent:'space-between'}}>
             <span>Tickets · {filt.length}</span>
-            <span>Sorted newest first · Row expanded — click again to close</span>
+            <span>Sorted {sort==='newest'?'newest first':sort==='oldest'?'oldest first':sort==='num_desc'?'by ticket # (high → low)':'by ticket # (low → high)'} · Row expanded — click again to close</span>
           </div>
           <div style={{overflowX:'auto'}}>
             <table className="ctbl">
@@ -1205,27 +1220,44 @@ function ExportDay({agent,tickets,showToast}){
 
 // ── CLOUD SYNC ──────────────────────────────────────────────
 function CloudSync({agent,tickets,setTickets,showToast}){
-  const BIN='6a11fd706877513b27bf6f70';const KEY='$2a$10$fJC1nhWE9aPBRZKKgHgbWOU.OQVGkWEqxjmB33sy1Rix8uqGoPCXG';const BASE='https://api.jsonbin.io/v3/b';
-  const hdrs={'Content-Type':'application/json','X-Master-Key':KEY};
+  const BIN='6a11fd706877513b27bf6f70';const BASE='https://api.jsonbin.io/v3/b';const KEY_STORAGE='ek_master_key';
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(KEY_STORAGE)||'');
+  const[keyDraft,setKeyDraft]=useState('');
+  const[showKey,setShowKey]=useState(false);
+  const hdrs=()=>({'Content-Type':'application/json','X-Master-Key':apiKey});
   const[saving,setSaving]=useState(false);const[status,setStatus]=useState({msg:'',ok:true});const[lastSync,setLastSync]=useState(()=>localStorage.getItem('ek_last_sync')||'');const[preview,setPreview]=useState(null);
-  useEffect(function(){const done=sessionStorage.getItem('ek_ag_pulled_'+agent.id);if(!done){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}},[]); // eslint-disable-line
-  async function pullNow(){setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});try{const res=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs});if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const cloud=data.record||{};Object.keys(cloud).forEach(function(agId){if(agId===agent.id&&Array.isArray(cloud[agId])){setTickets(cloud[agId]);}localStorage.setItem('ek_tix_'+agId,JSON.stringify(Array.isArray(cloud[agId])?cloud[agId]:[]));});const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);const msg='✅ Synced from cloud.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Pull failed: '+e.message,ok:false});showToast('Pull failed','error');}finally{setSaving(false);}}
-  async function pushNow(){setSaving(true);setStatus({msg:'Pushing…',ok:true});try{const getRes=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs});const current=getRes.ok?(await getRes.json()).record||{}:{};current[agent.id]=tickets;const res=await fetch(BASE+'/'+BIN,{method:'PUT',headers:hdrs,body:JSON.stringify(current)});if(!res.ok)throw new Error('HTTP '+res.status);const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);const msg='✅ Pushed '+tickets.length+' tickets.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}finally{setSaving(false);}}
+  function saveKey(){const k=(keyDraft||'').trim();if(!k){showToast('Paste the master key first','error');return;}localStorage.setItem(KEY_STORAGE,k);setApiKey(k);setKeyDraft('');showToast('Master key saved ✓');}
+  function clearKey(){if(!window.confirm('Clear master key from this device?'))return;localStorage.removeItem(KEY_STORAGE);setApiKey('');showToast('Master key cleared');}
+  useEffect(function(){if(!apiKey)return;const done=sessionStorage.getItem('ek_ag_pulled_'+agent.id);if(!done){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}},[apiKey]); // eslint-disable-line
+  async function pullNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});try{const res=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(res.status===401)throw new Error('Invalid master key');if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const cloud=data.record||{};Object.keys(cloud).forEach(function(agId){if(agId===agent.id&&Array.isArray(cloud[agId])){setTickets(cloud[agId]);}localStorage.setItem('ek_tix_'+agId,JSON.stringify(Array.isArray(cloud[agId])?cloud[agId]:[]));});const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);const msg='✅ Synced from cloud.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Pull failed: '+e.message,ok:false});showToast('Pull failed','error');}finally{setSaving(false);}}
+  async function pushNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pushing…',ok:true});try{const getRes=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(getRes.status===401)throw new Error('Invalid master key');const current=getRes.ok?(await getRes.json()).record||{}:{};current[agent.id]=tickets.filter(function(t){return !t._baseline;});const res=await fetch(BASE+'/'+BIN,{method:'PUT',headers:hdrs(),body:JSON.stringify(current)});if(!res.ok)throw new Error('HTTP '+res.status);const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);const msg='✅ Pushed '+tickets.length+' tickets.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}finally{setSaving(false);}}
   return(
     <div>
       <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — JSONBin</div></div></div>
       <div className="pad">
+        {!apiKey&&(
+          <div style={{background:'rgba(255,199,44,.06)',border:'1.5px solid rgba(255,199,44,.4)',borderRadius:12,padding:16,marginBottom:14}}>
+            <div style={{font:'800 14px Sora,sans-serif',color:'var(--text)',marginBottom:6}}>🔑 Set Master Key</div>
+            <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Ask Love (Managers Hub) for the JSONBin master key. <b style={{color:'var(--text)'}}>Paste it once</b> — it stays on this phone only.</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:8}}>
+              <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste master key…"/>
+              <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈':'👁'}</button>
+              <button onClick={saveKey} style={{padding:'8px 14px',background:'#16A34A',color:'#fff',border:'none',borderRadius:8,font:'800 12px Sora,sans-serif',cursor:'pointer'}}>✓ Save</button>
+            </div>
+          </div>
+        )}
         {status.msg&&<div style={{padding:'11px 14px',borderRadius:10,background:status.ok?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',border:'1px solid '+(status.ok?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),font:'600 12px Sora,sans-serif',color:status.ok?'var(--okb)':'var(--bdb)',marginBottom:12}}>{status.msg}</div>}
         {preview&&<div style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',font:'600 11px/1.4 JetBrains Mono,monospace',color:'var(--muted)',marginBottom:12}}>☁ Cloud: {Object.entries(preview).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')}</div>}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-          <button onClick={pullNow} disabled={saving} style={{padding:'20px',background:saving?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:saving?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:saving?.6:1}}>
-            <span style={{fontSize:24}}>⬇</span><span>Pull from Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>Get everyone's latest</small>
+          <button onClick={pullNow} disabled={saving||!apiKey} style={{padding:'20px',background:(saving||!apiKey)?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!apiKey)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!apiKey)?.55:1}}>
+            <span style={{fontSize:24}}>⬇</span><span>Pull from Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!apiKey?'Set key first':'Get everyone\'s latest'}</small>
           </button>
-          <button onClick={pushNow} disabled={saving} style={{padding:'20px',background:saving?'rgba(255,255,255,.06)':'#1D4ED8',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:saving?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:saving?.6:1}}>
-            <span style={{fontSize:24}}>⬆</span><span>Push to Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>Share your tickets</small>
+          <button onClick={pushNow} disabled={saving||!apiKey} style={{padding:'20px',background:(saving||!apiKey)?'rgba(255,255,255,.06)':'#1D4ED8',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!apiKey)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!apiKey)?.55:1}}>
+            <span style={{fontSize:24}}>⬆</span><span>Push to Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!apiKey?'Set key first':'Share your tickets'}</small>
           </button>
         </div>
-        {lastSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)'}}>Last synced: <b style={{color:'var(--okb)'}}>{lastSync}</b></div>}
+        {lastSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>Last synced: <b style={{color:'var(--okb)'}}>{lastSync}</b></div>}
+        {apiKey&&<div style={{display:'flex',gap:8,marginTop:8}}><button className="btn btn-sm" onClick={clearKey} style={{padding:'6px 12px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear key</button><span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',alignSelf:'center'}}>Key: {apiKey.slice(0,6)}……{apiKey.slice(-4)}</span></div>}
       </div>
     </div>
   );

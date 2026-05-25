@@ -8,6 +8,7 @@
 <title>EKEDP Power App — Managers Hub v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="baseline.js"></script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -267,22 +268,60 @@ var EK_AGENTS=[
   {id:'loveth', name:'Loveth Okpara',    email:'loveth.okpara@ekedp.com',    color:'#F59E0B',tint:'rgba(245,158,11,.18)',initials:'LO',role:'CX Agent'},
 ];
 var EK_BUS=['ISLAND','IJORA','MUSHIN','AJAH','LEKKI','APAPA','AGBARA','AJELE','OJO','FESTAC','ORILE','IBEJU-LEKKI'];
-var EK_RESP=[
-  {sn:1,name:'Holyland Umude',       cat:'Metering',              color:'#60A5FA'},
-  {sn:2,name:'Mojibola Adefuwa',     cat:'Billing',               color:'#34D399'},
-  {sn:3,name:'Ogheneyoreme Agbroko', cat:'Interruption/Voltage',  color:'#F87171'},
-  {sn:4,name:'Adetoun Adetola',      cat:'PPM Support',           color:'#FBBF24'},
-  {sn:5,name:'Owokade Olusegun',     cat:'PPM Maintenance',       color:'#F97316'},
-  {sn:6,name:'Clara Olutola',        cat:'Onboarding',            color:'#A78BFA'},
-  {sn:7,name:'Glory (BPS Africa)',   cat:'MYCRON',                color:'#2DD4BF'},
-  {sn:8,name:'Festus Moko',          cat:'AMISA',                 color:'#FB7185'},
-  {sn:9,name:'Nonye Angelina Nnadozie',cat:'Band Reclassification',color:'#818CF8'},
+var EK_RESP_DEFAULTS=[
+  {sn:1,name:'Holyland Umude',         cat:'Metering',                       color:'#60A5FA'},
+  {sn:2,name:'Mojibola Adefuwa',       cat:'Billing',                        color:'#34D399'},
+  {sn:3,name:'Ogheneyoreme Agbroko',   cat:'Interruption/Voltage/Safety',    color:'#F87171'},
+  {sn:4,name:'David Obisesan',         cat:'PPM Support',                    color:'#FBBF24'},
+  {sn:5,name:'Owokade Olusegun',       cat:'PPM Maintenance',                color:'#F97316'},
+  {sn:6,name:'Clara Olutola',          cat:'Onboarding',                     color:'#A78BFA'},
+  {sn:7,name:'Glory Chinyere',         cat:'MYCRON',                         color:'#2DD4BF'},
+  {sn:8,name:'Festus Moko',            cat:'AMISA',                          color:'#FB7185'},
+  {sn:9,name:'Nonye Angelina Nnadozie',cat:'Band Reclassification',          color:'#818CF8'},
+  {sn:10,name:'Customer Experience',   cat:'General First Contact Resolution',color:'#94A3B8'},
 ];
+var EK_RESP_KEY='ek_v3_resp';
+function loadResp(){
+  try{
+    var s=localStorage.getItem(EK_RESP_KEY);
+    if(s){var arr=JSON.parse(s);if(Array.isArray(arr)&&arr.length)return arr;}
+    // Migrate from v2 if present: replace renamed parties, drop stale ones
+    var v2=localStorage.getItem('ek_v2_resp');
+    if(v2){
+      try{
+        var old=JSON.parse(v2);
+        if(Array.isArray(old)&&old.length){
+          var rename={'Adetoun Adetola':'David Obisesan','Glory (BPS Africa)':'Glory Chinyere'};
+          var catFix={'Interruption/Voltage':'Interruption/Voltage/Safety','CX / General':'General First Contact Resolution'};
+          var migrated=old.map(function(r){
+            var newName=rename[r.name]||r.name;
+            var newCat =catFix[r.cat]||r.cat;
+            return Object.assign({},r,{name:newName,cat:newCat});
+          });
+          localStorage.setItem(EK_RESP_KEY,JSON.stringify(migrated));
+          return migrated;
+        }
+      }catch(e){}
+    }
+    return EK_RESP_DEFAULTS.slice();
+  }catch(e){return EK_RESP_DEFAULTS.slice();}
+}
+function saveResp(arr){try{localStorage.setItem(EK_RESP_KEY,JSON.stringify(arr));}catch(e){}EK_RESP.length=0;arr.forEach(function(r){EK_RESP.push(r);});}
+var EK_RESP=loadResp();
 var EK_CATS=['Band Reclassification','Billing','Interruption / Voltage / Safety','Metering','PPM Support','PPM Maintenance','Onboarding','MYCRON','AMISA','General'];
 
 (function(){
   var stored=localStorage.getItem('ek_v2_tickets');
   if(stored){try{window.EK_TICKETS=JSON.parse(stored);return;}catch(e){}}
+
+  // Seed from baseline.js (24 May 2026 COB) if available
+  if(window.EK_BASELINE_TICKETS&&Array.isArray(window.EK_BASELINE_TICKETS)&&window.EK_BASELINE_TICKETS.length){
+    var seed=window.EK_BASELINE_TICKETS.map(function(t){return Object.assign({},t,{_baseline:true});});
+    window.EK_TICKETS=seed;
+    localStorage.setItem('ek_v2_tickets',JSON.stringify(seed));
+    localStorage.setItem('ek_baseline_seeded','1');
+    return;
+  }
   var names=['John Adeyemi','Grace Okonkwo','Emeka Eze','Fatima Bello','Chidi Obi','Ngozi Uche','Tunde Bakare','Amaka Nwosu','Seun Adebayo','Kemi Okafor','Biodun Adeleke','Rashida Musa'];
   var phones=['+2348012345678','+2348023456789','+2347034567890','+2348145678901','+2348056789012','+2347067890123'];
   var tix=[]; var n=720001;
@@ -488,7 +527,7 @@ function Signin({onSignIn}){
           <div style={{font:'500 11px Sora,sans-serif',color:'var(--sub)',marginBottom:20}}>Hint: password = first name (e.g. love)</div>
           <button type="submit" className="btn btn-gold" style={{width:'100%',padding:'12px'}}>Sign in →</button>
         </form>
-        <a href="Home.html" style={{marginTop:12,display:'flex',alignItems:'center',justifyContent:'center',padding:'9px',border:'1px solid var(--border)',borderRadius:10,font:'600 11px Sora,sans-serif',color:'var(--muted)',textDecoration:'none',transition:'all .15s'}}
+        <a href="index.html" style={{marginTop:12,display:'flex',alignItems:'center',justifyContent:'center',padding:'9px',border:'1px solid var(--border)',borderRadius:10,font:'600 11px Sora,sans-serif',color:'var(--muted)',textDecoration:'none',transition:'all .15s'}}
           onMouseEnter={function(e){e.currentTarget.style.borderColor='var(--ek-gold)';}}
           onMouseLeave={function(e){e.currentTarget.style.borderColor='var(--border)';}}>
           ← Return to Home
@@ -641,22 +680,7 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav}){
             <div style={{font:'600 11px/1 Sora,sans-serif',color:'var(--muted)'}}>{onShiftAgents} of {EK_AGENTS.length} agents on shift</div>
           </div>
         </div>
-        {/* Slot timeline */}
-        <div className="slot-box">
-          <div className="eyebrow" style={{marginBottom:10}}>Operational Slots</div>
-          <div style={{display:'flex',gap:8,marginBottom:10}}>
-            {SLOTS.map(function(s){const done=h>=s.end;const active=h>=s.start&&h<s.end;return(
-              <div key={s.id} className={'slot-item'+(active?' active':done?' done':'')}
-                style={{flex:1,padding:'10px 12px',borderRadius:9,border:'1px solid var(--bsoft)',
-                  background:active?'rgba(255,199,44,.14)':done?'rgba(255,255,255,.03)':'rgba(0,0,0,.2)'}}>
-                <div style={{font:'600 11px/1 Sora,sans-serif',color:active?'var(--ek-gold)':done?'var(--okb)':'var(--muted)'}}>{s.label}</div>
-                <div style={{font:'700 9px/1 JetBrains Mono,monospace',color:active?'var(--ek-gold)':done?'var(--okb)':'var(--sub)',marginTop:4,letterSpacing:'.1em'}}>{active?'● ACTIVE':done?'✓ DONE':s.start+':00'}</div>
-              </div>);})}
-          </div>
-          <div style={{height:3,background:'rgba(255,255,255,.07)',borderRadius:2,overflow:'hidden'}}>
-            <div style={{height:3,background:'linear-gradient(90deg,var(--ek-gold),var(--wnb))',borderRadius:2,width:dayProg+'%',transition:'width 1s ease'}}/>
-          </div>
-        </div>
+        {/* Slot timeline removed — covered by Success Scorecard below */}
       </div>
 
       {/* KPI ROW */}
@@ -676,6 +700,57 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav}){
             </div>
           </div>);})}
       </div>
+
+      {/* SUCCESS SCORECARD */}
+      {(function(){
+        const watTodayStr=wat.toISOString().slice(0,10);
+        function ticketDate(t){
+          if(t.created)return String(t.created).slice(0,10);
+          if(t.received){try{return new Date(new Date(t.received).toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,10);}catch(e){return null;}}
+          return null;
+        }
+        const todayList=tickets.filter(function(t){return ticketDate(t)===watTodayStr;});
+        const todayResolved=todayList.filter(function(t){return t.status==='resolved';}).length;
+        const todayRate=todayList.length?Math.round(todayResolved/todayList.length*100):0;
+        const reportsSent=(h>=9?1:0)+(h>=12?1:0)+(h>=17?1:0);
+        const unassigned=todayList.filter(function(t){
+          const r=(t.responsible||t.resp||'').toString().trim();
+          return !r || r.toLowerCase()==='customer experience' && !t.responsible && !t.resp;
+        }).filter(function(t){return !(t.responsible||t.resp);}).length;
+        const isCOB=h>=17;
+        const SCORE=[
+          {l:'Same-day Resolution',v:todayList.length?todayRate+'%':'—',sub:'target ≥ 80%',ok:todayRate>=80&&todayList.length>0,warn:todayList.length>0&&todayRate<80,c:'#22C55E'},
+          {l:'Tickets Logged Today',v:todayList.length,sub:'received today (WAT)',ok:todayList.length>0,warn:false,c:'#60A5FA'},
+          {l:'Daily Reports Sent',v:reportsSent+' / 3',sub:'9 AM · 12 PM · 4 PM',ok:reportsSent===3,warn:isCOB&&reportsSent<3,c:'#FBBF24'},
+          {l:'Unassigned at COB',v:unassigned,sub:isCOB?'target = 0':'check at 4 PM',ok:unassigned===0,warn:isCOB&&unassigned>0,c:'#A78BFA'},
+        ];
+        return(
+          <div style={{padding:'10px 28px 0'}}>
+            <div style={{background:'rgba(0,0,0,.18)',border:'1px solid var(--bsoft)',borderRadius:12,padding:'12px 14px'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:10}}>
+                <div style={{font:'700 10px/1 Sora,sans-serif',color:'var(--ek-gold)',letterSpacing:'.18em',textTransform:'uppercase'}}>Success Scorecard · Today</div>
+                <a href="Success Criteria.html" target="_blank" style={{font:'600 10px/1 Sora,sans-serif',color:'var(--muted)',textDecoration:'none'}}>View targets →</a>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+                {SCORE.map(function(s){
+                  const dot=s.ok?'#22C55E':s.warn?'#EF4444':'#94A3B8';
+                  const mark=s.ok?'✓':s.warn?'✕':'·';
+                  return(
+                    <div key={s.l} style={{background:'rgba(255,255,255,.03)',border:'1px solid var(--bsoft)',borderRadius:10,padding:'10px 12px',borderLeft:'3px solid '+dot}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                        <span style={{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em'}}>{s.l}</span>
+                        <span style={{width:16,height:16,borderRadius:'50%',background:dot,color:'#fff',font:'900 10px/1 Sora,sans-serif',display:'inline-flex',alignItems:'center',justifyContent:'center'}}>{mark}</span>
+                      </div>
+                      <div style={{font:"800 22px/1 'JetBrains Mono',monospace",color:s.c,marginBottom:3}}>{s.v}</div>
+                      <div style={{font:'500 10px/1.3 Sora,sans-serif',color:'var(--muted)'}}>{s.sub}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* BODY */}
       <div style={{padding:'18px 28px',display:'grid',gridTemplateColumns:'1fr 360px',gap:16}}>
@@ -1059,12 +1134,13 @@ function AllComplaints({tickets}){
   const[fSt,setFSt]=useState('all');
   const[fBu,setFBu]=useState('all');
   const[fCat,setFCat]=useState('all');
+  const[sort,setSort]=useState('newest');
   const[expanded,setExpanded]=useState(null);
   const[page,setPage]=useState(0);
   const PAGE=100;
 
   // Reset to page 0 whenever filters change
-  useEffect(()=>{setPage(0);},[search,fSt,fBu,fCat]);
+  useEffect(()=>{setPage(0);},[search,fSt,fBu,fCat,sort]);
   const cats=[...new Set(tickets.map(function(t){return t.category;}))].filter(Boolean).sort();
   const filtered=tickets.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
@@ -1072,6 +1148,14 @@ function AllComplaints({tickets}){
     if(fCat!=='all'&&t.category!==fCat)return false;
     if(search){var q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+t.category+t.address).toLowerCase().includes(q);}
     return true;
+  }).sort(function(a,b){
+    const ad=(a.created||'')+' '+(a.time||'');
+    const bd=(b.created||'')+' '+(b.time||'');
+    const an=parseInt(a.num,10)||0;const bn=parseInt(b.num,10)||0;
+    if(sort==='oldest')   return ad.localeCompare(bd);
+    if(sort==='num_desc') return bn-an;
+    if(sort==='num_asc')  return an-bn;
+    /* newest */          return bd.localeCompare(ad);
   });
   const totalPages=Math.ceil(filtered.length/PAGE)||1;
   const paged=filtered.slice(page*PAGE,(page+1)*PAGE);
@@ -1107,7 +1191,13 @@ function AllComplaints({tickets}){
             <option value="all">All categories</option>
             {cats.map(function(c){return <option key={c} value={c}>{c.split('/')[0].trim()}</option>;})}
           </select>
-          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');}}>Clear</button>}
+          <select className="sel" style={{flex:'0 0 160px'}} value={sort} onChange={function(e){setSort(e.target.value);}}>
+            <option value="newest">↓ Newest first</option>
+            <option value="oldest">↑ Oldest first</option>
+            <option value="num_desc">Ticket # high → low</option>
+            <option value="num_asc">Ticket # low → high</option>
+          </select>
+          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all'||sort!=='newest')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');setSort('newest');}}>Clear</button>}
         </div>
       </div>
       <div style={{padding:'14px 28px 0'}}>
@@ -1339,17 +1429,75 @@ function LogTicket({tickets,onAdd,showToast,onSettings}){
 }
 
 // ── CUMULATIVE ─────────────────────────────────────────────────────
-function Cumulative({tickets}){
-  const rows=EK_RESP.map(function(r){
-    var myTix=tickets.filter(function(t){return t.category&&t.category.includes(r.cat.split('/')[0].trim());});
-    var todayTix=myTix.filter(function(t){return t.day===20;});
+function Cumulative({tickets,showToast}){
+  const[resp,setResp]=useState(function(){return EK_RESP.slice();});
+  const[editing,setEditing]=useState(false);
+  const[draft,setDraft]=useState([]);
+
+  // Today in WAT (Africa/Lagos)
+  const watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,10);
+  function ticketWatDate(t){
+    if(t.created)return String(t.created).slice(0,10);
+    if(t.received){try{return new Date(new Date(t.received).toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,10);}catch(e){return null;}}
+    return null;
+  }
+  function matchesParty(t,party){
+    const r=(t.responsible||t.resp||'').toString().trim().toLowerCase();
+    if(r&&r===party.name.toLowerCase())return true;
+    if(t.category){
+      const key=party.cat.split('/')[0].trim().toLowerCase();
+      if(t.category.toLowerCase().includes(key))return true;
+    }
+    return false;
+  }
+
+  function openEditor(){setDraft(resp.map(function(r){return Object.assign({},r);}));setEditing(true);}
+  function cancelEdit(){setEditing(false);setDraft([]);}
+  function updateDraft(i,key,val){setDraft(function(d){const n=d.slice();n[i]=Object.assign({},n[i],{[key]:val});return n;});}
+  function delDraft(i){setDraft(function(d){return d.filter(function(_,idx){return idx!==i;});});}
+  function addDraft(){setDraft(function(d){const nextSn=(d.reduce(function(m,r){return Math.max(m,parseInt(r.sn,10)||0);},0))+1;return d.concat([{sn:nextSn,name:'',cat:'',color:'#94A3B8'}]);});}
+  function saveDraft(){
+    const cleaned=draft.filter(function(r){return(r.name||'').trim();}).map(function(r,i){return Object.assign({},r,{sn:i+1,name:(r.name||'').trim(),cat:(r.cat||'').trim(),color:r.color||'#94A3B8'});});
+    if(!cleaned.length){(showToast||alert)('Need at least one responsible party.','error');return;}
+    saveResp(cleaned);
+    setResp(cleaned.slice());
+    setEditing(false);
+    (showToast||alert)('Responsible parties updated \u2014 '+cleaned.length+' total.');
+  }
+  function resetDefaults(){if(!window.confirm('Restore the default 10 responsible parties? Your custom edits will be lost.'))return;setDraft(EK_RESP_DEFAULTS.map(function(r){return Object.assign({},r);}));}
+
+  const rows=resp.map(function(r){
+    var myTix=tickets.filter(function(t){return matchesParty(t,r);});
+    var todayTix=myTix.filter(function(t){return ticketWatDate(t)===watToday;});
     var res=myTix.filter(function(t){return t.status==='resolved';}).length;
     var prg=myTix.filter(function(t){return t.status==='progress';}).length;
     var unr=myTix.filter(function(t){return t.status==='unresolved';}).length;
     var pct=myTix.length>0?Math.round(res/myTix.length*100):0;
     return Object.assign({},r,{today:todayTix.length,res:res,prg:prg,unr:unr,grand:myTix.length,pct:pct});
   });
-  const totals={today:rows.reduce(function(a,r){return a+r.today;},0),res:rows.reduce(function(a,r){return a+r.res;},0),prg:rows.reduce(function(a,r){return a+r.prg;},0),unr:rows.reduce(function(a,r){return a+r.unr;},0),grand:tickets.length,pct:tickets.length>0?Math.round(tickets.filter(function(t){return t.status==='resolved';}).length/tickets.length*100):0};
+  // Orphan tickets fold into Customer Experience
+  const matchedIds=new Set();
+  tickets.forEach(function(t){resp.forEach(function(r){if(matchesParty(t,r))matchedIds.add(t.id||t.num);});});
+  const orphans=tickets.filter(function(t){return!matchedIds.has(t.id||t.num);});
+  if(orphans.length){
+    const ceRow=rows.find(function(r){return r.name==='Customer Experience';});
+    if(ceRow){
+      ceRow.today += orphans.filter(function(t){return ticketWatDate(t)===watToday;}).length;
+      ceRow.res   += orphans.filter(function(t){return t.status==='resolved';}).length;
+      ceRow.prg   += orphans.filter(function(t){return t.status==='progress';}).length;
+      ceRow.unr   += orphans.filter(function(t){return t.status==='unresolved';}).length;
+      ceRow.grand += orphans.length;
+      ceRow.pct    = ceRow.grand>0?Math.round(ceRow.res/ceRow.grand*100):0;
+    }
+  }
+  const totals={
+    today: rows.reduce(function(a,r){return a+r.today;},0),
+    res:   rows.reduce(function(a,r){return a+r.res;},0),
+    prg:   rows.reduce(function(a,r){return a+r.prg;},0),
+    unr:   rows.reduce(function(a,r){return a+r.unr;},0),
+    grand: tickets.length,
+    pct:   tickets.length>0?Math.round(tickets.filter(function(t){return t.status==='resolved';}).length/tickets.length*100):0
+  };
   function exportExcel(){
     if(!window.XLSX)return;
     var data=[['S/N','Responsible Party','Category','Received Today','Cumulative Resolved','Cumulative In Progress','Cumulative Unresolved','Grand Total','% Resolution']];
@@ -1367,6 +1515,7 @@ function Cumulative({tickets}){
             <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Day 1–20 · Responsible Party Breakdown · May 2026</div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <button className="btn btn-sm" onClick={openEditor}>{Ico.settings}&nbsp;Manage Parties</button>
             <button className="btn btn-gold" onClick={exportExcel}>{Ico.download}&nbsp;Export Excel</button>
             <ScreenClock onSettings={()=>{}}/>
           </div>
@@ -1380,6 +1529,37 @@ function Cumulative({tickets}){
               <div style={{font:"800 28px/1 'JetBrains Mono',monospace",color:k.c}}>{k.v}</div>
             </div>);})}
         </div>
+
+        {editing&&(
+          <div className="card" style={{marginBottom:16,borderColor:'var(--ek-gold)'}}>
+            <div className="card-head" style={{background:'rgba(255,199,44,.08)'}}>
+              <h3>✏️ Manage Responsible Parties · {draft.length}</h3>
+              <div style={{display:'flex',gap:8}}>
+                <button className="btn btn-sm" onClick={resetDefaults}>↺ Reset defaults</button>
+                <button className="btn btn-sm" onClick={cancelEdit}>Cancel</button>
+                <button className="btn btn-gold btn-sm" onClick={saveDraft}>💾 Save</button>
+              </div>
+            </div>
+            <div style={{padding:14}}>
+              <div style={{display:'grid',gridTemplateColumns:'40px 1.4fr 1.4fr 60px 60px',gap:8,padding:'0 8px 8px',font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',borderBottom:'1px solid var(--bsoft)',marginBottom:8}}>
+                <div>S/N</div><div>Name</div><div>Category</div><div style={{textAlign:'center'}}>Color</div><div style={{textAlign:'center'}}>—</div>
+              </div>
+              {draft.map(function(r,i){return(
+                <div key={i} style={{display:'grid',gridTemplateColumns:'40px 1.4fr 1.4fr 60px 60px',gap:8,padding:'6px 8px',alignItems:'center',borderBottom:'1px solid rgba(255,255,255,.04)'}}>
+                  <div style={{font:"700 12px/1 'JetBrains Mono',monospace",color:'var(--muted)'}}>{i+1}</div>
+                  <input className="inp" value={r.name} onChange={function(e){updateDraft(i,'name',e.target.value);}} placeholder="Responsible name" style={{padding:'7px 9px',font:'600 12px Sora,sans-serif'}}/>
+                  <input className="inp" value={r.cat}  onChange={function(e){updateDraft(i,'cat', e.target.value);}} placeholder="Category" style={{padding:'7px 9px',font:'600 12px Sora,sans-serif'}}/>
+                  <input type="color" value={r.color||'#94A3B8'} onChange={function(e){updateDraft(i,'color',e.target.value);}} style={{width:36,height:30,border:'1px solid var(--bsoft)',borderRadius:6,background:'transparent',cursor:'pointer',padding:2,justifySelf:'center'}}/>
+                  <button onClick={function(){delDraft(i);}} style={{padding:'6px 10px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer',justifySelf:'center'}}>✕</button>
+                </div>
+              );})}
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:12,paddingTop:10,borderTop:'1px solid var(--bsoft)'}}>
+                <button onClick={addDraft} style={{padding:'8px 14px',background:'rgba(34,197,94,.12)',color:'#22C55E',border:'1px solid rgba(34,197,94,.35)',borderRadius:8,font:'700 12px Sora,sans-serif',cursor:'pointer'}}>＋ Add party</button>
+                <div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)'}}>Saved to this device. Cumulative table refreshes when you hit Save.</div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="card">
           <div style={{overflowX:'auto'}}>
             <table className="tbl">
@@ -1560,129 +1740,244 @@ function Analytics({tickets}){
 }
 
 // ── SLOT REPORT ────────────────────────────────────────────────────
+// 4 fixed slots — weekend pair and weekday pair, NOW badge marks the active one
 const SLOT_DEFS=[
-  {id:'9am',   label:'9AM Handover',  emoji:'☀️',  start:9,  end:12,  blurb:'Overnight intake — handover notes for the day shift.'},
-  {id:'12pm',  label:'12PM Update',   emoji:'🕛',  start:12, end:14,  blurb:'Morning batch — resolved and still in flight.'},
-  {id:'midday',label:'Midday Report', emoji:'🌤️', start:13, end:16,  blurb:'Mid-shift snapshot for the WhatsApp group.'},
-  {id:'cob',   label:'COB Report',    emoji:'🌆',  start:16, end:20,  blurb:'Close-of-business roll-up — full day summary.'},
+  {id:'w1pm',  label:'Weekend 1PM',     sub:'Weekends only', emoji:'🌤️', t:13*60, weekend:true},
+  {id:'wd2pm', label:'Weekday 2PM',     sub:'Weekdays only', emoji:'🌤️', t:14*60, weekend:false},
+  {id:'w4pm',  label:'Weekend COB 4PM', sub:'Weekends only', emoji:'🌆', t:16*60, weekend:true},
+  {id:'wd5pm', label:'Weekday COB 5PM', sub:'Weekdays only', emoji:'🌆', t:17*60, weekend:false},
 ];
-function SlotReport({tickets}){
-  const wat=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-  const h=wat.getHours();
-  const defaultSlot=SLOT_DEFS.slice().reverse().find(function(s){return h>=s.start;})||SLOT_DEFS[0];
-  const[sel,setSel]=useState(defaultSlot.id);
-  const slot=SLOT_DEFS.find(function(s){return s.id===sel;})||SLOT_DEFS[0];
+function SlotReport({tickets,showToast}){
+  const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  const isWeekend=watNow.getDay()===0||watNow.getDay()===6;
+  const nowMin=watNow.getHours()*60+watNow.getMinutes();
+  const todayStr=watNow.toISOString().slice(0,10);
+  const dateStr=watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  const slotTix=tickets;
-  const res=slotTix.filter(function(t){return t.status==='resolved';});
-  const prg=slotTix.filter(function(t){return t.status==='progress';});
-  const unr=slotTix.filter(function(t){return t.status==='unresolved';});
+  // NOW = relevant slot within ±90 min, else next upcoming relevant slot
+  const rel=SLOT_DEFS.filter(function(s){return s.weekend===isWeekend;});
+  const nowSlot=(function(){
+    const near=rel.find(function(s){return Math.abs(s.t-nowMin)<=90;});
+    if(near)return near.id;
+    const next=rel.find(function(s){return s.t>nowMin;});
+    return next?next.id:(rel[rel.length-1]||SLOT_DEFS[0]).id;
+  })();
 
-  function exportSlotPDF(){window.print();}
-  function exportSlotCSV(){
-    const rows=[['#','Ticket','Time','Customer','Phone','BU','Category','Responsible','Status','Note']];
-    slotTix.forEach(function(t,i){rows.push([i+1,t.num,t.time,t.name,t.phone,t.bu,t.category,t.resp||t.responsible||'',t.status,t.note||'']);});
-    const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-    const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);
-    a.download='EKEDP_Slot_'+slot.id+'_'+wat.toISOString().slice(0,10)+'.csv';a.click();
+  const[sel,setSel]=useState(nowSlot);
+  const slot=SLOT_DEFS.find(function(x){return x.id===sel;})||SLOT_DEFS[0];
+
+  // Today's tickets across the whole team
+  const todayTix=tickets.filter(function(t){return t.created?t.created.slice(0,10)===todayStr:true;});
+  const resTix=todayTix.filter(function(t){return t.status==='resolved';});
+  const prgTix=todayTix.filter(function(t){return t.status==='progress';});
+  const unrTix=todayTix.filter(function(t){return t.status==='unresolved';});
+  const rate=todayTix.length?Math.round(resTix.length/todayTix.length*100):0;
+
+  const wMsg=[
+    slot.emoji+' *'+slot.label+' — EKEDP CX*',
+    '📅 '+dateStr,
+    '👤 Managers Hub | Love (Team Lead)',
+    '',
+    '📊 *Today\'s Team Summary:*',
+    '• Total Received Today: *'+todayTix.length+'*',
+    '• Resolved: *'+resTix.length+'*',
+    '• In Progress: *'+prgTix.length+'*',
+    '• Unresolved: *'+unrTix.length+'*',
+    '• Resolution Rate: *'+rate+'%*',
+    '',
+    unrTix.length>0?'🔴 *'+unrTix.length+' ticket'+(unrTix.length>1?'s':'')+' still need action.*':'✅ *All today\'s tickets resolved!*',
+    '',
+    '📱 EKEDP Power App — Managers Hub',
+  ].join('\n');
+
+  function copyMsg(){
+    navigator.clipboard.writeText(wMsg)
+      .then(function(){(showToast||alert)('Copied! Paste into WhatsApp.');})
+      .catch(function(){(showToast||alert)('Copy failed — try selecting text manually.','error');});
   }
 
-  const sRow=function(t,i){
-    const statusCol=t.status==='resolved'?'#22C55E':t.status==='progress'?'#F59E0B':'#EF4444';
-    const statusLbl=t.status==='resolved'?'RESOLVED':t.status==='progress'?'IN PROGRESS':'UNRESOLVED';
-    return(
-      <tr key={t.num||i} style={{borderBottom:'1px solid var(--bsoft)'}}>
-        <td style={{padding:'8px 10px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--infob)',fontSize:11,whiteSpace:'nowrap'}}>#{t.num}</td>
-        <td style={{padding:'8px 10px',fontFamily:'JetBrains Mono,monospace',fontSize:11,color:'var(--muted)',whiteSpace:'nowrap'}}>{t.time}</td>
-        <td style={{padding:'8px 10px'}}>
-          <div style={{font:'700 12px/1.2 Sora,sans-serif',color:'var(--text)'}}>{t.name}</div>
-          <div style={{font:'500 10px JetBrains Mono,monospace',color:'var(--muted)',marginTop:2}}>{t.phone}</div>
-        </td>
-        <td style={{padding:'8px 10px'}}><span style={{padding:'2px 8px',borderRadius:20,background:'rgba(99,102,241,.15)',border:'1px solid rgba(99,102,241,.3)',font:'800 9.5px Sora,sans-serif',color:'#818CF8',whiteSpace:'nowrap'}}>{t.bu}</span></td>
-        <td style={{padding:'8px 10px',font:'600 11px Sora,sans-serif',color:'var(--text)'}}>{t.category}</td>
-        <td style={{padding:'8px 10px',font:'600 11px Sora,sans-serif',color:'var(--text)'}}>{t.resp||t.responsible||'—'}</td>
-        <td style={{padding:'8px 10px'}}><span style={{padding:'2px 8px',borderRadius:20,background:statusCol+'22',border:'1px solid '+statusCol+'55',font:'800 9.5px Sora,sans-serif',color:statusCol,whiteSpace:'nowrap'}}>{statusLbl}</span></td>
-        <td style={{padding:'8px 10px',font:'500 11px Sora,sans-serif',color:'var(--muted)',maxWidth:220}}>{t.note||'—'}</td>
-      </tr>
-    );
-  };
+  function doPDF(){
+    function tRow(t,i){
+      return '<tr style="background:'+(i%2===0?'#fff':'#f8fafc')+'">'
+        +'<td style="padding:6px 8px;font-size:11px;color:#94A3B8">'+(i+1)+'</td>'
+        +'<td style="padding:6px 8px;font-family:monospace;font-weight:700;color:#1D4ED8">#'+t.num+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px">'+(t.time||'')+'</td>'
+        +'<td style="padding:6px 8px;font-weight:600;font-size:12px">'+t.name+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px;font-family:monospace">'+t.phone+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px;font-family:monospace">'+(t.meter||'—')+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px"><span style="background:#E0F2FE;color:#0369A1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">'+t.bu+'</span></td>'
+        +'<td style="padding:6px 8px;font-size:11px">'+(t.category||t.issue||'')+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px">'+(t.resp||t.responsible||'—')+'</td>'
+        +'<td style="padding:6px 8px;font-size:11px;color:#64748B">'+(t.note||'—')+'</td>'
+        +'</tr>';
+    }
+    function section(list){
+      if(!list.length)return'<p style="font-size:12px;color:#94A3B8;padding:10px 0">None.</p>';
+      return'<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:Sora,sans-serif">'
+        +'<thead><tr style="background:#1E293B;color:#fff">'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">#</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Ticket</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Time</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Customer</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Phone</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Meter #</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">BU</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Category</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Responsible</th>'
+        +'<th style="padding:7px 8px;text-align:left;font-size:10px">Note</th>'
+        +'</tr></thead><tbody>'+list.map(tRow).join('')+'</tbody></table>';
+    }
+    const html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+      +'<title>EKEDP '+slot.label+' Report</title>'
+      +'<style>@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap");'
+      +'*{box-sizing:border-box;margin:0;padding:0}'
+      +'body{font-family:Sora,sans-serif;background:#fff;color:#1E293B;padding:18px}'
+      +'@media print{@page{size:A4 landscape;margin:12mm}body{-webkit-print-color-adjust:exact}}'
+      +'</style></head><body>'
+      +'<div style="background:linear-gradient(135deg,#001F5C,#0F172A);color:#fff;padding:20px 28px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:16px">'
+      +'<div style="width:48px;height:48px;background:rgba(255,199,44,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px">'+slot.emoji+'</div>'
+      +'<div><div style="font-size:18px;font-weight:800">EKEDP Power App — '+slot.label+'</div>'
+      +'<div style="font-size:12px;opacity:.8;margin-top:4px">Managers Hub · '+dateStr+'</div></div></div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">'
+      +[['TOTAL',todayTix.length,'#3B82F6'],['RESOLVED',resTix.length,'#22C55E'],['IN PROGRESS',prgTix.length,'#F59E0B'],['UNRESOLVED',unrTix.length,'#EF4444']].map(function(k){return'<div style="border:1px solid #E2E8F0;border-top:3px solid '+k[2]+';border-radius:8px;padding:14px 16px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8">'+k[0]+'</div><div style="font-size:28px;font-weight:800;font-family:monospace;color:'+k[2]+';margin-top:4px">'+k[1]+'</div></div>';}).join('')
+      +'</div>'
+      +'<div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#22C55E;margin-bottom:8px">✅ RESOLVED — '+resTix.length+' TICKETS</div>'+section(resTix)+'</div>'
+      +'<div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#F59E0B;margin-bottom:8px">⏳ IN PROGRESS — '+prgTix.length+' TICKETS</div>'+section(prgTix)+'</div>'
+      +'<div style="margin-bottom:18px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#EF4444;margin-bottom:8px">🔴 UNRESOLVED — '+unrTix.length+' TICKETS</div>'+section(unrTix)+'</div>'
+      +'<div style="font-size:10px;color:#94A3B8;text-align:center;padding-top:16px;border-top:1px solid #E2E8F0">EKEDP Power App · Managers Hub · Marina HQ · '+slot.label+' · '+dateStr+'</div>'
+      +'</body></html>';
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    window.open(url,'_blank');
+  }
 
-  const sSection=function(label,statusKey,rows){
-    const col=statusKey==='resolved'?'#22C55E':statusKey==='progress'?'#F59E0B':'#EF4444';
-    const bg=statusKey==='resolved'?'rgba(34,197,94,.08)':statusKey==='progress'?'rgba(245,158,11,.08)':'rgba(239,68,68,.08)';
-    return(
-      <div key={statusKey} style={{marginBottom:20}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:'2px solid '+col,marginBottom:0}}>
-          <span style={{font:'900 13px/1 Sora,sans-serif',color:col,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</span>
-          <span style={{padding:'2px 10px',borderRadius:14,background:bg,border:'1px solid '+col+'55',font:'800 10px Sora,sans-serif',color:col}}>{rows.length}</span>
-        </div>
-        {rows.length===0
-          ?<div style={{padding:'18px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif',background:'rgba(0,0,0,.1)',borderRadius:'0 0 10px 10px',border:'1px solid var(--bsoft)',borderTop:'none'}}>No {label.toLowerCase()} tickets in this slot.</div>
-          :<div style={{overflowX:'auto'}}>
-            <table style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead><tr style={{background:'rgba(0,0,0,.3)'}}>
-                {['Ticket','Time','Customer / Phone','BU','Category','Responsible Party','Status','Note'].map(function(h){return(
-                  <th key={h} style={{padding:'8px 10px',textAlign:'left',font:'700 9px/1 Sora,sans-serif',color:'rgba(255,255,255,.5)',textTransform:'uppercase',letterSpacing:'.08em',whiteSpace:'nowrap'}}>{h}</th>
-                );})}
-              </tr></thead>
-              <tbody>{rows.map(sRow)}</tbody>
-            </table>
-          </div>
-        }
-      </div>
-    );
-  };
+  function doExcel(){
+    if(typeof XLSX==='undefined'){(showToast||alert)('Excel library not loaded yet — try again in a moment.','error');return;}
+    const wb=XLSX.utils.book_new();
+    const H=['Ticket #','Time','Customer','Phone','Meter #','BU','Category','Responsible','Status','Note'];
+    function makeSheet(list,name){
+      const ws=XLSX.utils.aoa_to_sheet([
+        ['EKEDP Power App — '+slot.label],['Managers Hub'],['Date: '+dateStr],[''],H,
+        ...list.map(function(t){return[t.num,t.time||'',t.name,t.phone,t.meter||'',t.bu,t.category||t.issue||'',t.resp||t.responsible||'',t.status,t.note||''];})
+      ]);
+      ws['!cols']=[10,8,22,14,14,10,26,18,12,30].map(function(w){return{wch:w};});
+      XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));
+    }
+    makeSheet(todayTix,'All');
+    makeSheet(resTix,'Resolved');
+    makeSheet(prgTix,'In Progress');
+    makeSheet(unrTix,'Unresolved');
+    XLSX.writeFile(wb,'EKEDP_Manager_'+slot.id+'_'+todayStr+'.xlsx');
+    (showToast||alert)('Excel exported — 4 sheets.');
+  }
 
   return(
     <div>
       <div className="hero" style={{padding:'18px 28px'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}>
           <div>
-            <div style={{font:'700 10px/1 Sora,sans-serif',color:'var(--ek-gold)',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:8}}>Slot Report</div>
-            <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:4}}>{slot.emoji} {slot.label}</div>
-            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>{slot.blurb}</div>
+            <div style={{font:'700 10px/1 Sora,sans-serif',color:'var(--ek-gold)',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:8}}>Slot Reports</div>
+            <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:4}}>Slot Reports</div>
+            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Generate WhatsApp updates and PDF reports for your shift slot</div>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <button onClick={exportSlotCSV} className="btn btn-gold">{Ico.download}&nbsp;CSV</button>
-            <ScreenClock onSettings={()=>{}}/>
-          </div>
+          <ScreenClock onSettings={()=>{}}/>
         </div>
       </div>
 
-      {/* Slot picker */}
-      <div style={{padding:'14px 28px',display:'flex',gap:8,borderBottom:'1px solid var(--bsoft)',background:'rgba(0,0,0,.15)',flexWrap:'wrap'}}>
-        {SLOT_DEFS.map(function(s){
-          const isActive=h>=s.start&&h<s.end;
-          const isDone=h>=s.end;
-          return(
-            <button key={s.id} onClick={function(){setSel(s.id);}}
-              style={{padding:'8px 16px',borderRadius:9,border:'1.5px solid '+(sel===s.id?'var(--ek-gold)':'var(--bsoft)'),
-                background:sel===s.id?'rgba(255,199,44,.15)':'rgba(0,0,0,.2)',
-                color:sel===s.id?'var(--ek-gold)':'var(--muted)',
-                font:'700 12px Sora,sans-serif',cursor:'pointer',transition:'all .15s',
-                display:'flex',alignItems:'center',gap:6}}>
-              {s.emoji} {s.label}
-              {isActive&&<span style={{padding:'1px 6px',borderRadius:10,background:'var(--ek-gold)',color:'#0A1A4F',font:'800 9px Sora,sans-serif'}}>LIVE</span>}
-              {isDone&&!isActive&&<span style={{padding:'1px 6px',borderRadius:10,background:'rgba(255,255,255,.08)',color:'var(--muted)',font:'700 9px Sora,sans-serif'}}>DONE</span>}
-            </button>
-          );
-        })}
-      </div>
+      <div style={{padding:'18px 28px'}}>
+        {/* Slot tabs */}
+        <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap'}}>
+          {SLOT_DEFS.map(function(sv){
+            const isNow=sv.id===nowSlot;
+            const isActive=sv.id===sel;
+            return(
+              <button key={sv.id} onClick={function(){setSel(sv.id);}} style={{
+                padding:'12px 16px',borderRadius:11,minWidth:160,textAlign:'left',
+                border:'1.5px solid '+(isActive?'var(--ek-gold)':'var(--bsoft)'),
+                background:isActive?'rgba(255,199,44,.10)':'rgba(255,255,255,.03)',
+                color:'var(--text)',cursor:'pointer',position:'relative',
+              }}>
+                {isNow&&<span style={{position:'absolute',top:-9,left:10,background:'#F59E0B',color:'#0A1A4F',font:'800 9px Sora,sans-serif',padding:'2px 8px',borderRadius:20,letterSpacing:'.05em',textTransform:'uppercase'}}>NOW</span>}
+                <div style={{font:'700 13px Sora,sans-serif',color:isActive?'var(--ek-gold)':'var(--text)',marginBottom:3}}>{sv.emoji} {sv.label}</div>
+                <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)'}}>{sv.sub}</div>
+              </button>
+            );
+          })}
+        </div>
 
-      {/* KPIs */}
-      <div style={{padding:'16px 28px'}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:20}}>
-          {[{l:'Total',v:slotTix.length,c:'#60A5FA'},{l:'Resolved',v:res.length,c:'#22C55E'},{l:'In Progress',v:prg.length,c:'#F59E0B'},{l:'Unresolved',v:unr.length,c:'#EF4444'}].map(function(k){return(
-            <div key={k.l} style={{background:'rgba(0,0,0,.22)',border:'1px solid var(--bsoft)',borderRadius:12,padding:'14px 16px',textAlign:'center'}}>
-              <div style={{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8}}>{k.l}</div>
-              <div style={{font:"800 28px/1 'JetBrains Mono',monospace",color:k.c}}>{k.v}</div>
+        {/* KPIs */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:18}}>
+          {[{l:'TOTAL',v:todayTix.length,c:'var(--text)'},{l:'RESOLVED',v:resTix.length,c:'#22C55E'},{l:'IN PROGRESS',v:prgTix.length,c:'#F59E0B'},{l:'UNRESOLVED',v:unrTix.length,c:'#EF4444'}].map(function(k){return(
+            <div key={k.l} style={{background:'rgba(0,0,0,.22)',border:'1px solid var(--bsoft)',borderRadius:12,padding:'14px 18px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span style={{font:'700 10px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.12em'}}>{k.l}</span>
+              <span style={{font:"800 26px/1 'JetBrains Mono',monospace",color:k.c}}>{k.v}</span>
             </div>
           );})}
         </div>
 
-        {sSection('✅ Resolved',   'resolved',   res)}
-        {sSection('⏳ In Progress','progress',   prg)}
-        {sSection('🔴 Unresolved', 'unresolved', unr)}
+        {/* Action cards */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:18}}>
+          <button onClick={doPDF} style={{padding:'24px 16px',background:'#DC2626',color:'#fff',border:'none',borderRadius:12,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,transition:'opacity .15s'}} onMouseEnter={function(e){e.currentTarget.style.opacity='.85';}} onMouseLeave={function(e){e.currentTarget.style.opacity='1';}}>
+            <span style={{fontSize:28}}>📄</span>
+            <span style={{font:'800 14px Sora,sans-serif'}}>PDF Report</span>
+            <span style={{font:'500 10px Sora,sans-serif',opacity:.85}}>Print / Save as PDF</span>
+          </button>
+          <button onClick={copyMsg} style={{padding:'24px 16px',background:'#16A34A',color:'#fff',border:'none',borderRadius:12,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,transition:'opacity .15s'}} onMouseEnter={function(e){e.currentTarget.style.opacity='.85';}} onMouseLeave={function(e){e.currentTarget.style.opacity='1';}}>
+            <span style={{fontSize:28}}>💬</span>
+            <span style={{font:'800 14px Sora,sans-serif'}}>WhatsApp Copy</span>
+            <span style={{font:'500 10px Sora,sans-serif',opacity:.85}}>Copy message text</span>
+          </button>
+          <button onClick={doExcel} style={{padding:'24px 16px',background:'#059669',color:'#fff',border:'none',borderRadius:12,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,transition:'opacity .15s'}} onMouseEnter={function(e){e.currentTarget.style.opacity='.85';}} onMouseLeave={function(e){e.currentTarget.style.opacity='1';}}>
+            <span style={{fontSize:28}}>📊</span>
+            <span style={{font:'800 14px Sora,sans-serif'}}>Excel Export</span>
+            <span style={{font:'500 10px Sora,sans-serif',opacity:.85}}>4 sheets</span>
+          </button>
+        </div>
+
+        {/* Resolution rate + checklist */}
+        <div className="card" style={{overflow:'hidden'}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0}}>
+            <div style={{padding:'22px 24px',borderRight:'1px solid var(--bsoft)'}}>
+              <div style={{font:'700 11px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:1,marginBottom:14}}>Resolution Rate</div>
+              <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}>
+                <svg width="110" height="110" viewBox="0 0 110 110">
+                  <circle cx="55" cy="55" r="44" fill="none" stroke="var(--bsoft)" strokeWidth="10"/>
+                  <circle cx="55" cy="55" r="44" fill="none" stroke={resTix.length===todayTix.length&&todayTix.length>0?'#22C55E':resTix.length>0?'#F59E0B':'var(--bsoft)'}
+                    strokeWidth="10" strokeLinecap="round"
+                    strokeDasharray={2*Math.PI*44}
+                    strokeDashoffset={2*Math.PI*44*(1-(todayTix.length>0?resTix.length/todayTix.length:0))}
+                    transform="rotate(-90 55 55)"
+                    style={{transition:'stroke-dashoffset .6s ease'}}
+                  />
+                  <text x="55" y="62" textAnchor="middle" style={{font:"800 20px 'JetBrains Mono',monospace",fill:'var(--text)'}}>{rate}%</text>
+                </svg>
+              </div>
+              <div style={{display:'flex',justifyContent:'space-between',font:'600 11px Sora,sans-serif'}}>
+                <span style={{color:'#22C55E'}}>✅ {resTix.length} resolved</span>
+                <span style={{color:'#EF4444'}}>⏳ {unrTix.length+prgTix.length} open</span>
+              </div>
+            </div>
+            <div style={{padding:'22px 24px'}}>
+              <div style={{font:'700 11px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:1,marginBottom:12}}>Slot Checklist</div>
+              {[
+                {done: todayTix.length>0,                                                  label:'Tickets logged today'},
+                {done: resTix.length===todayTix.length&&todayTix.length>0,                  label:'All tickets resolved'},
+                {done: prgTix.length===0,                                                   label:'No in-progress backlog'},
+                {done: unrTix.length===0,                                                   label:'Zero unresolved tickets'},
+              ].map(function(item,i){return(
+                <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:9,font:'600 12px Sora,sans-serif',color:item.done?'var(--text)':'var(--muted)',opacity:item.done?1:.6}}>
+                  <span style={{width:18,height:18,borderRadius:'50%',background:item.done?'#22C55E':'var(--bsoft)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,flexShrink:0,color:'#fff',fontWeight:900}}>
+                    {item.done?'✓':'–'}
+                  </span>
+                  {item.label}
+                </div>
+              );})}
+              <div style={{marginTop:14,padding:'10px 12px',background:'rgba(255,199,44,.08)',borderRadius:8,font:'600 11px/1.5 Sora,sans-serif',color:'var(--muted)',borderLeft:'3px solid var(--ek-gold)'}}>
+                💡 Use <b style={{color:'var(--text)'}}>WhatsApp Copy</b> above to send this slot's summary to your team group.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1909,9 +2204,12 @@ function Agents({tickets,shifts,onShift,showToast}){
 // ── CLOUD SYNC — JSONBin ───────────────────────────────────────────
 function CloudSync({tickets,setTickets,showToast}){
   const SHARED_BIN_ID ='6a11fd706877513b27bf6f70';
-  const SHARED_API_KEY='$2a$10$fJC1nhWE9aPBRZKKgHgbWOU.OQVGkWEqxjmB33sy1Rix8uqGoPCXG';
   const BASE='https://api.jsonbin.io/v3/b';
+  const KEY_STORAGE='ek_master_key';
 
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(KEY_STORAGE)||'');
+  const[keyDraft,setKeyDraft]=useState('');
+  const[showKey,setShowKey]=useState(false);
   const[saving,setSaving]=useState(false);
   const[status,setStatus]=useState({msg:'',ok:true});
   const[lastSync,setLastSync]=useState(()=>localStorage.getItem('ek_last_sync')||'');
@@ -1919,16 +2217,34 @@ function CloudSync({tickets,setTickets,showToast}){
   const[connected,setConnected]=useState(false);
   const[log,setLog]=useState([]);
 
-  const hdrs=()=>({'Content-Type':'application/json','X-Master-Key':SHARED_API_KEY});
+  const hdrs=()=>({'Content-Type':'application/json','X-Master-Key':apiKey});
   const addLog=(msg,ok)=>setLog(l=>[{time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'}),msg,ok},...l.slice(0,19)]);
 
-  // Auto-pull on mount
+  function saveKey(){
+    const k=(keyDraft||'').trim();
+    if(!k){showToast('Paste the master key first','error');return;}
+    localStorage.setItem(KEY_STORAGE,k);
+    setApiKey(k);setKeyDraft('');
+    showToast('Master key saved on this device ✅');
+    addLog('Master key saved',true);
+  }
+  function clearKey(){
+    if(!window.confirm('Clear the master key from this device? Sync will stop working until you re-enter it.'))return;
+    localStorage.removeItem(KEY_STORAGE);
+    setApiKey('');setConnected(false);
+    showToast('Master key cleared');
+    addLog('Master key cleared',false);
+  }
+
+  // Auto-pull on mount — only if key is set
   useEffect(()=>{
+    if(!apiKey)return;
     const done=sessionStorage.getItem('ek_mgr_pulled');
     if(!done){sessionStorage.setItem('ek_mgr_pulled','1');setTimeout(pullNow,1400);}
-  },[]);
+  },[apiKey]);
 
   async function pullNow(){
+    if(!apiKey){showToast('Set the master key first','error');return;}
     setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});
     addLog('Connecting to JSONBin…',null);
     try{
@@ -1961,21 +2277,24 @@ function CloudSync({tickets,setTickets,showToast}){
   }
 
   async function pushNow(){
+    if(!apiKey){showToast('Set the master key first','error');return;}
     setSaving(true);setStatus({msg:'Pushing to cloud…',ok:true});addLog('Preparing data…',null);
     try{
-      // Build payload grouped by agent
+      // Build payload grouped by agent — filter out _baseline tickets (kept locally only)
       const byAgent={};
       tickets.forEach(function(t){
+        if(t._baseline)return; // never push baseline to cloud
         const key=t.agent||'manager';
         if(!byAgent[key])byAgent[key]=[];
         byAgent[key].push(t);
       });
+      const incrementalCount=Object.values(byAgent).reduce(function(a,arr){return a+arr.length;},0);
       const res=await fetch(BASE+'/'+SHARED_BIN_ID,{method:'PUT',headers:hdrs(),body:JSON.stringify(byAgent)});
       if(res.status===401)throw new Error('Invalid API key');
       if(!res.ok)throw new Error('HTTP '+res.status);
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);setConnected(true);
-      const msg='✅ Pushed '+tickets.length+' tickets to cloud.';
+      const msg='✅ Pushed '+incrementalCount+' new tickets (328 baseline kept local).';
       setStatus({msg,ok:true});addLog(msg,true);showToast(msg);
     }catch(e){
       const msg='Push failed: '+e.message;
@@ -1998,6 +2317,30 @@ function CloudSync({tickets,setTickets,showToast}){
       </div>
       <div style={{padding:'18px 28px',display:'grid',gridTemplateColumns:'1fr 320px',gap:16}}>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {/* Master key gate */}
+          {!apiKey&&(
+            <div className="card" style={{borderColor:'var(--ek-gold)',background:'rgba(255,199,44,.04)'}}>
+              <div className="card-head" style={{background:'rgba(255,199,44,.08)'}}>
+                <h3>🔑 Set Master Key</h3>
+              </div>
+              <div style={{padding:16}}>
+                <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>
+                  Cloud sync needs your JSONBin master key. <b style={{color:'var(--text)'}}>Paste it once</b> — it stays on this device only (never in source code).
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,alignItems:'center'}}>
+                  <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste master key here…" autoFocus/>
+                  <div style={{display:'flex',gap:6}}>
+                    <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈 Hide':'👁 Show'}</button>
+                    <button className="btn btn-gold btn-sm" onClick={saveKey}>✓ Save key</button>
+                  </div>
+                </div>
+                <div style={{marginTop:10,padding:'8px 12px',background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',borderRadius:8,font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)'}}>
+                  📝 Each device (Love's laptop, every agent's phone, this report laptop) needs the key entered once. Share it privately — don't commit it to GitHub.
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Status banner */}
           {status.msg&&(
             <div style={{padding:'12px 16px',borderRadius:10,background:status.ok?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)',border:'1px solid '+(status.ok?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),font:'600 13px Sora,sans-serif',color:status.ok?'var(--okb)':'var(--bdb)',display:'flex',alignItems:'center',gap:8}}>
@@ -2053,8 +2396,14 @@ function CloudSync({tickets,setTickets,showToast}){
             </summary>
             <div style={{padding:'0 16px 16px',borderTop:'1px solid var(--bsoft)'}}>
               <div style={{marginTop:12,marginBottom:8}}><label className="lbl">Bin ID</label><input className="inp" readOnly value={SHARED_BIN_ID}/></div>
-              <div style={{marginBottom:12}}><label className="lbl">Master Key</label><input className="inp" readOnly value={SHARED_API_KEY} type="password"/></div>
-              <div style={{font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>Shared credentials — same for all agents. Managed by Love Offei.</div>
+              <div style={{marginBottom:8}}><label className="lbl">Master Key (this device)</label>
+                <input className="inp" readOnly value={apiKey?(apiKey.slice(0,6)+'……………… '+apiKey.slice(-4)):'(not set)'} type="text"/>
+              </div>
+              <div style={{display:'flex',gap:8,marginBottom:8}}>
+                {apiKey&&<button className="btn btn-sm btn-danger" onClick={clearKey}>✕ Clear key</button>}
+                <button className="btn btn-sm" onClick={function(){setKeyDraft('');setApiKey('');}}>✎ Replace key</button>
+              </div>
+              <div style={{font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>Key lives in this browser's localStorage. Never written to source files — safe to deploy this app to public GitHub.</div>
             </div>
           </details>
         </div>
@@ -2184,9 +2533,9 @@ function App(){
     daily:     <DailyReport tickets={tickets} onSettings={()=>setShowSettings(true)}/>,
     all:       <AllComplaints tickets={tickets}/>,
     log:       <LogTicket tickets={tickets} onAdd={onAdd} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
-    cumulative:<Cumulative tickets={tickets}/>,
+    cumulative:<Cumulative tickets={tickets} showToast={showToast}/>,
     analytics: <Analytics tickets={tickets}/>,
-    slot:      <SlotReport tickets={tickets}/>,
+    slot:      <SlotReport tickets={tickets} showToast={showToast}/>,
     agents:    <Agents tickets={tickets} shifts={shifts} onShift={onShift} showToast={showToast}/>,
     sync:      <CloudSync tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
     data:      <DataPage tickets={tickets} setTickets={setTickets} showToast={showToast}/>,

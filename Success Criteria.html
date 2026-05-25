@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EKEDP Power App — Success Criteria</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --navy:#001F5C; --red:#E30613; --gold:#FFC72C;
+  --ink:#0F172A; --muted:#475569; --line:#CBD5E1; --soft:#F1F5F9;
+}
+html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-webkit-font-smoothing:antialiased;}
+.page{
+  width:210mm; min-height:297mm; margin:18px auto; background:#fff;
+  padding:18mm 16mm; box-shadow:0 8px 40px rgba(0,0,0,.15);
+  position:relative;
+}
+.toolbar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:50;}
+.toolbar button{
+  padding:9px 14px;border-radius:8px;border:none;font:800 12px 'Sora';color:#fff;
+  cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(0,0,0,.18);
+}
+.btn-back{background:var(--navy);}
+.btn-print{background:var(--red);}
+
+/* Header strip */
+.hd{
+  display:flex;align-items:center;gap:14px;
+  padding-bottom:14px;border-bottom:3px solid var(--navy);margin-bottom:18px;
+}
+.hd-mark{
+  width:56px;height:56px;border-radius:13px;background:linear-gradient(135deg,var(--navy),#0A2A7A);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(0,31,92,.25);
+}
+.hd-mark svg{width:32px;height:32px;color:var(--gold);}
+.hd-text{flex:1;}
+.hd-eyebrow{font:700 9px/1 'Sora';color:var(--red);letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px;}
+.hd-title{font:900 22px/1.1 'Sora';color:var(--navy);margin-bottom:3px;}
+.hd-sub{font:500 11px/1 'Sora';color:var(--muted);}
+.hd-meta{text-align:right;}
+.hd-meta .big{font:800 13px/1 'Sora';color:var(--navy);}
+.hd-meta .sm{font:600 9px/1.4 'Sora';color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;}
+
+/* Section heads */
+.sec{margin-bottom:14px;}
+.sec-h{
+  display:flex;align-items:center;gap:8px;margin-bottom:7px;padding-bottom:5px;
+  border-bottom:1.5px solid var(--gold);
+}
+.sec-h .num{
+  width:22px;height:22px;border-radius:6px;background:var(--gold);color:var(--navy);
+  font:900 11px/1 'Sora';display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sec-h h2{font:800 13px/1 'Sora';color:var(--navy);text-transform:uppercase;letter-spacing:.06em;}
+
+/* Body text */
+.lead{font:500 11.5px/1.55 'Sora';color:var(--ink);}
+.lead b{color:var(--navy);font-weight:700;}
+
+/* Two-col grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* Criteria list */
+.ck-list{display:flex;flex-direction:column;gap:5px;}
+.ck{
+  display:flex;align-items:flex-start;gap:9px;padding:6px 8px;
+  border-radius:7px;background:var(--soft);border-left:3px solid var(--navy);
+}
+.ck-mark{
+  width:16px;height:16px;border-radius:50%;background:#22C55E;color:#fff;
+  font:900 10px/1 'Sora';display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.ck-text{font:500 10.5px/1.5 'Sora';color:var(--ink);flex:1;}
+.ck-text b{color:var(--navy);font-weight:700;}
+
+/* Users */
+.users{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.user-card{
+  border:1px solid var(--line);border-radius:9px;padding:9px 11px;
+  border-top:3px solid var(--gold);
+}
+.user-card .role{font:700 9px/1 'Sora';color:var(--red);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.user-card .name{font:800 12px/1.2 'Sora';color:var(--navy);margin-bottom:3px;}
+.user-card .desc{font:500 9.5px/1.45 'Sora';color:var(--muted);}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.metric{
+  border:1px solid var(--line);border-radius:9px;padding:10px 11px;text-align:center;
+  background:linear-gradient(180deg,#fff,#FAFBFD);
+}
+.metric .val{font:900 22px/1 'JetBrains Mono',monospace;color:var(--navy);margin-bottom:3px;}
+.metric .lbl{font:700 8.5px/1.2 'Sora';color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+
+/* Footer */
+.foot{
+  position:absolute;bottom:14mm;left:16mm;right:16mm;
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:10px;border-top:1px solid var(--line);
+  font:600 9px/1 'Sora';color:var(--muted);
+}
+.foot .pill{
+  padding:3px 8px;background:var(--gold);color:var(--navy);
+  border-radius:11px;font:800 9px/1 'Sora';letter-spacing:.06em;
+}
+
+@media print{
+  body{background:#fff;}
+  .page{margin:0;box-shadow:none;width:auto;min-height:auto;}
+  .toolbar{display:none;}
+  @page{size:A4;margin:10mm;}
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a class="btn-back" href="index.html" style="text-decoration:none;">← Home</a>
+  <button class="btn-print" onclick="window.print()">🖨 Print / PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="hd">
+    <div class="hd-mark">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.09 12.97 11 13 9.5 22l9.41-10.97L12 11l1-9z"/></svg>
+    </div>
+    <div class="hd-text">
+      <div class="hd-eyebrow">EKEDP Power App · Customer Experience · Marina HQ</div>
+      <div class="hd-title">Success Criteria — Version 2</div>
+      <div class="hd-sub">What "good" looks like for this tool · How we measure it · Owners</div>
+    </div>
+    <div class="hd-meta">
+      <div class="big">May 2026</div>
+      <div class="sm">Owner: Love Offei</div>
+    </div>
+  </div>
+
+  <!-- 1. PURPOSE -->
+  <div class="sec">
+    <div class="sec-h"><div class="num">1</div><h2>Purpose</h2></div>
+    <p class="lead">
+      A single shared tool that lets the Customer Experience team <b>log every customer complaint</b>, <b>route it to the right Responsible Party</b>, and <b>report up to the GM three times a day</b> (9 AM · 12 PM · 4 PM COB) — replacing scattered WhatsApp messages, Excel sheets and email threads with one synced source of truth.
+    </p>
+  </div>
+
+  <!-- 2. USERS -->
+  <div class="sec">
+    <div class="sec-h"><div class="num">2</div><h2>Users</h2></div>
+    <div class="users">
+      <div class="user-card"><div class="role">Manager</div><div class="name">Love Offei</div><div class="desc">Oversees team, sets shifts, runs daily GM reports, holds master sync key.</div></div>
+      <div class="user-card"><div class="role">CX Agents (5)</div><div class="name">Matthew · Racheal · Tomina · Esther · Loveth</div><div class="desc">Log complaints, update tickets, send Midday / COB WhatsApp slot reports.</div></div>
+      <div class="user-card"><div class="role">Recipient</div><div class="name">GM / Leadership</div><div class="desc">Receives the 9 AM, 12 PM and 4 PM Daily Email Report via Outlook.</div></div>
+    </div>
+  </div>
+
+  <!-- 3. CORE SUCCESS CRITERIA -->
+  <div class="sec">
+    <div class="sec-h"><div class="num">3</div><h2>Core Success Criteria</h2></div>
+    <div class="grid2">
+      <div class="ck-list">
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Every complaint is logged</b> in the app within 5 minutes of being received — no more Excel side-files.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>One source of truth</b> — Manager, all 5 Agents and the Daily Email Report all read from the same JSONBin cloud bin.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Every ticket has a Responsible Party</b> assigned — zero unassigned tickets at COB.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>≥ 80 % resolution rate</b> on tickets received in the same business day (rolling 7-day average).</div></div>
+      </div>
+      <div class="ck-list">
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>9 AM, 12 PM and 4 PM reports sent to GM on time</b> — generated and copied to Outlook within 10 minutes of the slot.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Agent slot reports posted to WhatsApp</b> at every Weekday 2 PM / 5 PM and Weekend 1 PM / 4 PM checkpoint.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>No data loss</b> — tickets survive browser refresh, device swap, and offline pockets (local cache + cloud sync).</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Master key never in source</b> — each device holds it in localStorage only; safe to host on public GitHub Pages.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. FUNCTIONAL & OPERATIONAL -->
+  <div class="sec">
+    <div class="sec-h"><div class="num">4</div><h2>Functional &amp; Operational Checks</h2></div>
+    <div class="grid2">
+      <div class="ck-list">
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Managers Hub</b> can log, edit, bulk-update, sort, filter, search every complaint; export JSON, CSV and Excel.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Agent shifts</b> set by Love (Day / Night / Off / Leave) sync to every Agent's device.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Cumulative report</b> rolls up tickets by Responsible Party with % resolution; party list is editable in-app.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Slot Reports</b> produce a one-click WhatsApp message, a styled PDF and a 4-sheet Excel export.</div></div>
+      </div>
+      <div class="ck-list">
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Daily Email Report</b> auto-pulls live cloud data and is copy-pastable into Outlook with full formatting.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Works on Android, iOS and desktop</b> browsers — no app install, no backend, no IT ticket.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Failure is visible</b> — sync errors show a banner; no silent data drops.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Cost: ₦0</b> — runs on free JSONBin tier + free GitHub Pages hosting.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. WHAT WE MEASURE -->
+  <div class="sec">
+    <div class="sec-h"><div class="num">5</div><h2>What We Measure (Monthly)</h2></div>
+    <div class="metrics">
+      <div class="metric"><div class="val">≥ 80%</div><div class="lbl">Same-day Resolution</div></div>
+      <div class="metric"><div class="val">100%</div><div class="lbl">Tickets Logged</div></div>
+      <div class="metric"><div class="val">3 / 3</div><div class="lbl">Daily Reports Sent</div></div>
+      <div class="metric"><div class="val">0</div><div class="lbl">Unassigned at COB</div></div>
+    </div>
+  </div>
+
+  <!-- 6. OUT OF SCOPE -->
+  <div class="sec">
+    <div class="sec-h"><div class="num">6</div><h2>Out of Scope (Version 2)</h2></div>
+    <p class="lead">
+      No customer-facing portal · No SMS/email automation to customers · No SLA-timer engine · No multi-team / multi-BU role permissions · No native mobile app · No SAP / SharePoint integration. These are candidates for Version 3.
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div class="foot">
+    <div>EKEDP Power App · Customer Experience · Marina HQ</div>
+    <div class="pill">v2.0 · May 2026</div>
+    <div>Owner: Love Offei</div>
+  </div>
+
+</div>
+
+</body>
+</html>
