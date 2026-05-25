@@ -8,7 +8,6 @@
 <title>EKEDP Power App — Managers Hub v2</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="baseline.js"></script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -50,7 +49,11 @@ body[data-theme="lavender"] .card-head{background:#F8F8FF !important;border-bott
 body[data-theme="lavender"] .card-head h3{color:#1E1B4B !important;}
 body[data-theme="lavender"] .kpi-card{background:#fff !important;border:1px solid #D4D4F0 !important;box-shadow:0 2px 8px rgba(99,102,241,.07) !important;}
 body[data-theme="lavender"] .tbl th{color:rgba(255,255,255,.9) !important;}
-body[data-theme="lavender"] .tbl td{color:#334155 !important;border-bottom:1px solid #EEF0FF !important;}
+body[data-theme="lavender"] .tbl td{color:#1E1B4B !important;border-bottom:1px solid #EEF0FF !important;font-weight:500 !important;}
+body[data-theme="lavender"] .tbl tbody td span,body[data-theme="lavender"] .tbl tbody td{color:#1E1B4B;}
+body[data-theme="lavender"] [style*="var(--muted)"]{color:#3730A3 !important;}
+body[data-theme="lavender"] [style*="var(--sub)"]{color:#4338CA !important;}
+body[data-theme="lavender"] .lbl{color:#3730A3 !important;font-weight:800 !important;}
 body[data-theme="lavender"] .tbl tbody tr:hover td{background:rgba(99,102,241,.04) !important;}
 body[data-theme="lavender"] .tbl thead tr{background:#3730A3 !important;}
 body[data-theme="lavender"] .badge-res{background:rgba(22,163,74,.1) !important;color:#15803D !important;border-color:rgba(22,163,74,.2) !important;}
@@ -1152,13 +1155,18 @@ function DailyReport({tickets,onSettings}){
 }
 
 // ── ALL COMPLAINTS ─────────────────────────────────────────────────
-function AllComplaints({tickets}){
+function AllComplaints({tickets,onUpdate}){
   const[search,setSearch]=useState('');
   const[fSt,setFSt]=useState('all');
   const[fBu,setFBu]=useState('all');
   const[fCat,setFCat]=useState('all');
   const[sort,setSort]=useState('newest');
   const[expanded,setExpanded]=useState(null);
+  const[edits,setEdits]=useState({});
+  function getF(t,k){return edits[t.id]&&edits[t.id][k]!==undefined?edits[t.id][k]:t[k];}
+  function setF(id,k,v){setEdits(function(e){return Object.assign({},e,{[id]:Object.assign({},e[id]||{},{[k]:v})});});}
+  function clearEdit(id){setEdits(function(e){const c=Object.assign({},e);delete c[id];return c;});}
+  function saveEdit(t){if(!edits[t.id])return;onUpdate&&onUpdate(Object.assign({},t,edits[t.id]));clearEdit(t.id);}
   const[page,setPage]=useState(0);
   const PAGE=100;
 
@@ -1206,42 +1214,43 @@ function AllComplaints({tickets}){
   }
   return(
     <div>
-      <div className="hero" style={{padding:'18px 28px'}}>
-        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:16,marginBottom:8}}>
-          <div>
-            <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:4}}>📂 All Complaints</div>
-            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>{tickets.length} total · {filtered.length} shown</div>
+      <div className="hero" style={{padding:'16px 28px 14px'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,marginBottom:12}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:14,minWidth:0}}>
+            <div style={{font:'800 22px/1 Sora,sans-serif',color:'#fff',whiteSpace:'nowrap'}}>📂 All Complaints</div>
+            <div style={{font:'600 12px/1 Sora,sans-serif',color:'rgba(255,255,255,.65)',whiteSpace:'nowrap'}}>{tickets.length} total · <b style={{color:'#FCD34D'}}>{filtered.length}</b> shown</div>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <button onClick={exportExcelAC} style={{padding:'8px 14px',background:'#059669',color:'#fff',border:'none',borderRadius:9,font:'800 11.5px Sora,sans-serif',cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>📗 Excel</button>
+          <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+            <button onClick={exportExcelAC} style={{padding:'8px 14px',background:'#059669',color:'#fff',border:'none',borderRadius:9,font:'800 11.5px Sora,sans-serif',cursor:'pointer',display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 12px rgba(5,150,105,.3)'}}>📗 Excel</button>
             <ScreenClock onSettings={()=>{}}/>
+          </div>
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-          <div style={{position:'relative',flex:'0 0 240px'}}>
-            <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'var(--sub)',display:'flex'}}>{Ico.search}</span>
-            <input className="inp" style={{paddingLeft:34}} value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search tickets…"/>
+          <div style={{position:'relative',flex:'1 1 260px',minWidth:200}}>
+            <span style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',color:'rgba(255,255,255,.5)',display:'flex'}}>{Ico.search}</span>
+            <input className="inp" style={{paddingLeft:34,height:36}} value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search ticket #, customer, phone, address…"/>
           </div>
-          <select className="sel" style={{flex:'0 0 140px'}} value={fSt} onChange={function(e){setFSt(e.target.value);}}>
+          <select className="sel" style={{flex:'0 0 130px',height:36}} value={fSt} onChange={function(e){setFSt(e.target.value);}}>
             <option value="all">All statuses</option>
             <option value="resolved">Resolved</option>
             <option value="progress">In Progress</option>
             <option value="unresolved">Unresolved</option>
           </select>
-          <select className="sel" style={{flex:'0 0 120px'}} value={fBu} onChange={function(e){setFBu(e.target.value);}}>
+          <select className="sel" style={{flex:'0 0 110px',height:36}} value={fBu} onChange={function(e){setFBu(e.target.value);}}>
             <option value="all">All BUs</option>
             {EK_BUS.map(function(b){return <option key={b} value={b}>{b}</option>;})}
           </select>
-          <select className="sel" style={{flex:'0 0 180px'}} value={fCat} onChange={function(e){setFCat(e.target.value);}}>
+          <select className="sel" style={{flex:'0 0 150px',height:36}} value={fCat} onChange={function(e){setFCat(e.target.value);}}>
             <option value="all">All categories</option>
             {cats.map(function(c){return <option key={c} value={c}>{c.split('/')[0].trim()}</option>;})}
           </select>
-          <select className="sel" style={{flex:'0 0 160px'}} value={sort} onChange={function(e){setSort(e.target.value);}}>
+          <select className="sel" style={{flex:'0 0 140px',height:36}} value={sort} onChange={function(e){setSort(e.target.value);}}>
             <option value="newest">↓ Newest first</option>
             <option value="oldest">↑ Oldest first</option>
             <option value="num_desc">Ticket # high → low</option>
             <option value="num_asc">Ticket # low → high</option>
           </select>
-          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all'||sort!=='newest')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');setSort('newest');}}>Clear</button>}
+          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all'||sort!=='newest')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');setSort('newest');}} style={{height:36}}>Clear</button>}
         </div>
       </div>
       <div style={{padding:'14px 28px 0'}}>
@@ -1272,10 +1281,45 @@ function AllComplaints({tickets}){
                       <td><span style={{font:'700 10px Sora,sans-serif',color:'var(--ek-gold)'}}>{expanded===t.id?'▲ close':'▼ details'}</span></td>
                     </tr>
                     {expanded===t.id&&(
-                      <tr><td colSpan={10} style={{padding:0,background:'rgba(255,199,44,.04)'}}>
-                        <div style={{padding:'12px 16px',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,borderBottom:'2px solid rgba(255,199,44,.2)'}}>
-                          {[['Address',t.address],['Meter/Acct',t.meter],['Date',t.created],['Note',t.note||'—']].map(function(f){return(
-                            <div key={f[0]}><div className="lbl" style={{fontSize:9}}>{f[0]}</div><div style={{font:'600 11px Sora,sans-serif',color:'var(--text)'}}>{f[1]||'—'}</div></div>);})}
+                      <tr><td colSpan={10} style={{padding:0,background:'rgba(99,102,241,.05)'}}>
+                        <div style={{padding:'14px 18px',borderBottom:'2px solid rgba(99,102,241,.25)'}}>
+                          {/* Read-only fields */}
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:14}}>
+                            {[['Customer',t.name],['Phone',t.phone],['Meter/Acct',t.meter||'—'],['Address',t.addr||t.address||'—']].map(function(f){return(
+                              <div key={f[0]}><div className="lbl" style={{fontSize:9}}>{f[0]}</div><div style={{font:'700 12px Sora,sans-serif',color:'var(--text)'}}>{f[1]||'—'}</div></div>);})}
+                          </div>
+                          {/* Editable fields */}
+                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:12}}>
+                            <div>
+                              <label className="lbl">Status</label>
+                              <div style={{display:'flex',gap:5}}>
+                                {[{v:'progress',l:'⟳ In Progress',c:'#D97706'},{v:'resolved',l:'✓ Resolved',c:'#16A34A'},{v:'unresolved',l:'✕ Unresolved',c:'#DC2626'}].map(function(s){const on=getF(t,'status')===s.v;return(
+                                  <button key={s.v} onClick={function(e){e.stopPropagation();setF(t.id,'status',s.v);}}
+                                    style={{flex:1,padding:'7px 4px',border:'1.5px solid '+(on?s.c:'var(--bsoft)'),borderRadius:7,background:on?s.c+'22':'transparent',color:on?s.c:'var(--muted)',font:'800 10px Sora,sans-serif',cursor:'pointer'}}>{s.l}</button>);})}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="lbl">Responsible Party</label>
+                              <select className="sel" value={getF(t,'resp')||EK_RESP[0].name} onClick={function(e){e.stopPropagation();}} onChange={function(e){setF(t.id,'resp',e.target.value);}}>
+                                {EK_RESP.map(function(r){return <option key={r.name} value={r.name}>{r.name}</option>;})}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="lbl">Category</label>
+                              <select className="sel" value={getF(t,'category')||EK_CATS[0]} onClick={function(e){e.stopPropagation();}} onChange={function(e){setF(t.id,'category',e.target.value);}}>
+                                {EK_CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}
+                              </select>
+                            </div>
+                          </div>
+                          <div style={{marginBottom:12}}>
+                            <label className="lbl">Action Taken / Resolution Note</label>
+                            <textarea className="inp" rows={2} value={getF(t,'note')||''} onClick={function(e){e.stopPropagation();}} onChange={function(e){setF(t.id,'note',e.target.value);}} placeholder="What was done? Leave blank if pending." style={{resize:'vertical'}}/>
+                          </div>
+                          <div style={{display:'flex',gap:8,justifyContent:'flex-end',alignItems:'center'}}>
+                            {edits[t.id]&&<span style={{font:'700 11px Sora,sans-serif',color:'#D97706',marginRight:'auto'}}>● Unsaved changes</span>}
+                            <button onClick={function(e){e.stopPropagation();clearEdit(t.id);setExpanded(null);}} className="btn btn-sm">Close</button>
+                            <button onClick={function(e){e.stopPropagation();saveEdit(t);}} className="btn btn-gold btn-sm" disabled={!edits[t.id]} style={{opacity:edits[t.id]?1:.4}}>💾 Save changes</button>
+                          </div>
                         </div>
                       </td></tr>)}
                   </React.Fragment>);})}
@@ -1305,7 +1349,6 @@ function AllComplaints({tickets}){
         </div>
       </div>
     </div>
-  </div>
   );
 }
 
@@ -2267,18 +2310,15 @@ function Agents({tickets,shifts,onShift,showToast}){
     </div>
   );
 }
-
-// ── CLOUD SYNC — JSONBin ───────────────────────────────────────────
+// ── CLOUD SYNC — GitHub Gist ──────────────────────────────────────
 function CloudSync({tickets,setTickets,showToast}){
-  const DEFAULT_BIN_ID='6a11fd706877513b27bf6f70';
-  const BASE='https://api.jsonbin.io/v3/b';
-  const KEY_STORAGE='ek_master_key';
-  const BIN_STORAGE='ek_bin_id';
+  const GIST_ID='fdcc6ebd6dd39199088de7133f661076';
+  const GIST_FILENAME='data.json';
+  const RAW_URL='https://gist.githubusercontent.com/loveoffei22-web/'+GIST_ID+'/raw/'+GIST_FILENAME;
+  const API_URL='https://api.github.com/gists/'+GIST_ID;
+  const TOKEN_STORAGE='ek_gh_token';
 
-  const[binId,setBinId]=useState(()=>localStorage.getItem(BIN_STORAGE)||DEFAULT_BIN_ID);
-  const[binDraft,setBinDraft]=useState('');
-  const[editBin,setEditBin]=useState(false);
-  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(KEY_STORAGE)||'');
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(TOKEN_STORAGE)||'');
   const[keyDraft,setKeyDraft]=useState('');
   const[showKey,setShowKey]=useState(false);
   const[saving,setSaving]=useState(false);
@@ -2288,60 +2328,39 @@ function CloudSync({tickets,setTickets,showToast}){
   const[connected,setConnected]=useState(false);
   const[log,setLog]=useState([]);
 
-  const hdrs=()=>({'Content-Type':'application/json','X-Master-Key':apiKey});
   const addLog=(msg,ok)=>setLog(l=>[{time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'}),msg,ok},...l.slice(0,19)]);
 
   function saveKey(){
     const k=(keyDraft||'').trim();
-    if(!k){showToast('Paste the master key first','error');return;}
-    localStorage.setItem(KEY_STORAGE,k);
+    if(!k){showToast('Paste your GitHub token first','error');return;}
+    localStorage.setItem(TOKEN_STORAGE,k);
     setApiKey(k);setKeyDraft('');
-    showToast('Master key saved on this device ✅');
-    addLog('Master key saved',true);
+    showToast('GitHub token saved on this device ✅');
+    addLog('GitHub token saved',true);
   }
   function clearKey(){
-    if(!window.confirm('Clear the master key from this device? Sync will stop working until you re-enter it.'))return;
-    localStorage.removeItem(KEY_STORAGE);
+    if(!window.confirm('Clear the GitHub token from this device? Sync will stop working until you re-enter it.'))return;
+    localStorage.removeItem(TOKEN_STORAGE);
     setApiKey('');setConnected(false);
-    showToast('Master key cleared');
-    addLog('Master key cleared',false);
-  }
-  function saveBin(){
-    const b=(binDraft||'').trim();
-    if(!b){showToast('Enter a Bin ID first','error');return;}
-    localStorage.setItem(BIN_STORAGE,b);
-    setBinId(b);setBinDraft('');setEditBin(false);
-    showToast('Bin ID saved ✅');
-    addLog('Bin ID updated to '+b.slice(0,8)+'…',true);
-  }
-  function clearBin(){
-    if(!window.confirm('Reset Bin ID to the default?'))return;
-    localStorage.removeItem(BIN_STORAGE);
-    setBinId(DEFAULT_BIN_ID);setEditBin(false);
-    showToast('Bin ID reset to default');
+    showToast('GitHub token cleared');
+    addLog('GitHub token cleared',false);
   }
 
-  // Auto-pull on mount — only if key is set
+  // Auto-pull on mount
   useEffect(()=>{
-    if(!apiKey)return;
     const done=sessionStorage.getItem('ek_mgr_pulled');
     if(!done){sessionStorage.setItem('ek_mgr_pulled','1');setTimeout(pullNow,1400);}
-  },[apiKey]);
+  },[]);
 
   async function pullNow(){
-    if(!apiKey){showToast('Set the master key first','error');return;}
-    setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});
-    addLog('Connecting to JSONBin…',null);
+    setSaving(true);setStatus({msg:'Pulling from GitHub Gist…',ok:true});
+    addLog('Fetching from GitHub Gist…',null);
     try{
-      const res=await fetch(BASE+'/'+binId+'/latest',{headers:hdrs()});
-      if(res.status===401)throw new Error('Invalid API key');
-      if(res.status===404)throw new Error('Bin ID not found');
+      const res=await fetch(RAW_URL+'?t='+Date.now());
       if(!res.ok)throw new Error('HTTP '+res.status);
-      const data=await res.json();
-      const cloud=data.record||{};
+      const cloud=await res.json();
 
-      // ── FORMAT DETECTION ──────────────────────────────────────────
-      // If the bin contains snapshot format { days: [...] } convert to agent-keyed format
+      // FORMAT DETECTION — snapshot format { days: [...] }
       let cloudNorm=cloud;
       if(Array.isArray(cloud.days)){
         const STATUS_MAP={'pending':'unresolved','assigned':'progress','closed':'resolved','in progress':'progress','resolved':'resolved','unresolved':'unresolved'};
@@ -2370,7 +2389,6 @@ function CloudSync({tickets,setTickets,showToast}){
         });
         cloudNorm={manager:flatTickets};
       }
-      // Merge all agent tickets into manager's local store
       let count=0;
       const merged=[...tickets];
       Object.keys(cloudNorm).forEach(function(agentId){
@@ -2400,31 +2418,34 @@ function CloudSync({tickets,setTickets,showToast}){
   }
 
   async function pushNow(){
-    if(!apiKey){showToast('Set the master key first','error');return;}
-    setSaving(true);setStatus({msg:'Pushing to cloud…',ok:true});addLog('Preparing data…',null);
+    if(!apiKey){showToast('Set your GitHub token first','error');return;}
+    setSaving(true);setStatus({msg:'Pushing to GitHub Gist…',ok:true});addLog('Preparing data…',null);
     try{
-      // Build payload — TODAY's tickets only, grouped by agent
       const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
       const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
       const byAgent={};
       tickets.forEach(function(t){
-        if(t._baseline)return; // never push baseline to cloud
+        if(t._baseline)return;
         const tDate=(t.created||t.day||'').toString().slice(0,10);
-        if(tDate!==todayStr)return; // only today's tickets
+        if(tDate!==todayStr)return;
         const key=t.agent||'manager';
         if(!byAgent[key])byAgent[key]=[];
         byAgent[key].push(t);
       });
       const incrementalCount=Object.values(byAgent).reduce(function(a,arr){return a+arr.length;},0);
-      // Attach shifts + guide so other devices stay in sync
       try{byAgent._shifts=JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch(e){}
       try{var g=localStorage.getItem('ek_guide');if(g){byAgent._guide=JSON.parse(g);}}catch(e){}
-      const res=await fetch(BASE+'/'+binId,{method:'PUT',headers:hdrs(),body:JSON.stringify(byAgent)});
-      if(res.status===401)throw new Error('Invalid API key');
+      const res=await fetch(API_URL,{
+        method:'PATCH',
+        headers:{'Content-Type':'application/json','Authorization':'token '+apiKey,'Accept':'application/vnd.github+json'},
+        body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(byAgent,null,2)}}})
+      });
+      if(res.status===401)throw new Error('Invalid GitHub token');
+      if(res.status===404)throw new Error('Gist not found — check token has gist scope');
       if(!res.ok)throw new Error('HTTP '+res.status);
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);setConnected(true);
-      const msg='✅ Pushed '+incrementalCount+' new tickets (328 baseline kept local).';
+      const msg='✅ Pushed '+incrementalCount+' new tickets to GitHub Gist.';
       setStatus({msg,ok:true});addLog(msg,true);showToast(msg);
     }catch(e){
       const msg='Push failed: '+e.message;
@@ -2433,7 +2454,7 @@ function CloudSync({tickets,setTickets,showToast}){
   }
 
   const agentSummary=preview
-    ?Object.entries(preview).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')
+    ?Object.entries(preview).filter(function([k]){return k.charAt(0)!=='_';}).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')
     :null;
 
   const fmtSync=lastSync?new Date(lastSync.includes('/')?lastSync:lastSync).toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Africa/Lagos'}):null;
@@ -2442,118 +2463,81 @@ function CloudSync({tickets,setTickets,showToast}){
     <div>
       <div className="hero" style={{padding:'18px 28px'}}>
         <div style={{font:'700 10px/1 Sora,sans-serif',color:'var(--ek-gold)',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:8}}>Cloud Sync</div>
-        <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:6}}>☁ Cloud Sync — JSONBin</div>
-        <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Shared cloud storage. All agents sync automatically — any device, any browser, no setup needed.</div>
+        <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:6}}>☁ Cloud Sync — GitHub Gist</div>
+        <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Shared cloud storage via GitHub Gist. Pull reads publicly — Push needs your GitHub token.</div>
       </div>
       <div style={{padding:'18px 28px',display:'grid',gridTemplateColumns:'1fr 320px',gap:16}}>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          {/* Master key gate */}
-          {!apiKey&&(
-            <div className="card" style={{borderColor:'var(--ek-gold)',background:'rgba(255,199,44,.04)'}}>
-              <div className="card-head" style={{background:'rgba(255,199,44,.08)'}}>
-                <h3>🔑 Set Master Key</h3>
-              </div>
-              <div style={{padding:16}}>
-                <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>
-                  Cloud sync needs your JSONBin master key. <b style={{color:'var(--text)'}}>Paste it once</b> — it stays on this device only (never in source code).
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,alignItems:'center'}}>
-                  <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste master key here…" autoFocus/>
-                  <div style={{display:'flex',gap:6}}>
-                    <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈 Hide':'👁 Show'}</button>
-                    <button className="btn btn-gold btn-sm" onClick={saveKey}>✓ Save key</button>
-                  </div>
-                </div>
-                <div style={{marginTop:10,padding:'8px 12px',background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',borderRadius:8,font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)'}}>
-                  📝 Each device (Love's laptop, every agent's phone, this report laptop) needs the key entered once. Share it privately — don't commit it to GitHub.
-                </div>
+          {/* Status bar */}
+          <div className="card" style={{borderColor:connected?'var(--okb)':'var(--bsoft)'}}>
+            <div style={{padding:'14px 16px',display:'flex',alignItems:'center',gap:12}}>
+              <span style={{fontSize:20}}>{connected?'🟢':'⚪'}</span>
+              <div style={{flex:1}}>
+                <div style={{font:'700 12px/1 Sora,sans-serif',color:connected?'var(--okb)':'var(--muted)'}}>{connected?'Connected to GitHub Gist':'Not yet synced'}</div>
+                {fmtSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--sub)',marginTop:3}}>Last sync: {fmtSync} WAT</div>}
+                {agentSummary&&<div style={{font:'500 11px JetBrains Mono,monospace',color:'var(--muted)',marginTop:3}}>{agentSummary}</div>}
               </div>
             </div>
-          )}
+            {status.msg&&<div style={{padding:'10px 16px',borderTop:'1px solid var(--bsoft)',font:'600 12px Sora,sans-serif',color:status.ok?'var(--okb)':'var(--bdb)'}}>{status.msg}</div>}
+          </div>
 
-          {/* Status banner */}
-          {status.msg&&(
-            <div style={{padding:'12px 16px',borderRadius:10,background:status.ok?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)',border:'1px solid '+(status.ok?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),font:'600 13px Sora,sans-serif',color:status.ok?'var(--okb)':'var(--bdb)',display:'flex',alignItems:'center',gap:8}}>
-              <span>{status.ok?'✅':'❌'}</span>{status.msg}
-            </div>)}
-
-          {/* Sync card */}
+          {/* Pull / Push actions */}
           <div className="card">
-            <div className="card-head">
-              <h3><span style={{width:24,height:24,borderRadius:'50%',background:'var(--ek-red)',color:'#fff',font:'900 12px Sora,sans-serif',display:'inline-flex',alignItems:'center',justifyContent:'center',marginRight:8}}>1</span>Sync with Cloud</h3>
+            <div className="card-head"><h3>⚡ Sync Actions</h3></div>
+            <div style={{padding:16,display:'flex',gap:10}}>
+              <button className="btn btn-gold" onClick={pullNow} disabled={saving} style={{flex:1,padding:'12px 0',font:'700 13px Sora,sans-serif'}}>
+                {saving?'⟳ Working…':'⬇ Pull from Gist'}
+              </button>
+              <button className="btn" onClick={pushNow} disabled={saving||!apiKey} style={{flex:1,padding:'12px 0',font:'700 13px Sora,sans-serif',opacity:apiKey?1:.45}}>
+                {saving?'⟳ Working…':'⬆ Push to Gist'}
+              </button>
             </div>
-            <div style={{padding:16}}>
-              {/* Info tiles */}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:14}}>
-                {[
-                  {label:'CLOUD',val:'JSONBin · EKEDP CX Live',c:'var(--infob)'},
-                  {label:'LAST SYNC',val:fmtSync||'—',c:'var(--text)'},
-                  {label:'STATUS',val:connected?'✅ Connected':'⬤ Not synced yet',c:connected?'var(--okb)':'var(--muted)'},
-                ].map(function(t){return(
-                  <div key={t.label} style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderRadius:9,padding:'10px 12px'}}>
-                    <div style={{font:'700 9px/1 Sora,sans-serif',color:'var(--sub)',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:5}}>{t.label}</div>
-                    <div style={{font:"700 12px/1.3 'JetBrains Mono',monospace",color:t.c,wordBreak:'break-all'}}>{t.val}</div>
-                  </div>);})}
-              </div>
-              {/* Agent summary */}
-              {agentSummary&&(
-                <div style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',font:'600 11px/1.4 JetBrains Mono,monospace',color:'var(--muted)',marginBottom:14}}>
-                  ☁ Cloud has: <span style={{color:'var(--text)'}}>{agentSummary}</span>
-                </div>)}
-              {/* Pull + Push buttons */}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                <button onClick={pullNow} disabled={saving} style={{padding:'18px 14px',background:saving?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:10,font:'800 13px Sora,sans-serif',cursor:saving?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:7,boxShadow:saving?'none':'0 4px 14px rgba(22,163,74,.35)',opacity:saving?.6:1,transition:'all .15s'}}>
-                  <span style={{fontSize:22}}>⬇</span>
-                  <span>Pull from Cloud</span>
-                  <small style={{fontWeight:500,opacity:.8,fontSize:11}}>Get everyone's latest tickets</small>
-                </button>
-                <button onClick={pushNow} disabled={saving} style={{padding:'18px 14px',background:saving?'rgba(255,255,255,.06)':'#1D4ED8',color:'#fff',border:'none',borderRadius:10,font:'800 13px Sora,sans-serif',cursor:saving?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:7,boxShadow:saving?'none':'0 4px 14px rgba(29,78,216,.35)',opacity:saving?.6:1,transition:'all .15s'}}>
-                  <span style={{fontSize:22}}>⬆</span>
-                  <span>Push to Cloud</span>
-                  <small style={{fontWeight:500,opacity:.8,fontSize:11}}>Upload your tickets for all to see</small>
-                </button>
-              </div>
-              <div style={{marginTop:12,padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.03)',font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)'}}>
-                💡 <b style={{color:'var(--text)'}}>Auto-syncs when you open the app.</b> After adding tickets, hit <b style={{color:'#4ADE80'}}>Push</b> so everyone sees your updates. Hit <b style={{color:'#93C5FD'}}>Pull</b> to get the latest from all agents.
-              </div>
+            <div style={{padding:'0 16px 14px',font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>
+              Pull is always free — no token needed. Push requires your GitHub token below.
             </div>
           </div>
 
-          {/* Credentials (collapsed by default) */}
-          <details style={{background:'var(--card)',border:'1px solid var(--bsoft)',borderRadius:12,overflow:'hidden'}}>
-            <summary style={{padding:'13px 18px',font:'700 13px/1 Sora,sans-serif',color:'var(--muted)',cursor:'pointer',listStyle:'none',display:'flex',alignItems:'center',gap:8}}>
-              ⚙ JSONBin Credentials <span style={{font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>— tap to expand</span>
-            </summary>
-            <div style={{padding:'0 16px 16px',borderTop:'1px solid var(--bsoft)'}}>
-              <div style={{marginTop:12,marginBottom:8}}>
-                <label className="lbl">Bin ID</label>
-                {editBin?(
-                  <div style={{display:'flex',gap:6,marginBottom:6}}>
-                    <input className="inp" autoFocus value={binDraft} onChange={function(e){setBinDraft(e.target.value);}} placeholder="Paste new Bin ID…"/>
-                    <button className="btn btn-sm" style={{background:'#16A34A',color:'#fff',border:'none',whiteSpace:'nowrap'}} onClick={saveBin}>💾 Save</button>
-                    <button className="btn btn-sm" onClick={function(){setEditBin(false);setBinDraft('');}}>Cancel</button>
-                  </div>
-                ):(
-                  <div style={{display:'flex',gap:6,alignItems:'center',marginBottom:6}}>
-                    <input className="inp" readOnly value={binId}/>
-                    <button className="btn btn-sm" onClick={function(){setBinDraft('');setEditBin(true);}} style={{whiteSpace:'nowrap'}}>✎ Edit</button>
-                    {binId!==DEFAULT_BIN_ID&&<button className="btn btn-sm btn-danger" onClick={clearBin} style={{whiteSpace:'nowrap'}}>↺ Reset</button>}
-                  </div>
-                )}
-              </div>
-              <div style={{marginBottom:8}}><label className="lbl">Master Key (this device)</label>
-                <input className="inp" readOnly value={apiKey?(apiKey.slice(0,6)+'……………… '+apiKey.slice(-4)):'(not set)'} type="text"/>
-              </div>
-              <div style={{display:'flex',gap:8,marginBottom:8}}>
-                {apiKey&&<button className="btn btn-sm btn-danger" onClick={clearKey}>✕ Clear key</button>}
-                <button className="btn btn-sm" onClick={function(){setKeyDraft('');setApiKey('');}}>✎ Replace key</button>
-              </div>
-              <div style={{font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>Key lives in this browser's localStorage. Never written to source files — safe to deploy this app to public GitHub.</div>
+          {/* GitHub token */}
+          <div className="card" style={{borderColor:apiKey?'rgba(74,222,128,.3)':'var(--bsoft)'}}>
+            <div className="card-head" style={{background:apiKey?'rgba(74,222,128,.06)':''}}>
+              <h3>{apiKey?'🔑 GitHub Token (saved)':'🔑 GitHub Token — required to Push'}</h3>
+              {apiKey&&<button className="btn btn-sm btn-danger" onClick={clearKey}>Clear</button>}
             </div>
-          </details>
+            {!apiKey&&(
+              <div style={{padding:16}}>
+                <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>
+                  Generate at <b style={{color:'var(--text)'}}>github.com → Settings → Developer Settings → Personal Access Tokens (classic)</b> — tick <b style={{color:'var(--text)'}}>gist</b> scope only.
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,alignItems:'center'}}>
+                  <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste GitHub token here…" autoFocus/>
+                  <div style={{display:'flex',gap:6}}>
+                    <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈 Hide':'👁 Show'}</button>
+                    <button className="btn btn-gold btn-sm" onClick={saveKey}>✓ Save</button>
+                  </div>
+                </div>
+                <div style={{marginTop:10,padding:'8px 12px',background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',borderRadius:8,font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)'}}>
+                  Token is saved on this device only — never in source code.
+                </div>
+              </div>
+            )}
+            {apiKey&&(
+              <div style={{padding:'12px 16px',font:'600 12px Sora,sans-serif',color:'var(--okb)'}}>✓ Token saved on this device — Push is enabled.</div>
+            )}
+          </div>
+
+          {/* Gist info */}
+          <div className="card">
+            <div className="card-head"><h3>ℹ Gist Info</h3></div>
+            <div style={{padding:16,display:'flex',flexDirection:'column',gap:8}}>
+              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist ID</div>
+              <div style={{font:'700 12px JetBrains Mono,monospace',color:'var(--text)',wordBreak:'break-all'}}>{GIST_ID}</div>
+              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)',marginTop:6}}>Raw URL (always latest)</div>
+              <div style={{font:'600 11px JetBrains Mono,monospace',color:'var(--ek-gold)',wordBreak:'break-all'}}>{RAW_URL}</div>
+            </div>
+          </div>
         </div>
 
-        {/* Sync log */}
+        {/* Sync Log */}
         <div className="card" style={{alignSelf:'start'}}>
           <div className="card-head"><h3>Sync Log</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{log.length} events</span></div>
           <div style={{maxHeight:400,overflowY:'auto'}}>
@@ -2665,6 +2649,15 @@ function App(){
     });
   }
 
+  function onUpdate(updated){
+    setTickets(function(prev){
+      const next=prev.map(function(t){return t.id===updated.id?updated:t;});
+      persistTickets(next);
+      return next;
+    });
+    showToast('✓ Ticket #'+updated.num+' updated');
+  }
+
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;
@@ -2684,7 +2677,7 @@ function App(){
   const screens={
     dashboard: <Dashboard tickets={tickets} shifts={shifts} onShift={onShift} onSettings={()=>setShowSettings(true)} onNav={setScreen}/>,
     daily:     <DailyReport tickets={tickets} onSettings={()=>setShowSettings(true)}/>,
-    all:       <AllComplaints tickets={tickets}/>,
+    all:       <AllComplaints tickets={tickets} onUpdate={onUpdate}/>,
     log:       <LogTicket tickets={tickets} onAdd={onAdd} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
     cumulative:<Cumulative tickets={tickets} showToast={showToast}/>,
     analytics: <Analytics tickets={tickets}/>,

@@ -1422,55 +1422,109 @@ function SupportGuide({agent,showToast}){
 }
 
 function CloudSync({agent,tickets,setTickets,showToast}){
-  const BIN='6a11fd706877513b27bf6f70';const BASE='https://api.jsonbin.io/v3/b';const KEY_STORAGE='ek_master_key';
-  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(KEY_STORAGE)||'');
+  const GIST_ID='fdcc6ebd6dd39199088de7133f661076';
+  const GIST_FILENAME='data.json';
+  const RAW_URL='https://gist.githubusercontent.com/loveoffei22-web/'+GIST_ID+'/raw/'+GIST_FILENAME;
+  const API_URL='https://api.github.com/gists/'+GIST_ID;
+  const TOKEN_STORAGE='ek_gh_token';
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(TOKEN_STORAGE)||'');
   const[keyDraft,setKeyDraft]=useState('');
   const[showKey,setShowKey]=useState(false);
-  const hdrs=()=>({'Content-Type':'application/json','X-Master-Key':apiKey});
-  const[saving,setSaving]=useState(false);const[status,setStatus]=useState({msg:'',ok:true});const[lastSync,setLastSync]=useState(()=>localStorage.getItem('ek_last_sync')||'');const[preview,setPreview]=useState(null);
-  function saveKey(){const k=(keyDraft||'').trim();if(!k){showToast('Paste the master key first','error');return;}localStorage.setItem(KEY_STORAGE,k);setApiKey(k);setKeyDraft('');showToast('Master key saved ✓');}
-  function clearKey(){if(!window.confirm('Clear master key from this device?'))return;localStorage.removeItem(KEY_STORAGE);setApiKey('');showToast('Master key cleared');}
-  useEffect(function(){if(!apiKey)return;const done=sessionStorage.getItem('ek_ag_pulled_'+agent.id);if(!done){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}},[apiKey]); // eslint-disable-line
-  async function pullNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});try{const res=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(res.status===401)throw new Error('Invalid master key');if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const cloud=data.record||{};Object.keys(cloud).forEach(function(agId){if(agId==='_shifts'&&cloud._shifts&&typeof cloud._shifts==='object'){try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloud._shifts));}catch(e){}return;}if(agId==='_guide'&&Array.isArray(cloud._guide)&&cloud._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}return;}if(agId.charAt(0)==='_')return;if(agId===agent.id&&Array.isArray(cloud[agId])){setTickets(cloud[agId]);}localStorage.setItem('ek_tix_'+agId,JSON.stringify(Array.isArray(cloud[agId])?cloud[agId]:[]));});const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);const msg='✅ Synced from cloud.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Pull failed: '+e.message,ok:false});showToast('Pull failed','error');}finally{setSaving(false);}}
-  async function pushNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pushing…',ok:true});try{const getRes=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(getRes.status===401)throw new Error('Invalid master key');const current=getRes.ok?(await getRes.json()).record||{}:{};
-    // Push TODAY's tickets only
-    const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-    const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
-    const todayTix=tickets.filter(function(t){return !t._baseline&&(t.created||'').slice(0,10)===todayStr;});
-    current[agent.id]=todayTix;const res=await fetch(BASE+'/'+BIN,{method:'PUT',headers:hdrs(),body:JSON.stringify(current)});if(!res.ok)throw new Error('HTTP '+res.status);const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);const msg='✅ Pushed '+todayTix.length+' tickets for today.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}finally{setSaving(false);}}
+  const[saving,setSaving]=useState(false);
+  const[status,setStatus]=useState({msg:'',ok:true});
+  const[lastSync,setLastSync]=useState(()=>localStorage.getItem('ek_last_sync')||'');
+  const[preview,setPreview]=useState(null);
+
+  function saveKey(){const k=(keyDraft||'').trim();if(!k){showToast('Paste your GitHub token first','error');return;}localStorage.setItem(TOKEN_STORAGE,k);setApiKey(k);setKeyDraft('');showToast('GitHub token saved ✓');}
+  function clearKey(){if(!window.confirm('Clear GitHub token from this device?'))return;localStorage.removeItem(TOKEN_STORAGE);setApiKey('');showToast('Token cleared');}
+
+  useEffect(function(){
+    const done=sessionStorage.getItem('ek_ag_pulled_'+agent.id);
+    if(!done){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}
+  },[]); // eslint-disable-line
+
+  async function pullNow(){
+    setSaving(true);setStatus({msg:'Pulling from GitHub Gist…',ok:true});
+    try{
+      const res=await fetch(RAW_URL+'?t='+Date.now());
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const cloud=await res.json();
+      Object.keys(cloud).forEach(function(agId){
+        if(agId==='_shifts'&&cloud._shifts&&typeof cloud._shifts==='object'){try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloud._shifts));}catch(e){}return;}
+        if(agId==='_guide'&&Array.isArray(cloud._guide)&&cloud._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}return;}
+        if(agId.charAt(0)==='_')return;
+        if(agId===agent.id&&Array.isArray(cloud[agId])){setTickets(cloud[agId]);}
+        localStorage.setItem('ek_tix_'+agId,JSON.stringify(Array.isArray(cloud[agId])?cloud[agId]:[]));
+      });
+      const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
+      setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);
+      setStatus({msg:'✅ Synced from GitHub Gist.',ok:true});showToast('✅ Synced from cloud.');
+    }catch(e){setStatus({msg:'Pull failed: '+e.message,ok:false});showToast('Pull failed','error');}
+    finally{setSaving(false);}
+  }
+
+  async function pushNow(){
+    if(!apiKey){showToast('Set your GitHub token first','error');return;}
+    setSaving(true);setStatus({msg:'Pushing to GitHub Gist…',ok:true});
+    try{
+      // Pull current gist first so we don't overwrite other agents
+      let current={};
+      try{const getRes=await fetch(RAW_URL+'?t='+Date.now());if(getRes.ok)current=await getRes.json();}catch(e){}
+      const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+      const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
+      const todayTix=tickets.filter(function(t){return !t._baseline&&(t.created||'').slice(0,10)===todayStr;});
+      current[agent.id]=todayTix;
+      const res=await fetch(API_URL,{
+        method:'PATCH',
+        headers:{'Content-Type':'application/json','Authorization':'token '+apiKey,'Accept':'application/vnd.github+json'},
+        body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(current,null,2)}}})
+      });
+      if(res.status===401)throw new Error('Invalid GitHub token');
+      if(res.status===404)throw new Error('Gist not found — check token has gist scope');
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
+      setLastSync(now);localStorage.setItem('ek_last_sync',now);
+      const msg='✅ Pushed '+todayTix.length+' tickets for today.';
+      setStatus({msg,ok:true});showToast(msg);
+    }catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}
+    finally{setSaving(false);}
+  }
+
   return(
     <div>
-      <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — JSONBin</div></div></div>
+      <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — GitHub Gist</div></div></div>
       <div className="pad">
         {!apiKey&&(
           <div style={{background:'rgba(255,199,44,.06)',border:'1.5px solid rgba(255,199,44,.4)',borderRadius:12,padding:16,marginBottom:14}}>
-            <div style={{font:'800 14px Sora,sans-serif',color:'var(--text)',marginBottom:6}}>🔑 Set Master Key</div>
-            <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Ask Love (Managers Hub) for the JSONBin master key. <b style={{color:'var(--text)'}}>Paste it once</b> — it stays on this phone only.</div>
+            <div style={{font:'800 14px Sora,sans-serif',color:'var(--text)',marginBottom:6}}>🔑 Set GitHub Token</div>
+            <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Generate at <b style={{color:'var(--text)'}}>github.com → Settings → Developer Settings → Tokens (classic)</b> — tick <b style={{color:'var(--text)'}}>gist</b> scope only. <b style={{color:'var(--text)'}}>Paste it once</b> — stays on this phone only.</div>
             <div style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:8}}>
-              <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste master key…"/>
+              <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste GitHub token…"/>
               <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈':'👁'}</button>
               <button onClick={saveKey} style={{padding:'8px 14px',background:'#16A34A',color:'#fff',border:'none',borderRadius:8,font:'800 12px Sora,sans-serif',cursor:'pointer'}}>✓ Save</button>
             </div>
           </div>
         )}
         {status.msg&&<div style={{padding:'11px 14px',borderRadius:10,background:status.ok?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',border:'1px solid '+(status.ok?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),font:'600 12px Sora,sans-serif',color:status.ok?'var(--okb)':'var(--bdb)',marginBottom:12}}>{status.msg}</div>}
-        {preview&&<div style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',font:'600 11px/1.4 JetBrains Mono,monospace',color:'var(--muted)',marginBottom:12}}>☁ Cloud: {Object.entries(preview).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')}</div>}
+        {preview&&<div style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',font:'600 11px/1.4 JetBrains Mono,monospace',color:'var(--muted)',marginBottom:12}}>☁ Gist: {Object.entries(preview).filter(function([k]){return k.charAt(0)!=='_';}).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')}</div>}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-          <button onClick={pullNow} disabled={saving||!apiKey} style={{padding:'20px',background:(saving||!apiKey)?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!apiKey)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!apiKey)?.55:1}}>
-            <span style={{fontSize:24}}>⬇</span><span>Pull from Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!apiKey?'Set key first':'Get everyone\'s latest'}</small>
+          <button onClick={pullNow} disabled={saving} style={{padding:'20px',background:saving?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:saving?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:saving?.55:1}}>
+            <span style={{fontSize:24}}>⬇</span><span>Pull from Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>Get everyone's latest</small>
           </button>
           <button onClick={pushNow} disabled={saving||!apiKey} style={{padding:'20px',background:(saving||!apiKey)?'rgba(255,255,255,.06)':'#1D4ED8',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!apiKey)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!apiKey)?.55:1}}>
-            <span style={{fontSize:24}}>⬆</span><span>Push to Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!apiKey?'Set key first':'Share your tickets'}</small>
+            <span style={{fontSize:24}}>⬆</span><span>Push to Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!apiKey?'Set token first':'Share your tickets'}</small>
           </button>
         </div>
+        <div style={{padding:'10px 12px',borderRadius:8,background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>
+          💡 Pull is free — no token needed. Token only required to Push.
+        </div>
         {lastSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>Last synced: <b style={{color:'var(--okb)'}}>{lastSync}</b></div>}
-        {apiKey&&<div style={{display:'flex',gap:8,marginTop:8}}><button className="btn btn-sm" onClick={clearKey} style={{padding:'6px 12px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear key</button><span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',alignSelf:'center'}}>Key: {apiKey.slice(0,6)}……{apiKey.slice(-4)}</span></div>}
+        {apiKey&&<div style={{display:'flex',gap:8,marginTop:8}}><button className="btn btn-sm" onClick={clearKey} style={{padding:'6px 12px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear token</button><span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',alignSelf:'center'}}>Token: {apiKey.slice(0,6)}……{apiKey.slice(-4)}</span></div>}
       </div>
     </div>
   );
 }
 
-// ── EDIT TICKET MODAL ────────────────────────────────────────
 function EditModal({ticket,agent,onSave,onDelete,onClose}){
   const[status,setStatus]=useState(ticket.status||'progress');const[note,setNote]=useState(ticket.note||'');
   return(
