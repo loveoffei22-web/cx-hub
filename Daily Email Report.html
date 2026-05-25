@@ -128,6 +128,7 @@ table.t tfoot td.r{font-family:'JetBrains Mono',monospace;font-size:15px;}
   <button data-slot="9am">☀️ 9 AM</button>
   <button data-slot="12pm">🕛 12 PM</button>
   <button data-slot="4pm" class="on">🌆 4 PM</button>
+  <button data-slot="5pm">🌇 5 PM</button>
   <span class="spacer"></span>
   <button class="btn-email" onclick="copyEmail()">📧 Copy for Outlook</button>
   <button class="btn-excel" onclick="downloadExcel()">📊 Export to Excel</button>
@@ -162,6 +163,7 @@ const GM_SLOTS = {
   '9am': {label:'9 AM',  emoji:'☀️', stamp:'9:00 AM WAT',  window:'Cumulative as of 9:00 AM'},
   '12pm':{label:'12 PM', emoji:'🕛', stamp:'12:00 PM WAT', window:'Cumulative as of 12:00 PM'},
   '4pm': {label:'4 PM',  emoji:'🌆', stamp:'4:00 PM WAT',  window:'Cumulative as of 4:00 PM'},
+  '5pm': {label:'5 PM',  emoji:'🌇', stamp:'5:00 PM WAT',  window:'End of Day — Full Cumulative'},
 };
 
 let CURRENT_SLOT = '4pm';
@@ -196,7 +198,35 @@ function render(slotId){
   tot.grand=tot.res+tot.prg+tot.unr;
   tot.pct=tot.grand?Math.round(tot.res/tot.grand*100):0;
 
-  const noteHtml = '';
+  const is5pm = slotId === '5pm';
+
+  // ── KPI block (5 PM only) ──────────────────────────────────────────
+  const kpiHtml = is5pm ? `
+    <div class="kpi-row">
+      <div class="kpi tot"><div class="kl">Total Complaints</div><div class="kv">${tot.grand}</div></div>
+      <div class="kpi res"><div class="kl">Resolved</div><div class="kv">${tot.res}</div></div>
+      <div class="kpi prg"><div class="kl">In Progress</div><div class="kv">${tot.prg}</div></div>
+      <div class="kpi unr"><div class="kl">Unresolved</div><div class="kv">${tot.unr}</div></div>
+      <div class="kpi pct"><div class="kl">% Resolution</div><div class="kv">${tot.pct}%</div></div>
+    </div>` : `<div class="kpi-row" style="display:none;"></div>`;
+
+  // ── Executive summary (5 PM only) ─────────────────────────────────
+  const bestRow  = rows.filter(r=>r.grand>0).sort((a,b)=>b.pct-a.pct)[0];
+  const worstRow = rows.filter(r=>r.grand>0).sort((a,b)=>a.pct-b.pct)[0];
+  const execHtml = is5pm ? `
+    <div style="margin:0 16px 10px;padding:14px 18px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;">
+      <div style="font:800 10px/1 'Sora';text-transform:uppercase;letter-spacing:.12em;color:#1D4ED8;margin-bottom:8px;">📋 Executive Summary — End of Day</div>
+      <p style="font:500 13px/1.6 'Sora';color:#0F172A;margin:0;">
+        As of <b>5:00 PM WAT on ${todayLong()}</b>, the EKEDP Customer Experience team recorded
+        <b>${tot.today} new complaint${tot.today!==1?'s':''} today</b> and a cumulative total of
+        <b>${tot.grand} complaint${tot.grand!==1?'s':''}</b>.
+        Of these, <b style="color:#065F46;">${tot.res} have been resolved</b> (${tot.pct}% resolution rate),
+        <b style="color:#92400E;">${tot.prg} are in progress</b>, and
+        <b style="color:#991B1B;">${tot.unr} remain unresolved</b>.
+        ${bestRow ? `<b>${bestRow.party}</b> leads resolution at <b style="color:#065F46;">${bestRow.pct}%</b>.` : ''}
+        ${worstRow && worstRow !== bestRow && worstRow.unr > 0 ? `<b>${worstRow.party}</b> requires immediate attention with <b style="color:#991B1B;">${worstRow.unr} unresolved</b> item${worstRow.unr!==1?'s':''}.` : ''}
+      </p>
+    </div>` : '';
 
   document.getElementById('doc').innerHTML = `
     <div class="hd">
@@ -204,7 +234,7 @@ function render(slotId){
         <div class="hd-icon"><img src="${ICON_B64}" alt="EKEDP Power App"></div>
         <div>
           <div class="hd-eyebrow">EKEDP Power App · Mobile APP Report</div>
-          <h1 class="hd-title">EKEDP Mobile APP Report (9AM 12PM 4PM)</h1>
+          <h1 class="hd-title">EKEDP Mobile APP Report (9AM 12PM 4PM 5PM)</h1>
           <div class="hd-sub">${todayLong()} · Generated at ${slot.stamp} · Customer Experience Department · Mobile App</div>
         </div>
         <div class="hd-meta">
@@ -214,9 +244,8 @@ function render(slotId){
       </div>
     </div>
 
-    <div class="kpi-row" style="display:none;"></div>
-
-    
+    ${kpiHtml}
+    ${execHtml}
 
     <div class="tbl-wrap">
       <table class="t">
@@ -243,9 +272,9 @@ function render(slotId){
               <td class="r"><span class="pct-pill ${pctClass(r.pct)}">${r.pct}%</span></td>
             </tr>`).join('')}
         </tbody>
-        <tfoot style="display:none;">
+        ${is5pm ? `<tfoot>
           <tr>
-            <td colspan="2" style="text-align:right;letter-spacing:.10em;">TOTAL</td>
+            <td colspan="2" style="text-align:right;letter-spacing:.10em;font:900 13px 'Sora';">TOTAL</td>
             <td class="r">${tot.today}</td>
             <td class="r">${tot.res}</td>
             <td class="r">${tot.prg}</td>
@@ -253,7 +282,7 @@ function render(slotId){
             <td class="r">${tot.grand}</td>
             <td class="r">${tot.pct}%</td>
           </tr>
-        </tfoot>
+        </tfoot>` : '<tfoot style="display:none;"><tr></tr></tfoot>'}
       </table>
     </div>
 
@@ -337,7 +366,7 @@ function showToast(msg,type='ok'){
 //   ≥ 16:00 → 4 PM COB report
 (function autoSlot(){
   const watHour=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
-  const id=watHour<12?'9am':watHour<16?'12pm':'4pm';
+  const id=watHour<12?'9am':watHour<16?'12pm':watHour<17?'4pm':'5pm';
   render(id);
 })();
 
