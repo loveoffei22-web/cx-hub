@@ -265,6 +265,20 @@ function parseMultiple(txt){
   return blocks.map(parseSingle).filter(function(b){return b.num||b.name||b.phone;});
 }
 function loadTix(id){try{return JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');}catch{return[];}}
+
+// ── DAILY RESET: clear agent tickets at start of each new day ─────
+(function(){
+  var watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  var todayKey=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
+  var lastDay=localStorage.getItem('ek_agent_day');
+  if(lastDay&&lastDay!==todayKey){
+    // New day — wipe all agent ticket stores so everyone starts fresh
+    ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){
+      localStorage.removeItem('ek_tix_'+id);
+    });
+  }
+  localStorage.setItem('ek_agent_day',todayKey);
+})();
 function fmtDay(t){
   const d=String(t.created||t.received||'').slice(0,10);
   if(d&&/^\d{4}-\d{2}-\d{2}$/.test(d)){
@@ -1418,7 +1432,12 @@ function CloudSync({agent,tickets,setTickets,showToast}){
   function clearKey(){if(!window.confirm('Clear master key from this device?'))return;localStorage.removeItem(KEY_STORAGE);setApiKey('');showToast('Master key cleared');}
   useEffect(function(){if(!apiKey)return;const done=sessionStorage.getItem('ek_ag_pulled_'+agent.id);if(!done){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}},[apiKey]); // eslint-disable-line
   async function pullNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});try{const res=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(res.status===401)throw new Error('Invalid master key');if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();const cloud=data.record||{};Object.keys(cloud).forEach(function(agId){if(agId==='_shifts'&&cloud._shifts&&typeof cloud._shifts==='object'){try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloud._shifts));}catch(e){}return;}if(agId==='_guide'&&Array.isArray(cloud._guide)&&cloud._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}return;}if(agId.charAt(0)==='_')return;if(agId===agent.id&&Array.isArray(cloud[agId])){setTickets(cloud[agId]);}localStorage.setItem('ek_tix_'+agId,JSON.stringify(Array.isArray(cloud[agId])?cloud[agId]:[]));});const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);const msg='✅ Synced from cloud.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Pull failed: '+e.message,ok:false});showToast('Pull failed','error');}finally{setSaving(false);}}
-  async function pushNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pushing…',ok:true});try{const getRes=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(getRes.status===401)throw new Error('Invalid master key');const current=getRes.ok?(await getRes.json()).record||{}:{};current[agent.id]=tickets.filter(function(t){return !t._baseline;});const res=await fetch(BASE+'/'+BIN,{method:'PUT',headers:hdrs(),body:JSON.stringify(current)});if(!res.ok)throw new Error('HTTP '+res.status);const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);const msg='✅ Pushed '+tickets.length+' tickets.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}finally{setSaving(false);}}
+  async function pushNow(){if(!apiKey){showToast('Set the master key first','error');return;}setSaving(true);setStatus({msg:'Pushing…',ok:true});try{const getRes=await fetch(BASE+'/'+BIN+'/latest',{headers:hdrs()});if(getRes.status===401)throw new Error('Invalid master key');const current=getRes.ok?(await getRes.json()).record||{}:{};
+    // Push TODAY's tickets only
+    const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+    const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
+    const todayTix=tickets.filter(function(t){return !t._baseline&&(t.created||'').slice(0,10)===todayStr;});
+    current[agent.id]=todayTix;const res=await fetch(BASE+'/'+BIN,{method:'PUT',headers:hdrs(),body:JSON.stringify(current)});if(!res.ok)throw new Error('HTTP '+res.status);const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});setLastSync(now);localStorage.setItem('ek_last_sync',now);const msg='✅ Pushed '+todayTix.length+' tickets for today.';setStatus({msg,ok:true});showToast(msg);}catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}finally{setSaving(false);}}
   return(
     <div>
       <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — JSONBin</div></div></div>
