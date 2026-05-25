@@ -21,10 +21,10 @@
 --bd:#EF4444;--bdb:#FCA5A5;--bdt:rgba(239,68,68,.18);
 --info:#60A5FA;--infob:#BFDBFE;--violet:#8B5CF6;}
 body[data-theme="bright"]{--bg:#EEF2FF;--bg2:#E4E9FC;--surface:#fff;--card:#fff;--card2:#F8FAFF;
---border:#DDE3F5;--bsoft:#E8EDFF;--text:#0F1240;--text2:#2D3780;--muted:#5763A6;--sub:#8892C8;}
+--border:#DDE3F5;--bsoft:#E8EDFF;--text:#0F1240;--text2:#2D3780;--muted:#3A4490;--sub:#4E5BAA;}
 body[data-theme="lavender"]{
   --bg:#EEEEFF;--bg2:#E8E8FA;--surface:#fff;--card:#fff;--card2:#F5F5FD;
-  --border:#D4D4F0;--bsoft:#E0E0F8;--text:#1E1B4B;--text2:#3730A3;--muted:#6366F1;--sub:#818CF8;
+  --border:#D4D4F0;--bsoft:#E0E0F8;--text:#1E1B4B;--text2:#3730A3;--muted:#3730A3;--sub:#4338CA;
   --ek-navy:#3730A3;--ek-gold:#F97316;--ek-gold-deep:#EA6C0A;
   --ok:#16A34A;--okb:#15803D;--okt:rgba(22,163,74,.1);
   --wn:#F59E0B;--wnb:#D97706;--wnt:rgba(245,158,11,.1);
@@ -2239,10 +2239,14 @@ function Agents({tickets,shifts,onShift,showToast}){
 
 // ── CLOUD SYNC — JSONBin ───────────────────────────────────────────
 function CloudSync({tickets,setTickets,showToast}){
-  const SHARED_BIN_ID ='6a11fd706877513b27bf6f70';
+  const DEFAULT_BIN_ID='6a11fd706877513b27bf6f70';
   const BASE='https://api.jsonbin.io/v3/b';
   const KEY_STORAGE='ek_master_key';
+  const BIN_STORAGE='ek_bin_id';
 
+  const[binId,setBinId]=useState(()=>localStorage.getItem(BIN_STORAGE)||DEFAULT_BIN_ID);
+  const[binDraft,setBinDraft]=useState('');
+  const[editBin,setEditBin]=useState(false);
   const[apiKey,setApiKey]=useState(()=>localStorage.getItem(KEY_STORAGE)||'');
   const[keyDraft,setKeyDraft]=useState('');
   const[showKey,setShowKey]=useState(false);
@@ -2271,6 +2275,20 @@ function CloudSync({tickets,setTickets,showToast}){
     showToast('Master key cleared');
     addLog('Master key cleared',false);
   }
+  function saveBin(){
+    const b=(binDraft||'').trim();
+    if(!b){showToast('Enter a Bin ID first','error');return;}
+    localStorage.setItem(BIN_STORAGE,b);
+    setBinId(b);setBinDraft('');setEditBin(false);
+    showToast('Bin ID saved ✅');
+    addLog('Bin ID updated to '+b.slice(0,8)+'…',true);
+  }
+  function clearBin(){
+    if(!window.confirm('Reset Bin ID to the default?'))return;
+    localStorage.removeItem(BIN_STORAGE);
+    setBinId(DEFAULT_BIN_ID);setEditBin(false);
+    showToast('Bin ID reset to default');
+  }
 
   // Auto-pull on mount — only if key is set
   useEffect(()=>{
@@ -2284,7 +2302,7 @@ function CloudSync({tickets,setTickets,showToast}){
     setSaving(true);setStatus({msg:'Pulling from cloud…',ok:true});
     addLog('Connecting to JSONBin…',null);
     try{
-      const res=await fetch(BASE+'/'+SHARED_BIN_ID+'/latest',{headers:hdrs()});
+      const res=await fetch(BASE+'/'+binId+'/latest',{headers:hdrs()});
       if(res.status===401)throw new Error('Invalid API key');
       if(res.status===404)throw new Error('Bin ID not found');
       if(!res.ok)throw new Error('HTTP '+res.status);
@@ -2335,7 +2353,7 @@ function CloudSync({tickets,setTickets,showToast}){
       // Attach shifts + guide so other devices stay in sync
       try{byAgent._shifts=JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch(e){}
       try{var g=localStorage.getItem('ek_guide');if(g){byAgent._guide=JSON.parse(g);}}catch(e){}
-      const res=await fetch(BASE+'/'+SHARED_BIN_ID,{method:'PUT',headers:hdrs(),body:JSON.stringify(byAgent)});
+      const res=await fetch(BASE+'/'+binId,{method:'PUT',headers:hdrs(),body:JSON.stringify(byAgent)});
       if(res.status===401)throw new Error('Invalid API key');
       if(!res.ok)throw new Error('HTTP '+res.status);
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
@@ -2441,7 +2459,22 @@ function CloudSync({tickets,setTickets,showToast}){
               ⚙ JSONBin Credentials <span style={{font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>— tap to expand</span>
             </summary>
             <div style={{padding:'0 16px 16px',borderTop:'1px solid var(--bsoft)'}}>
-              <div style={{marginTop:12,marginBottom:8}}><label className="lbl">Bin ID</label><input className="inp" readOnly value={SHARED_BIN_ID}/></div>
+              <div style={{marginTop:12,marginBottom:8}}>
+                <label className="lbl">Bin ID</label>
+                {editBin?(
+                  <div style={{display:'flex',gap:6,marginBottom:6}}>
+                    <input className="inp" autoFocus value={binDraft} onChange={function(e){setBinDraft(e.target.value);}} placeholder="Paste new Bin ID…"/>
+                    <button className="btn btn-sm" style={{background:'#16A34A',color:'#fff',border:'none',whiteSpace:'nowrap'}} onClick={saveBin}>💾 Save</button>
+                    <button className="btn btn-sm" onClick={function(){setEditBin(false);setBinDraft('');}}>Cancel</button>
+                  </div>
+                ):(
+                  <div style={{display:'flex',gap:6,alignItems:'center',marginBottom:6}}>
+                    <input className="inp" readOnly value={binId}/>
+                    <button className="btn btn-sm" onClick={function(){setBinDraft('');setEditBin(true);}} style={{whiteSpace:'nowrap'}}>✎ Edit</button>
+                    {binId!==DEFAULT_BIN_ID&&<button className="btn btn-sm btn-danger" onClick={clearBin} style={{whiteSpace:'nowrap'}}>↺ Reset</button>}
+                  </div>
+                )}
+              </div>
               <div style={{marginBottom:8}}><label className="lbl">Master Key (this device)</label>
                 <input className="inp" readOnly value={apiKey?(apiKey.slice(0,6)+'……………… '+apiKey.slice(-4)):'(not set)'} type="text"/>
               </div>
