@@ -17,14 +17,14 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
   position:relative;
 }
 .toolbar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:50;}
-.toolbar button{
+.toolbar a,.toolbar button{
   padding:9px 14px;border-radius:8px;border:none;font:800 12px 'Sora';color:#fff;
   cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(0,0,0,.18);
+  text-decoration:none;
 }
 .btn-back{background:var(--navy);}
 .btn-print{background:var(--red);}
 
-/* Header strip */
 .hd{
   display:flex;align-items:center;gap:14px;
   padding-bottom:14px;border-bottom:3px solid var(--navy);margin-bottom:18px;
@@ -43,7 +43,6 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
 .hd-meta .big{font:800 13px/1 'Sora';color:var(--navy);}
 .hd-meta .sm{font:600 9px/1.4 'Sora';color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;}
 
-/* Section heads */
 .sec{margin-bottom:14px;}
 .sec-h{
   display:flex;align-items:center;gap:8px;margin-bottom:7px;padding-bottom:5px;
@@ -55,14 +54,11 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
 }
 .sec-h h2{font:800 13px/1 'Sora';color:var(--navy);text-transform:uppercase;letter-spacing:.06em;}
 
-/* Body text */
 .lead{font:500 11.5px/1.55 'Sora';color:var(--ink);}
 .lead b{color:var(--navy);font-weight:700;}
 
-/* Two-col grid */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
-/* Criteria list */
 .ck-list{display:flex;flex-direction:column;gap:5px;}
 .ck{
   display:flex;align-items:flex-start;gap:9px;padding:6px 8px;
@@ -76,7 +72,6 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
 .ck-text{font:500 10.5px/1.5 'Sora';color:var(--ink);flex:1;}
 .ck-text b{color:var(--navy);font-weight:700;}
 
-/* Users */
 .users{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .user-card{
   border:1px solid var(--line);border-radius:9px;padding:9px 11px;
@@ -86,7 +81,6 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
 .user-card .name{font:800 12px/1.2 'Sora';color:var(--navy);margin-bottom:3px;}
 .user-card .desc{font:500 9.5px/1.45 'Sora';color:var(--muted);}
 
-/* Metrics */
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .metric{
   border:1px solid var(--line);border-radius:9px;padding:10px 11px;text-align:center;
@@ -95,7 +89,15 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
 .metric .val{font:900 22px/1 'JetBrains Mono',monospace;color:var(--navy);margin-bottom:3px;}
 .metric .lbl{font:700 8.5px/1.2 'Sora';color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
 
-/* Footer */
+/* Features table */
+.feat-table{width:100%;border-collapse:collapse;font-size:10.5px;}
+.feat-table th{padding:7px 10px;background:var(--navy);color:#fff;font:700 9px/1 'Sora';text-transform:uppercase;letter-spacing:.08em;text-align:left;}
+.feat-table td{padding:6px 10px;border-bottom:1px solid var(--line);font:500 10.5px/1.4 'Sora';color:var(--ink);}
+.feat-table tr:nth-child(even) td{background:var(--soft);}
+.feat-table .badge{display:inline-block;padding:2px 7px;border-radius:10px;font:700 8.5px/1 'Sora';}
+.badge-live{background:#DCFCE7;color:#15803D;}
+.badge-scope{background:#FEF9C3;color:#854D0E;}
+
 .foot{
   position:absolute;bottom:14mm;left:16mm;right:16mm;
   display:flex;align-items:center;justify-content:space-between;
@@ -118,7 +120,7 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
 <body>
 
 <div class="toolbar">
-  <a class="btn-back" href="index.html" style="text-decoration:none;">← Home</a>
+  <a class="btn-back" href="index.html">← Home</a>
   <button class="btn-print" onclick="window.print()">🖨 Print / PDF</button>
 </div>
 
@@ -144,7 +146,7 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
   <div class="sec">
     <div class="sec-h"><div class="num">1</div><h2>Purpose</h2></div>
     <p class="lead">
-      A single shared tool that lets the Customer Experience team <b>log every customer complaint</b>, <b>route it to the right Responsible Party</b>, and <b>report up to the GM three times a day</b> (9 AM · 12 PM · 4 PM COB) — replacing scattered WhatsApp messages, Excel sheets and email threads with one synced source of truth.
+      A single shared tool that lets the Customer Experience team <b>log every customer complaint</b>, <b>route it to the right Responsible Party</b>, and <b>report up to leadership three times a day</b> — replacing scattered WhatsApp messages, Excel sheets and email threads with one cloud-synced source of truth. The app runs entirely on free infrastructure (GitHub Pages + dual Gist sync) at <b>zero hosting cost</b>.
     </p>
   </div>
 
@@ -152,9 +154,21 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
   <div class="sec">
     <div class="sec-h"><div class="num">2</div><h2>Users</h2></div>
     <div class="users">
-      <div class="user-card"><div class="role">Manager</div><div class="name">Love Offei</div><div class="desc">Oversees team, sets shifts, runs daily GM reports, holds master sync key.</div></div>
-      <div class="user-card"><div class="role">CX Agents (5)</div><div class="name">Matthew · Racheal · Tomina · Esther · Loveth</div><div class="desc">Log complaints, update tickets, send Midday / COB WhatsApp slot reports.</div></div>
-      <div class="user-card"><div class="role">Recipient</div><div class="name">GM / Leadership</div><div class="desc">Receives the 9 AM, 12 PM and 4 PM Daily Email Report via Outlook.</div></div>
+      <div class="user-card">
+        <div class="role">Manager / PA</div>
+        <div class="name">Love Offei</div>
+        <div class="desc">Oversees team, sets agent shifts, runs Daily GM Email Reports, holds master Gist sync key, edits Responsible Party guide.</div>
+      </div>
+      <div class="user-card">
+        <div class="role">CX Agents (5)</div>
+        <div class="name">Matthew · Racheal · Tomina · Esther · Loveth</div>
+        <div class="desc">Log complaints via paste or manual form, update ticket status, generate WhatsApp slot reports and PDF/Excel exports per shift.</div>
+      </div>
+      <div class="user-card">
+        <div class="role">Recipients</div>
+        <div class="name">GM / Leadership</div>
+        <div class="desc">Receives the structured Daily Email Report (9 AM · 12 PM · 4 PM COB) pulled live from cloud and formatted for Outlook.</div>
+      </div>
     </div>
   </div>
 
@@ -163,45 +177,50 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
     <div class="sec-h"><div class="num">3</div><h2>Core Success Criteria</h2></div>
     <div class="grid2">
       <div class="ck-list">
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Every complaint is logged</b> in the app within 5 minutes of being received — no more Excel side-files.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>One source of truth</b> — Manager, all 5 Agents and the Daily Email Report all read from the same JSONBin cloud bin.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Every ticket has a Responsible Party</b> assigned — zero unassigned tickets at COB.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>≥ 80 % resolution rate</b> on tickets received in the same business day (rolling 7-day average).</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Every complaint is logged</b> in the app within 5 minutes of receipt — no Excel side-files or WhatsApp-only records.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>One source of truth</b> — Manager Hub, all 5 Agent Hubs and the Daily Email Report read from the same dual-Gist cloud store.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Every ticket has a Responsible Party</b> assigned before COB — zero unassigned tickets at end of day.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>≥ 80 % same-day resolution rate</b> on tickets received in the current business day (rolling 7-day average).</div></div>
       </div>
       <div class="ck-list">
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>9 AM, 12 PM and 4 PM reports sent to GM on time</b> — generated and copied to Outlook within 10 minutes of the slot.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>9 AM, 12 PM and 4 PM reports sent to GM on time</b> — generated and pasted into Outlook within 10 minutes of each slot.</div></div>
         <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Agent slot reports posted to WhatsApp</b> at every Weekday 2 PM / 5 PM and Weekend 1 PM / 4 PM checkpoint.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>No data loss</b> — tickets survive browser refresh, device swap, and offline pockets (local cache + cloud sync).</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Master key never in source</b> — each device holds it in localStorage only; safe to host on public GitHub Pages.</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>No data loss</b> — tickets survive browser refresh, device swap and offline gaps (localStorage cache + cloud pull on login).</div></div>
+        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Daily auto-reset</b> — each agent's ticket store resets at midnight WAT so today's view is always today's work only.</div></div>
       </div>
     </div>
   </div>
 
-  <!-- 4. FUNCTIONAL & OPERATIONAL -->
+  <!-- 4. LIVE FEATURES -->
   <div class="sec">
-    <div class="sec-h"><div class="num">4</div><h2>Functional &amp; Operational Checks</h2></div>
-    <div class="grid2">
-      <div class="ck-list">
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Managers Hub</b> can log, edit, bulk-update, sort, filter, search every complaint; export JSON, CSV and Excel.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Agent shifts</b> set by Love (Day / Night / Off / Leave) sync to every Agent's device.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Cumulative report</b> rolls up tickets by Responsible Party with % resolution; party list is editable in-app.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Slot Reports</b> produce a one-click WhatsApp message, a styled PDF and a 4-sheet Excel export.</div></div>
-      </div>
-      <div class="ck-list">
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Daily Email Report</b> auto-pulls live cloud data and is copy-pastable into Outlook with full formatting.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Works on Android, iOS and desktop</b> browsers — no app install, no backend, no IT ticket.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Failure is visible</b> — sync errors show a banner; no silent data drops.</div></div>
-        <div class="ck"><div class="ck-mark">✓</div><div class="ck-text"><b>Cost: ₦0</b> — runs on free JSONBin tier + free GitHub Pages hosting.</div></div>
-      </div>
-    </div>
+    <div class="sec-h"><div class="num">4</div><h2>Live Features (v2)</h2></div>
+    <table class="feat-table">
+      <thead><tr><th>Feature</th><th>Hub</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Paste-to-log (single &amp; bulk SharePoint format)</td><td>Agents</td><td><span class="badge badge-live">Live</span></td><td>Auto-detects ticket #, name, phone, meter, BU, address, issue</td></tr>
+        <tr><td>Manual ticket form (20 fields)</td><td>Agents</td><td><span class="badge badge-live">Live</span></td><td>Fallback for non-SharePoint sources</td></tr>
+        <tr><td>Duplicate detection (ticket # + content signature)</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>Skips re-imports silently with count shown</td></tr>
+        <tr><td>Expand-in-row ticket editor (status, RP, note)</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>Updates persist to localStorage + cloud on push</td></tr>
+        <tr><td>Slot Reports (WhatsApp copy, PDF, Excel 4-sheet)</td><td>Agents</td><td><span class="badge badge-live">Live</span></td><td>4 slots: weekday 2PM/5PM, weekend 1PM/4PM; NOW badge</td></tr>
+        <tr><td>Daily Email Report (GM-ready, 3 slots)</td><td>Manager</td><td><span class="badge badge-live">Live</span></td><td>Live pull from Gist; copy to Outlook with full formatting</td></tr>
+        <tr><td>Cumulative Report by Responsible Party</td><td>Manager</td><td><span class="badge badge-live">Live</span></td><td>% resolution per party, expandable rows</td></tr>
+        <tr><td>Agent Shift Roster + Week Calendar</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>Set by Manager, syncs to all agents via Gist</td></tr>
+        <tr><td>Support Guide (editable in-app)</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>Who resolves what — persists to localStorage</td></tr>
+        <tr><td>Dual-Gist Cloud Sync (Push / Pull)</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>Gist 1 (Manager write), Gist 2 (Agent write), both readable</td></tr>
+        <tr><td>Export: JSON, CSV, Excel (.xlsx)</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>All tickets or today only; 4-sheet Excel via SheetJS</td></tr>
+        <tr><td>6 colour themes</td><td>Both</td><td><span class="badge badge-live">Live</span></td><td>Midnight, Daylight, Solar, Forest, Violet, Lavender</td></tr>
+        <tr><td>SMS / email to customers</td><td>—</td><td><span class="badge badge-scope">v3 Scope</span></td><td>Out of scope for v2</td></tr>
+        <tr><td>SLA timer engine</td><td>—</td><td><span class="badge badge-scope">v3 Scope</span></td><td>Out of scope for v2</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- 5. WHAT WE MEASURE -->
   <div class="sec">
-    <div class="sec-h"><div class="num">5</div><h2>What We Measure (Monthly)</h2></div>
+    <div class="sec-h"><div class="num">5</div><h2>What We Measure (Monthly Review)</h2></div>
     <div class="metrics">
       <div class="metric"><div class="val">≥ 80%</div><div class="lbl">Same-day Resolution</div></div>
-      <div class="metric"><div class="val">100%</div><div class="lbl">Tickets Logged</div></div>
+      <div class="metric"><div class="val">100%</div><div class="lbl">Complaints Logged</div></div>
       <div class="metric"><div class="val">3 / 3</div><div class="lbl">Daily Reports Sent</div></div>
       <div class="metric"><div class="val">0</div><div class="lbl">Unassigned at COB</div></div>
     </div>
@@ -211,7 +230,7 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
   <div class="sec">
     <div class="sec-h"><div class="num">6</div><h2>Out of Scope (Version 2)</h2></div>
     <p class="lead">
-      No customer-facing portal · No SMS/email automation to customers · No SLA-timer engine · No multi-team / multi-BU role permissions · No native mobile app · No SAP / SharePoint integration. These are candidates for Version 3.
+      No customer-facing portal · No SMS/email automation to customers · No SLA-timer engine · No multi-team / multi-BU role permissions · No native mobile app · No SAP / SharePoint integration · No real-time collaborative editing. These are candidates for <b>Version 3</b>.
     </p>
   </div>
 
@@ -223,6 +242,5 @@ html,body{font-family:'Sora',sans-serif;background:#E5E7EB;color:var(--ink);-web
   </div>
 
 </div>
-
 </body>
 </html>
