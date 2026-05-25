@@ -1425,6 +1425,11 @@ function CloudSync({agent,tickets,setTickets,showToast}){
   const GIST_ID='a15726378ff2053985d3f41ebf026010';
   const GIST_FILENAME='data.json';
   const RAW_URL='https://gist.githubusercontent.com/loveoffei22-web/'+GIST_ID+'/raw/'+GIST_FILENAME;
+  // Gist 2 — agents push here
+  const GIST2_ID='32f4e03644698904ce8f8265aa451265';
+  const GIST2_FILENAME='gistfile1.txt';
+  const RAW_URL2='https://gist.githubusercontent.com/loveoffei22-web/'+GIST2_ID+'/raw/'+GIST2_FILENAME;
+  const API_URL2='https://api.github.com/gists/'+GIST2_ID;
   const API_URL='https://api.github.com/gists/'+GIST_ID;
   const TOKEN_STORAGE='ek_gh_token';
   const[apiKey,setApiKey]=useState(()=>localStorage.getItem(TOKEN_STORAGE)||'');
@@ -1444,11 +1449,15 @@ function CloudSync({agent,tickets,setTickets,showToast}){
   },[]); // eslint-disable-line
 
   async function pullNow(){
-    setSaving(true);setStatus({msg:'Pulling from GitHub Gist…',ok:true});
+    setSaving(true);setStatus({msg:'Pulling from both Gists…',ok:true});
     try{
-      const res=await fetch(RAW_URL+'?t='+Date.now());
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const cloud=await res.json();
+      const [res1,res2]=await Promise.all([
+        fetch(RAW_URL+'?t='+Date.now()),
+        fetch(RAW_URL2+'?t='+Date.now())
+      ]);
+      const cloud1=res1.ok?await res1.json():{};
+      const cloud2=res2.ok?await res2.json():{};
+      const cloud=Object.assign({},cloud2,cloud1);
       Object.keys(cloud).forEach(function(agId){
         if(agId==='_shifts'&&cloud._shifts&&typeof cloud._shifts==='object'){try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloud._shifts));}catch(e){}return;}
         if(agId==='_guide'&&Array.isArray(cloud._guide)&&cloud._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}return;}
@@ -1469,15 +1478,15 @@ function CloudSync({agent,tickets,setTickets,showToast}){
     try{
       // Pull current gist first so we don't overwrite other agents
       let current={};
-      try{const getRes=await fetch(RAW_URL+'?t='+Date.now());if(getRes.ok)current=await getRes.json();}catch(e){}
+      try{const getRes=await fetch(RAW_URL2+'?t='+Date.now());if(getRes.ok)current=await getRes.json();}catch(e){}
       const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
       const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
       const todayTix=tickets.filter(function(t){return !t._baseline&&(t.created||'').slice(0,10)===todayStr;});
       current[agent.id]=todayTix;
-      const res=await fetch(API_URL,{
+      const res=await fetch(API_URL2,{
         method:'PATCH',
         headers:{'Content-Type':'application/json','Authorization':'token '+apiKey,'Accept':'application/vnd.github+json'},
-        body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(current,null,2)}}})
+        body:JSON.stringify({files:{[GIST2_FILENAME]:{content:JSON.stringify(current,null,2)}}})
       });
       if(res.status===401)throw new Error('Invalid GitHub token');
       if(res.status===404)throw new Error('Gist not found — check token has gist scope');
@@ -1492,7 +1501,7 @@ function CloudSync({agent,tickets,setTickets,showToast}){
 
   return(
     <div>
-      <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — GitHub Gist</div></div></div>
+      <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — Dual Gist</div></div></div>
       <div className="pad">
         {!apiKey&&(
           <div style={{background:'rgba(255,199,44,.06)',border:'1.5px solid rgba(255,199,44,.4)',borderRadius:12,padding:16,marginBottom:14}}>
@@ -1516,7 +1525,7 @@ function CloudSync({agent,tickets,setTickets,showToast}){
           </button>
         </div>
         <div style={{padding:'10px 12px',borderRadius:8,background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>
-          💡 Pull is free — no token needed. Token only required to Push.
+          💡 Pull reads Gist 1 (PA) + Gist 2 (agents). Push writes to Gist 2 only.
         </div>
         {lastSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>Last synced: <b style={{color:'var(--okb)'}}>{lastSync}</b></div>}
         {apiKey&&<div style={{display:'flex',gap:8,marginTop:8}}><button className="btn btn-sm" onClick={clearKey} style={{padding:'6px 12px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear token</button><span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',alignSelf:'center'}}>Token: {apiKey.slice(0,6)}……{apiKey.slice(-4)}</span></div>}

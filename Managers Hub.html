@@ -2316,6 +2316,11 @@ function CloudSync({tickets,setTickets,showToast}){
   const GIST_ID='a15726378ff2053985d3f41ebf026010';
   const GIST_FILENAME='data.json';
   const RAW_URL='https://gist.githubusercontent.com/loveoffei22-web/'+GIST_ID+'/raw/'+GIST_FILENAME;
+  // Gist 2 — agents push here, everyone pulls from here
+  const GIST2_ID='32f4e03644698904ce8f8265aa451265';
+  const GIST2_FILENAME='gistfile1.txt';
+  const RAW_URL2='https://gist.githubusercontent.com/loveoffei22-web/'+GIST2_ID+'/raw/'+GIST2_FILENAME;
+  const API_URL2='https://api.github.com/gists/'+GIST2_ID;
   const API_URL='https://api.github.com/gists/'+GIST_ID;
   const TOKEN_STORAGE='ek_gh_token';
 
@@ -2360,12 +2365,17 @@ function CloudSync({tickets,setTickets,showToast}){
   },[]);
 
   async function pullNow(){
-    setSaving(true);setStatus({msg:'Pulling from GitHub Gist…',ok:true});
-    addLog('Fetching from GitHub Gist…',null);
+    setSaving(true);setStatus({msg:'Pulling from both Gists…',ok:true});
+    addLog('Fetching from Gist 1 (PA) + Gist 2 (Agents)…',null);
     try{
-      const res=await fetch(RAW_URL+'?t='+Date.now());
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const cloud=await res.json();
+      const [res1,res2]=await Promise.all([
+        fetch(RAW_URL+'?t='+Date.now()),
+        fetch(RAW_URL2+'?t='+Date.now())
+      ]);
+      const cloud1=res1.ok?await res1.json():{};
+      const cloud2=res2.ok?await res2.json():{};
+      // Merge both Gists
+      const cloud=Object.assign({},cloud2,cloud1);
 
       // FORMAT DETECTION — snapshot format { days: [...] }
       let cloudNorm=cloud;
@@ -2450,10 +2460,10 @@ function CloudSync({tickets,setTickets,showToast}){
       const incrementalCount=Object.values(byAgent).reduce(function(a,arr){return a+arr.length;},0);
       try{byAgent._shifts=JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch(e){}
       try{var g=localStorage.getItem('ek_guide');if(g){byAgent._guide=JSON.parse(g);}}catch(e){}
-      const res=await fetch(API_URL,{
+      const res=await fetch(API_URL2,{
         method:'PATCH',
         headers:{'Content-Type':'application/json','Authorization':'token '+apiKey,'Accept':'application/vnd.github+json'},
-        body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(byAgent,null,2)}}})
+        body:JSON.stringify({files:{[GIST2_FILENAME]:{content:JSON.stringify(byAgent,null,2)}}})
       });
       if(res.status===401)throw new Error('Invalid GitHub token');
       if(res.status===404)throw new Error('Gist not found — check token has gist scope');
@@ -2485,8 +2495,8 @@ function CloudSync({tickets,setTickets,showToast}){
     <div>
       <div className="hero" style={{padding:'18px 28px'}}>
         <div style={{font:'700 10px/1 Sora,sans-serif',color:'var(--ek-gold)',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:8}}>Cloud Sync</div>
-        <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:6}}>☁ Cloud Sync — GitHub Gist</div>
-        <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Shared cloud storage via GitHub Gist. Pull reads publicly — Push needs your GitHub token.</div>
+        <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:6}}>☁ Cloud Sync — Dual Gist</div>
+        <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Pulls from Gist 1 (PA flow) + Gist 2 (agents). Push writes to Gist 2 only.</div>
       </div>
       <div style={{padding:'18px 28px',display:'grid',gridTemplateColumns:'1fr 320px',gap:16}}>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
@@ -2552,9 +2562,10 @@ function CloudSync({tickets,setTickets,showToast}){
             <div className="card-head"><h3>ℹ Gist Info</h3></div>
             <div style={{padding:16,display:'flex',flexDirection:'column',gap:8}}>
               <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist ID</div>
-              <div style={{font:'700 12px JetBrains Mono,monospace',color:'var(--text)',wordBreak:'break-all'}}>{GIST_ID}</div>
-              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)',marginTop:6}}>Raw URL (always latest)</div>
-              <div style={{font:'600 11px JetBrains Mono,monospace',color:'var(--ek-gold)',wordBreak:'break-all'}}>{RAW_URL}</div>
+              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist 1 — PA flow (read only)</div>
+              <div style={{font:'700 11px JetBrains Mono,monospace',color:'var(--text)',wordBreak:'break-all',marginBottom:8}}>{GIST_ID}</div>
+              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist 2 — Agents push here</div>
+              <div style={{font:'700 11px JetBrains Mono,monospace',color:'var(--ek-gold)',wordBreak:'break-all'}}>{GIST2_ID}</div>
             </div>
           </div>
         </div>
