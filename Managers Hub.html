@@ -358,9 +358,41 @@ function saveShifts(s){localStorage.setItem(EK_SHIFTS_KEY,JSON.stringify(s));}
 
 // Ticket persistence helpers
 function persistTickets(tix){window.EK_TICKETS=tix;localStorage.setItem('ek_v2_tickets',JSON.stringify(tix));}
+// De-dup signature: ticket# + name + complaint/issue text (normalized).
+// Two tickets are considered the same if their number is identical AND
+// either the customer name OR the complaint description matches.
+function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
+function ticketSig(t){return _norm(t.num)+'|'+_norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
+function dedupTickets(existing,incoming){
+  // Build map of existing by num and by sig
+  const byNum={}; const bySig={};
+  existing.forEach(function(t){
+    if(t.num)byNum[_norm(t.num)]=t;
+    bySig[ticketSig(t)]=t;
+  });
+  const out=[]; let dropped=0;
+  incoming.forEach(function(t){
+    const n=_norm(t.num);
+    const sig=ticketSig(t);
+    if(n&&byNum[n]){dropped++;return;}
+    if(bySig[sig]){dropped++;return;}
+    out.push(t);
+    if(n)byNum[n]=t; bySig[sig]=t;
+  });
+  return{kept:out,dropped:dropped};
+}
 
 
 var stripEmoji=function(s){return(s||'').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{200D}\u{20E3}]+/gu,'').replace(/\s{2,}/g,' ').trim();};
+function fmtDay(t){
+  var d=String(t.created||t.received||'').slice(0,10);
+  if(d&&/^\d{4}-\d{2}-\d{2}$/.test(d)){
+    var p=d.split('-');
+    var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(p[1],10)-1]||'';
+    return mn+' '+parseInt(p[2],10);
+  }
+  return(t.day&&t.day>0)?'Day '+t.day:'—';
+}
 function matchBU(val){var v=stripEmoji(val).trim().toUpperCase().replace(/\s+/g,' ');var exact=EK_BUS.find(function(b){return b.toUpperCase()===v;});if(exact)return exact;var partial=EK_BUS.find(function(b){return v.includes(b.toUpperCase())||b.toUpperCase().includes(v.split(' ')[0]);});return partial||null;}
 function parseSingle(txt){
   var result={};
@@ -369,16 +401,21 @@ function parseSingle(txt){
     for(var si=0;si<segs.length;si++){var seg=segs[si];var clean=stripEmoji(seg).trim();var ci=clean.indexOf(':');if(ci<1||ci>50)continue;var label=clean.slice(0,ci).trim().toLowerCase().replace(/\s+/g,' ');var val=clean.slice(ci+1).trim();if(!val||/^n\/a$/i.test(val))continue;
       if(/ticket\s*(no\.?|number|#)?$/.test(label)||label==='ticket no'){var m=val.match(/\b(7\d{5})\b/);if(m)result.num=m[1];}
       else if(/^customer/.test(label))result.name=stripEmoji(val);
-      else if(/^phone$|^tel$|^mobile$/.test(label))result.phone=val.replace(/\s/g,'');
+      else if(/^phone$|^tel$|^mobile$/.test(label))result.phone=stripEmoji(val).replace(/\s/g,'');
       else if(/^(business\s*unit|bu)$/.test(label)){var bu=matchBU(val);if(bu)result.bu=bu;}
       else if(/^address$/.test(label))result.addr=stripEmoji(val);
-      else if(/^(description|complaint)$/.test(label))result.issue=val;
+      else if(/^email$/.test(label))result.email=stripEmoji(val);
+      else if(/^(meter|account|account\s*no|account\s*number|meter\s*no|meter\s*number|mirn)$/.test(label))result.meter=stripEmoji(val).replace(/[^0-9]/g,'');
+      else if(/^(description|complaint|issue)$/.test(label))result.issue=stripEmoji(val);
       else if(/^category$/.test(label))result.category=stripEmoji(val);
     }
     if(Object.keys(result).length>=2)return result;
   }
   var tktM=txt.match(/(?:ticket\s*(?:no\.?|#|number)?\s*[:–-]?\s*)(7\d{5})/i)||txt.match(/\b(7\d{5})\b/);if(tktM)result.num=tktM[1];
   var phoneM=txt.match(/(\+?234\d{10}|0[789]\d{9})/);if(phoneM)result.phone=phoneM[1];
+  var meterM=txt.match(/(?:meter|account)[#:\s]*[:–-]?\s*(\d{10,16})/i);if(meterM)result.meter=meterM[1];
+  if(!result.meter){var m2=txt.match(/\b(\d{11,14})\b/);if(m2&&(!result.phone||result.phone.indexOf(m2[1])===-1))result.meter=m2[1];}
+  var emailM=txt.match(/([\w.+-]+@[\w-]+\.[\w.-]+)/);if(emailM)result.email=emailM[1];
   var nameM=txt.match(/(?:customer\s*(?:name)?|name\s*[:–-])\s*[:–-]?\s*([A-Za-z][A-Za-z .'-]{2,50})/i);if(nameM)result.name=stripEmoji(nameM[1]).trim();
   var addrM=txt.match(/(?:^|\n)\s*address\s*[:–-]?\s*(.+?)(?=\n[A-Za-z ]+\s*[:–-]|$)/im);if(addrM)result.addr=stripEmoji(addrM[1]).trim();
   var buM=txt.match(/(?:business\s*unit|BU)\s*[:–-]?\s*([A-Za-z\s/]+?)(?:\n|,|$)/i);if(buM){var bu=matchBU(buM[1]);if(bu)result.bu=bu;}
@@ -1211,12 +1248,12 @@ function AllComplaints({tickets}){
         <div className="card" style={{marginBottom:24}}>
           <div style={{overflowX:'auto'}}>
             <table className="tbl">
-              <thead><tr><th>Day</th><th>Ticket</th><th>Time</th><th>Customer</th><th>Phone</th><th>BU</th><th>Category</th><th>Status</th><th>Responsible</th><th>Details</th></tr></thead>
+              <thead><tr><th>Date</th><th>Ticket</th><th>Time</th><th>Customer</th><th>Phone</th><th>BU</th><th>Category</th><th>Status</th><th>Responsible</th><th>Details</th></tr></thead>
               <tbody>
                 {paged.map(function(t){return(
                   <React.Fragment key={t.id}>
                     <tr style={{cursor:'pointer'}} onClick={function(){setExpanded(expanded===t.id?null:t.id);}}>
-                      <td style={{color:'var(--sub)',fontSize:11}}>D{t.day}</td>
+                      <td style={{color:'var(--sub)',fontSize:11,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
                       <td><span className="tbl-num">#{t.num}</span></td>
                       <td style={{color:'var(--muted)',fontSize:11}}>{t.time}</td>
                       <td style={{fontWeight:600}}>{t.name}</td>
@@ -2030,10 +2067,9 @@ function DataPage({tickets,setTickets,showToast}){
   }
   function confirmImport(){
     if(!preview)return;
-    const existing=tickets.map(function(t){return t.id||t.num;});
-    const newTix=preview.tickets.filter(function(t){return!existing.includes(t.id||t.num);});
-    setTickets([...tickets,...newTix]);
-    showToast('Imported '+newTix.length+' new tickets ✓');
+    const r=dedupTickets(tickets,preview.tickets);
+    setTickets([...tickets,...r.kept]);
+    showToast('Imported '+r.kept.length+' new tickets'+(r.dropped>0?' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped':'')+' ✓');
     setPreview(null);
   }
 
@@ -2258,11 +2294,18 @@ function CloudSync({tickets,setTickets,showToast}){
       let count=0;
       const merged=[...tickets];
       Object.keys(cloud).forEach(function(agentId){
+        if(agentId==='_shifts'&&cloud._shifts&&typeof cloud._shifts==='object'){
+          try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloud._shifts));}catch(e){}
+          return;
+        }
+        if(agentId==='_guide'&&Array.isArray(cloud._guide)&&cloud._guide.length){
+          try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}
+          return;
+        }
+        if(agentId.charAt(0)==='_')return;
         if(!Array.isArray(cloud[agentId]))return;
-        cloud[agentId].forEach(function(t){
-          if(!merged.find(function(x){return x.id===t.id||x.num===t.num;}))merged.push(t);
-          count++;
-        });
+        const r=dedupTickets(merged,cloud[agentId]);
+        r.kept.forEach(function(t){merged.push(t);count++;});
       });
       persistTickets(merged);setTickets(merged);
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
@@ -2289,6 +2332,9 @@ function CloudSync({tickets,setTickets,showToast}){
         byAgent[key].push(t);
       });
       const incrementalCount=Object.values(byAgent).reduce(function(a,arr){return a+arr.length;},0);
+      // Attach shifts + guide so other devices stay in sync
+      try{byAgent._shifts=JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch(e){}
+      try{var g=localStorage.getItem('ek_guide');if(g){byAgent._guide=JSON.parse(g);}}catch(e){}
       const res=await fetch(BASE+'/'+SHARED_BIN_ID,{method:'PUT',headers:hdrs(),body:JSON.stringify(byAgent)});
       if(res.status===401)throw new Error('Invalid API key');
       if(!res.ok)throw new Error('HTTP '+res.status);
@@ -2510,7 +2556,15 @@ function App(){
 
   function onShift(agentId,shift){setShifts(function(s){const n={...s,[agentId]:shift};saveShifts(n);return n;});}
 
-  function onAdd(newTix){setTickets(function(prev){const merged=[...prev,...newTix];persistTickets(merged);return merged;});}
+  function onAdd(newTix){
+    setTickets(function(prev){
+      const r=dedupTickets(prev,newTix);
+      const merged=[...prev,...r.kept];
+      persistTickets(merged);
+      if(r.dropped>0)showToast('Added '+r.kept.length+' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped','warn');
+      return merged;
+    });
+  }
 
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
