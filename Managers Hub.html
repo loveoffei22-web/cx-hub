@@ -313,7 +313,7 @@ function saveResp(arr){try{localStorage.setItem(EK_RESP_KEY,JSON.stringify(arr))
 var EK_RESP=loadResp();
 var EK_CATS=['Band Reclassification','Billing','Interruption / Voltage / Safety','Metering','PPM Support','PPM Maintenance','Onboarding','MYCRON','AMISA','General'];
 
-// ── SHAREPOINT BASE DATA (May 2026, 345 tickets) ─────────────────
+// ── SHAREPOINT BASE DATA (populated via Gist pull) ─────────────────
 window.EK_BASELINE_TICKETS=[];
 
 // ── VERSION-BASED RESET: change EK_DATA_VERSION to force re-seed ──
@@ -321,6 +321,7 @@ var EK_DATA_VERSION='2026-05-25-v1';
 if(localStorage.getItem('ek_data_version')!==EK_DATA_VERSION){
   localStorage.removeItem('ek_v2_tickets');
   localStorage.removeItem('ek_baseline_seeded');
+  window.EK_TICKETS=[];
   localStorage.setItem('ek_data_version',EK_DATA_VERSION);
 }
 
@@ -653,14 +654,14 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav}){
   const res=tickets.filter(function(t){return t.status==='resolved';}).length;
   const prg=tickets.filter(function(t){return t.status==='progress';}).length;
   const unr=tickets.filter(function(t){return t.status==='unresolved';}).length;
-  const today=tickets.filter(function(t){return t.day===20;});
+  const watDay=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate();const today=tickets.filter(function(t){return t.day===watDay;});
   const rate=all>0?Math.round(res/all*100):0;
 
   const cum=EK_RESP.map(function(r,i){
     var myTix=tickets.filter(function(t){return t.category&&t.category.includes(r.cat.split('/')[0].trim());});
     var myRes=myTix.filter(function(t){return t.status==='resolved';}).length;
     var pct=myTix.length>0?Math.round(myRes/myTix.length*100):0;
-    var todayCount=myTix.filter(function(t){return t.day===20;}).length;
+    var watD=new Date(new Date().toLocaleString("en-US",{timeZone:"Africa/Lagos"})).getDate();var todayCount=myTix.filter(function(t){return t.day===watD;}).length;
     return Object.assign({},r,{grand:myTix.length,res:myRes,pct:pct,todayCount:todayCount});
   });
 
@@ -678,7 +679,7 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav}){
     {label:'Resolved',value:res,color:'#22C55E',sub:rate+'% rate'},
     {label:'In Progress',value:prg,color:'#F59E0B',sub:'Being handled'},
     {label:'Unresolved',value:unr,color:'#EF4444',sub:'Action needed'},
-    {label:"Today's",value:today.length,color:'#C4B5FD',sub:'Day 20'},
+    {label:"Today's",value:today.length,color:'#C4B5FD',sub:'Day '+new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()},
   ];
 
   const onShiftF=h<12?'day':h<17?'day':'night';
@@ -693,7 +694,7 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav}){
             <div className="hero-sub" style={{marginBottom:8}}>EKEDP Customer Experience · Marina HQ</div>
             <div className="hero-greeting">{greet}, Love {greetE}</div>
             <div style={{font:'500 12px/1.3 Sora,sans-serif',color:'var(--muted)',marginTop:8}}>
-              📊 Daily Roll-up · Day 20 · {watDate}
+              {`📊 Daily Roll-up · Day ${new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()} · ${watDate}`}
             </div>
           </div>
           <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
@@ -888,7 +889,7 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav}){
 // ── DAILY REPORT ───────────────────────────────────────────────────
 function DailyReport({tickets,onSettings}){
   const days=[...new Set(tickets.map(function(t){return t.day;}))].sort(function(a,b){return a-b;});
-  const[activeDay,setActiveDay]=useState(days[days.length-1]||20);
+  const watDayNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate();const[activeDay,setActiveDay]=useState(days[days.length-1]||watDayNow);
   const[viewMode,setViewMode]=useState('report'); // 'report' | 'table'
 
   const dayTix=tickets.filter(function(t){return t.day===activeDay;});
@@ -916,7 +917,7 @@ function DailyReport({tickets,onSettings}){
   function nextMonth(){if(calMonth===12){setCalMonth(1);setCalYear(function(y){return y+1;});}else setCalMonth(function(m){return m+1;});}
   const calDayTickets=function(d){return tickets.filter(function(t){
     if(t.created)return new Date(t.created).getMonth()+1===calMonth&&new Date(t.created).getFullYear()===calYear&&new Date(t.created).getDate()===d;
-    return t.day===d&&calMonth===5&&calYear===2026;
+    return t.day===d&&calMonth===calMonth&&calYear===calYear;
   }).length;};
 
   // BU breakdown for bar chart
@@ -1354,7 +1355,7 @@ function AllComplaints({tickets,onUpdate}){
 
 // ── LOG TICKET ─────────────────────────────────────────────────────
 function LogTicket({tickets,onAdd,showToast,onSettings}){
-  const EMPTY={num:'',name:'',phone:'',meter:'',addr:'',bu:EK_BUS[0],issue:'',category:EK_CATS[0],resp:EK_RESP[0].name,status:'progress',note:'',time:'',day:20};
+  const EMPTY={num:'',name:'',phone:'',meter:'',addr:'',bu:EK_BUS[0],issue:'',category:EK_CATS[0],resp:EK_RESP[0].name,status:'progress',note:'',time:'',day:new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()};
   const[pasted,setPasted]=useState('');
   const[bulk,setBulk]=useState([]);
   const[sel,setSel]=useState([]);
@@ -1592,7 +1593,7 @@ function Cumulative({tickets,showToast}){
     rows.forEach(function(r){data.push([r.sn,r.name,r.cat,r.today,r.res,r.prg,r.unr,r.grand,r.pct+'%']);});
     data.push(['','Total','',totals.today,totals.res,totals.prg,totals.unr,totals.grand,totals.pct+'%']);
     var ws=XLSX.utils.aoa_to_sheet(data);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Cumulative');
-    XLSX.writeFile(wb,'EKEDP_Cumulative_Day20.xlsx');
+    XLSX.writeFile(wb,'`EKEDP_Cumulative_Day${new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()}.xlsx`');
   }
   return(
     <div>
@@ -1600,7 +1601,7 @@ function Cumulative({tickets,showToast}){
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16}}>
           <div>
             <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:4}}>📊 Cumulative Report</div>
-            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Day 1–20 · Responsible Party Breakdown · May 2026</div>
+            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>`Day 1–${new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()} · Responsible Party Breakdown`</div>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <button className="btn btn-sm" onClick={openEditor}>{Ico.settings}&nbsp;Manage Parties</button>
@@ -1687,7 +1688,7 @@ function Cumulative({tickets,showToast}){
 function Analytics({tickets}){
   const byBu=EK_BUS.map(function(b){var tix=tickets.filter(function(t){return t.bu===b;});var res=tix.filter(function(t){return t.status==='resolved';}).length;var prg=tix.filter(function(t){return t.status==='progress';}).length;return{bu:b,total:tix.length,res:res,prg:prg,unr:tix.length-res-prg,pct:tix.length?Math.round(res/tix.length*100):0};}).filter(function(b){return b.total>0;}).sort(function(a,b){return b.total-a.total;});
   const byCat=EK_CATS.map(function(c,i){var tix=tickets.filter(function(t){return t.category===c;});var res=tix.filter(function(t){return t.status==='resolved';}).length;const colors=['#6366F1','#F97316','#22C55E','#EF4444','#F59E0B','#8B5CF6','#2DD4BF','#EC4899','#60A5FA','#34D399'];return{cat:c,total:tix.length,res:res,pct:tix.length?Math.round(res/tix.length*100):0,color:colors[i%colors.length]};}).filter(function(c){return c.total>0;}).sort(function(a,b){return b.total-a.total;});
-  const byDay=Array.from({length:20},function(_,i){var d=i+1;var tix=tickets.filter(function(t){return t.day===d;});var res=tix.filter(function(t){return t.status==='resolved';}).length;return{day:d,total:tix.length,res:res,pct:tix.length?Math.round(res/tix.length*100):0};});
+  const byDay=Array.from({length:new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()},function(_,i){var d=i+1;var tix=tickets.filter(function(t){return t.day===d;});var res=tix.filter(function(t){return t.status==='resolved';}).length;return{day:d,total:tix.length,res:res,pct:tix.length?Math.round(res/tix.length*100):0};});
   const maxBu=Math.max(...byBu.map(function(b){return b.total;}),1);
   const maxDay=Math.max(...byDay.map(function(d){return d.total;}),1);
   const totalAll=tickets.length;
@@ -1709,7 +1710,7 @@ function Analytics({tickets}){
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div>
             <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:4}}>📈 Analytics</div>
-            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Performance deep-dive — May 2026 · Days 1–20</div>
+            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>`Performance deep-dive · Days 1–${new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate()}`</div>
           </div>
           {/* Quick stats */}
           <div style={{display:'flex',gap:16,alignItems:'center'}}>
@@ -1726,7 +1727,7 @@ function Analytics({tickets}){
         {/* Line chart — daily trend */}
         <div className="card">
           <div className="card-head">
-            <h3>📊 Daily Volume Trend — May 2026</h3>
+            <h3>`📊 Daily Volume Trend`</h3>
             <div style={{display:'flex',gap:14,alignItems:'center'}}>
               <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:20,height:3,borderRadius:2,background:'#6366F1'}}/><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>Total</span></div>
               <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:20,height:3,borderRadius:2,background:'#22C55E'}}/><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>Resolved</span></div>
@@ -2262,7 +2263,7 @@ function DataPage({tickets,setTickets,showToast}){
 
 // ── AGENTS ─────────────────────────────────────────────────────────
 function Agents({tickets,shifts,onShift,showToast}){
-  const today=tickets.filter(function(t){return t.day===20;});
+  const watDay=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate();const today=tickets.filter(function(t){return t.day===watDay;});
   const onCount=Object.values(shifts).filter(function(s){return s==='day'||s==='night';}).length;
   function importCSV(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){showToast('Roster CSV loaded. Auto-detect coming soon.');};reader.readAsText(file);}
   function clearOverrides(){EK_AGENTS.forEach(function(a){onShift(a.id,a.id==='matthew'?'day':a.id==='loveth'?'day':'off');});showToast('Overrides cleared.');}
@@ -2272,7 +2273,7 @@ function Agents({tickets,shifts,onShift,showToast}){
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div>
             <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:4}}>👥 Agents</div>
-            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Wednesday, 20 May 2026 · {onCount} on shift · {EK_AGENTS.length-onCount} off</div>
+            <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>{new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · {onCount} on shift · {EK_AGENTS.length-onCount} off</div>
           </div>
           <div style={{display:'flex',gap:8}}>
             <button className="btn btn-danger btn-sm" onClick={clearOverrides}>{Ico.x}&nbsp;Clear Overrides</button>
@@ -2346,10 +2347,16 @@ function CloudSync({tickets,setTickets,showToast}){
     addLog('GitHub token cleared',false);
   }
 
-  // Auto-pull on mount
+  // Request notification permission + auto-pull on mount
   useEffect(()=>{
+    if('Notification' in window && Notification.permission==='default'){
+      Notification.requestPermission();
+    }
     const done=sessionStorage.getItem('ek_mgr_pulled');
     if(!done){sessionStorage.setItem('ek_mgr_pulled','1');setTimeout(pullNow,1400);}
+    // Auto-refresh every 5 minutes
+    const interval=setInterval(function(){pullNow();},5*60*1000);
+    return function(){clearInterval(interval);};
   },[]);
 
   async function pullNow(){
@@ -2411,6 +2418,14 @@ function CloudSync({tickets,setTickets,showToast}){
       setPreview(cloudNorm);setConnected(true);
       const msg='✅ Pulled '+count+' tickets from '+Object.keys(cloudNorm).filter(function(k){return k.charAt(0)!=='_';}).length+' agent(s).';
       setStatus({msg,ok:true});addLog(msg,true);showToast(msg);
+      // Browser notification for new tickets
+      if(count>0&&'Notification' in window&&Notification.permission==='granted'){
+        new Notification('📱 EKEDP Power App',{
+          body:count+' new complaint'+(count>1?'s':'')+' received',
+          icon:'https://loveoffei22-web.github.io/cx-hub/ekedpappicon.png',
+          tag:'ek-new-tickets'
+        });
+      }
     }catch(e){
       const msg='Pull failed: '+e.message;
       setStatus({msg,ok:false});addLog(msg,false);showToast(msg,'error');setConnected(false);
@@ -2457,7 +2472,14 @@ function CloudSync({tickets,setTickets,showToast}){
     ?Object.entries(preview).filter(function([k]){return k.charAt(0)!=='_';}).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')
     :null;
 
-  const fmtSync=lastSync?new Date(lastSync.includes('/')?lastSync:lastSync).toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Africa/Lagos'}):null;
+  const fmtSync=(function(){
+    if(!lastSync)return null;
+    try{
+      const d=new Date(lastSync);
+      if(isNaN(d.getTime()))return lastSync;
+      return d.toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Africa/Lagos'});
+    }catch(e){return lastSync;}
+  })();
 
   return(
     <div>
