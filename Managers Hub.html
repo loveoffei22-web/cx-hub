@@ -226,12 +226,37 @@ body[data-theme="bright"] .tbl th{color:#fff;}
 .shift-btn:hover{border-color:var(--ek-gold);color:#fff;}
 .shift-btn.active{color:#0A1A4F;font-weight:800;}
 
+
+/* ── LAVENDER: force ALL text black/dark, no exceptions ── */
+body[data-theme="lavender"] .tbl td,
+body[data-theme="lavender"] .tbl td span,
+body[data-theme="lavender"] .tbl td a,
+body[data-theme="lavender"] .tbl-num,
+body[data-theme="lavender"] .tbl td .tbl-num { color:#1E1B4B !important; }
+body[data-theme="lavender"] *[style*="var(--info)"],
+body[data-theme="lavender"] *[style*="var(--infob)"],
+body[data-theme="lavender"] *[style*="var(--violet)"],
+body[data-theme="lavender"] *[style*="var(--ek-gold)"] { color:#1E1B4B !important; }
+body[data-theme="lavender"] .tbl td * { color:#1E1B4B !important; }
+/* Keep status badges coloured */
+body[data-theme="lavender"] .badge-res,
+body[data-theme="lavender"] .badge-res * { color:#15803D !important; }
+body[data-theme="lavender"] .badge-prg,
+body[data-theme="lavender"] .badge-prg * { color:#D97706 !important; }
+body[data-theme="lavender"] .badge-unr,
+body[data-theme="lavender"] .badge-unr * { color:#B91C1C !important; }
+body[data-theme="lavender"] .bu-pill,
+body[data-theme="lavender"] .bu-pill * { color:#3730A3 !important; }
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:linear-gradient(135deg,var(--card2),var(--card));
 border:1px solid var(--ek-gold);border-radius:12px;padding:12px 18px;font:700 12px 'Sora',sans-serif;
 color:#fff;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:slideIn .25s ease;}
 .toast.err{border-color:var(--bdb);}
 @keyframes slideIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+/* Lavender toast fix */
+body[data-theme="lavender"] .toast{background:#1E1B4B !important;color:#fff !important;border-color:#6366F1 !important;box-shadow:0 12px 32px rgba(99,102,241,.35) !important;}
+body[data-theme="lavender"] .toast.err{background:#7F1D1D !important;border-color:#DC2626 !important;color:#fff !important;}
 
 /* SIGNIN */
 .signin-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -1184,10 +1209,10 @@ function AllComplaints({tickets,onUpdate}){
     const ad=(a.created||'')+' '+(a.time||'');
     const bd=(b.created||'')+' '+(b.time||'');
     const an=parseInt(a.num,10)||0;const bn=parseInt(b.num,10)||0;
-    if(sort==='oldest')   return ad.localeCompare(bd);
+    if(sort==='oldest')   return an-bn;
     if(sort==='num_desc') return bn-an;
     if(sort==='num_asc')  return an-bn;
-    /* newest */          return bd.localeCompare(ad);
+    /* newest */          return bn-an;
   });
   const totalPages=Math.ceil(filtered.length/PAGE)||1;
   const paged=filtered.slice(page*PAGE,(page+1)*PAGE);
@@ -2129,8 +2154,25 @@ function DataPage({tickets,setTickets,showToast}){
         let raw=e.target.result.trim();
         if(!raw.startsWith('{'))raw='{'+raw;
         const data=JSON.parse(raw);
-        const imported=data.tickets||data||[];
-        if(!Array.isArray(imported))throw new Error('Expected array of tickets');
+        // Support multiple formats:
+        // 1. {tickets:[...]} — agent export
+        // 2. {manager:[...], racheal:[...]} — Gist format
+        // 3. [...] — raw array
+        // 4. {days:[{tickets:[...]}]} — PA snapshot format
+        let imported=[];
+        if(Array.isArray(data)){
+          imported=data;
+        } else if(Array.isArray(data.tickets)){
+          imported=data.tickets;
+        } else if(Array.isArray(data.days)){
+          data.days.forEach(function(day){(day.tickets||[]).forEach(function(t){imported.push(t);});});
+        } else {
+          // Gist format — flatten all agent arrays
+          Object.keys(data).forEach(function(k){
+            if(k.charAt(0)!=='_'&&Array.isArray(data[k]))data[k].forEach(function(t){imported.push(t);});
+          });
+        }
+        if(!imported.length)throw new Error('No tickets found in file');
         setPreview({count:imported.length,by:data.exportedBy,tickets:imported});
       }catch(err){showToast('Invalid JSON: '+err.message,'error');}
     };
@@ -2265,7 +2307,73 @@ function DataPage({tickets,setTickets,showToast}){
 function Agents({tickets,shifts,onShift,showToast}){
   const watDay=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getDate();const today=tickets.filter(function(t){return t.day===watDay;});
   const onCount=Object.values(shifts).filter(function(s){return s==='day'||s==='night';}).length;
-  function importCSV(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){showToast('Roster CSV loaded. Auto-detect coming soon.');};reader.readAsText(file);}
+  function importCSV(e){
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const lines=ev.target.result.replace(/
+/g,'').split('
+').filter(Boolean);
+        const headers=lines[0].replace(/"/g,'').split(',');
+        const iDate=headers.indexOf('TitleDate');
+        const iName=headers.indexOf('AgentName');
+        const iShift=headers.indexOf('ShiftType');
+        const AGENT_MAP={'Matthew Akhigbe':'matthew','Racheal Ogunleke':'racheal','Tomina Egbokwu':'tomina','Esther Okafor':'esther','Loveth Okpara':'loveth'};
+        const SHIFT_MAP={'Day':'day','Night':'night','Off':'off','Leave':'leave'};
+        const newShifts=Object.assign({},shifts);
+        let count=0;
+        lines.slice(1).forEach(function(line){
+          const cols=line.replace(/^"|"$/g,'').split(/","/);
+          const rawDate=(cols[iDate]||'').trim();
+          const rawName=(cols[iName]||'').trim();
+          const rawShift=(cols[iShift]||'').trim();
+          const agentId=AGENT_MAP[rawName];
+          const shift=SHIFT_MAP[rawShift]||'off';
+          if(!agentId||!rawDate)return;
+          const parts=rawDate.split('/');
+          if(parts.length!==3)return;
+          const dateStr=parts[2]+'-'+parts[0].padStart(2,'0')+'-'+parts[1].padStart(2,'0');
+          localStorage.setItem('ek_sched_'+agentId+'_'+dateStr,shift);
+          const watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+          const todayStr=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
+          if(dateStr===todayStr){newShifts[agentId]=shift;}
+          count++;
+        });
+        setShifts(newShifts);
+        localStorage.setItem('ek_v2_shifts',JSON.stringify(newShifts));
+        // Build full schedule object for Gist push
+        const schedObj={};
+        EK_AGENTS.forEach(function(a){
+          schedObj[a.id]={};
+          // Collect all ek_sched_ keys for this agent
+          Object.keys(localStorage).forEach(function(k){
+            if(k.startsWith('ek_sched_'+a.id+'_')){
+              const d=k.replace('ek_sched_'+a.id+'_','');
+              schedObj[a.id][d]=localStorage.getItem(k);
+            }
+          });
+        });
+        // Push _shifts + _sched to Gist 2 if token available
+        const ghToken=localStorage.getItem('ek_gh_token');
+        if(ghToken){
+          fetch('https://api.github.com/gists/32f4e03644698904ce8f8265aa451265',{
+            method:'PATCH',
+            headers:{'Content-Type':'application/json','Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},
+            body:JSON.stringify({files:{['gistfile1.txt']:{content:JSON.stringify(Object.assign(
+              {},
+              (function(){try{return JSON.parse(localStorage.getItem('ek_gist2_cache')||'{}')}catch(e){return{}}})(),
+              {_shifts:newShifts,_sched:schedObj}
+            ),null,2)}}})
+          }).then(function(){showToast('✅ Roster imported & pushed to Gist — agents will see updates on next pull');})
+            .catch(function(){showToast('✅ Roster imported locally. Push to Gist failed — try Cloud Sync manually.','error');});
+        } else {
+          showToast('✅ Roster imported — '+count+' entries. Set GitHub token in Cloud Sync to push to agents.');
+        }
+      }catch(err){showToast('CSV parse error: '+err.message,'error');}
+    };
+    reader.readAsText(file);
+  }
   function clearOverrides(){EK_AGENTS.forEach(function(a){onShift(a.id,a.id==='matthew'?'day':a.id==='loveth'?'day':'off');});showToast('Overrides cleared.');}
   return(
     <div>
@@ -2375,14 +2483,12 @@ function CloudSync({tickets,setTickets,showToast}){
       const cloud1=res1.ok?await res1.json():{};
       const cloud2=res2.ok?await res2.json():{};
       // Merge both Gists
-      const cloud=Object.assign({},cloud2,cloud1);
-
-      // FORMAT DETECTION — snapshot format { days: [...] }
-      let cloudNorm=cloud;
-      if(Array.isArray(cloud.days)){
-        const STATUS_MAP={'pending':'unresolved','assigned':'progress','closed':'resolved','in progress':'progress','resolved':'resolved','unresolved':'unresolved'};
+      // Normalize Gist 1 — may be {days:[...]} PA snapshot format
+      const STATUS_MAP_N={'pending':'unresolved','assigned':'progress','closed':'resolved','in progress':'progress','resolved':'resolved','unresolved':'unresolved'};
+      let norm1=cloud1;
+      if(Array.isArray(cloud1.days)){
         const flatTickets=[];
-        cloud.days.forEach(function(day){
+        cloud1.days.forEach(function(day){
           (day.tickets||[]).forEach(function(t){
             flatTickets.push({
               id:       t.id||('tk_'+t.num),
@@ -2396,16 +2502,18 @@ function CloudSync({tickets,setTickets,showToast}){
               category: t.category&&t.subcategory?t.category+' — '+t.subcategory:(t.category||''),
               issue:    t.note||t.title||'',
               resp:     t.assignee||'',
-              status:   STATUS_MAP[(t.status||'').toLowerCase()]||'unresolved',
+              status:   STATUS_MAP_N[(t.status||'').toLowerCase()]||'unresolved',
               note:     t.resolutionNote||'',
-              day:      day.dayNum||day.dateBig||'',
+              day:      day.dayNum||25,
               agent:    t.agent||'manager',
               created:  t.created||'',
             });
           });
         });
-        cloudNorm={manager:flatTickets};
+        norm1={manager:flatTickets};
       }
+      // Merge: Gist2 agent keys take priority over Gist1 manager keys
+      const cloudNorm=Object.assign({},norm1,cloud2);
       let count=0;
       const merged=[...tickets];
       Object.keys(cloudNorm).forEach(function(agentId){
