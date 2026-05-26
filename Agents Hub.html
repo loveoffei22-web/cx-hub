@@ -57,7 +57,8 @@ body[data-theme="lavender"] .stat-bar{border-color:#D4D4F0 !important;}
 body[data-theme="lavender"] .sbar-item{border-color:#D4D4F0 !important;background:#F8F8FF !important;}
 body[data-theme="lavender"] .sbar-lbl{color:#64748B !important;}
 body[data-theme="lavender"] .ctbl th{color:rgba(255,255,255,.9) !important;}
-body[data-theme="lavender"] .ctbl td{color:#334155 !important;border-color:#EEF0FF !important;}
+body[data-theme="lavender"] .ctbl td{color:#1E1B4B !important;border-color:#EEF0FF !important;}
+body[data-theme="lavender"] .ctbl td span[style*="var(--info)"]{color:#3730A3 !important;}
 body[data-theme="lavender"] .ctbl thead tr{background:#3730A3 !important;}
 body[data-theme="lavender"] .bu-tag{background:rgba(55,48,163,.1) !important;color:#3730A3 !important;border-color:rgba(55,48,163,.2) !important;}
 body[data-theme="lavender"] .cat-main{color:#1E1B4B !important;}
@@ -133,9 +134,9 @@ border-right:1px solid rgba(42,64,153,.5);display:flex;flex-direction:column;ove
 .sbar-item:last-child{border-right:none;}
 .sbar-lbl{font:600 12px/1 Sora,sans-serif;color:var(--text2);}
 .sbar-val{font:800 20px/1 'JetBrains Mono',monospace;}
-.ctbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+.ctbl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
 .ctbl thead tr{background:rgba(0,0,0,.4);}
-.ctbl th{padding:9px 10px;text-align:left;font:700 9px/1 Sora,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.5);white-space:nowrap;}
+.ctbl th{padding:9px 10px;text-align:left;font:700 11px/1 Sora,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.9);white-space:nowrap;}
 .ctbl td{padding:8px 10px;border-bottom:1px solid var(--bsoft);color:var(--text2);vertical-align:top;}
 .ctbl tbody tr{cursor:pointer;}
 .ctbl tbody tr:hover td{background:rgba(255,255,255,.03);}
@@ -249,6 +250,25 @@ const SHIFT_LABELS={day:{emoji:'☀️',text:'Day Shift',sub:'08:00 – 17:00',c
 // parse helpers
 const stripEmoji=function(s){return(s||'').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{200D}\u{20E3}]+/gu,'').replace(/\s{2,}/g,' ').trim();};
 function matchBU(v){const val=stripEmoji(v).trim().toUpperCase();const ex=BUS.find(function(b){return b.toUpperCase()===val;});if(ex)return ex;return BUS.find(function(b){return val.includes(b)||b.includes(val.split(' ')[0]);})||null;}
+// FIX-BUG3: extract 📅 complaint date from pasted text and store as ISO created
+function _extractDate(txt,r){
+  if(r.created)return; // already set, don't overwrite
+  const MONTHS={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+  const dm=txt.match(/(?:📅|DATE)[^\d]*?(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{4})/i);
+  if(!dm)return;
+  const mo=MONTHS[dm[2].toLowerCase().slice(0,3)]||'01';
+  const dd=String(dm[1]).padStart(2,'0');
+  const yr=dm[3];
+  // Extract time component e.g. "· 10:54 PM"
+  const tm=txt.match(/\b(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  let hh='00',mi='00';
+  if(tm){
+    hh=tm[1].padStart(2,'0');mi=tm[2].padStart(2,'0');
+    if(tm[3].toUpperCase()==='PM'&&hh!=='12')hh=String(parseInt(hh,10)+12).padStart(2,'0');
+    if(tm[3].toUpperCase()==='AM'&&hh==='12')hh='00';
+  }
+  r.created=yr+'-'+mo+'-'+dd+'T'+hh+':'+mi+':00.000Z';
+}
 function parseSingle(txt){
   const r={};
   if((txt.match(/\|/g)||[]).length>3){
@@ -264,7 +284,7 @@ function parseSingle(txt){
       else if(/^(description|complaint|issue)$/.test(lbl))r.issue=stripEmoji(val);
       else if(/^category$/.test(lbl))r.category=stripEmoji(val);
     }
-    if(Object.keys(r).length>=2)return r;
+    if(Object.keys(r).length>=2){_extractDate(txt,r);return r;}
   }
   const tM=txt.match(/(7\d{5})/);if(tM)r.num=tM[1];
   const pM=txt.match(/(\+?234\d{10}|0[789]\d{9})/);if(pM)r.phone=pM[1];
@@ -274,6 +294,8 @@ function parseSingle(txt){
   const nM=txt.match(/(?:customer|name)\s*[:–-]?\s*([A-Za-z][A-Za-z .'-]{2,50})/i);if(nM)r.name=stripEmoji(nM[1]).trim();
   const aM=txt.match(/address\s*[:–-]?\s*(.+?)(?=\n|$)/im);if(aM)r.addr=stripEmoji(aM[1]).trim();
   const bM=txt.match(/(?:business\s*unit|BU)\s*[:–-]?\s*([A-Za-z\s]+?)(?:\n|,|$)/i);if(bM){const bu=matchBU(bM[1]);if(bu)r.bu=bu;}
+  // FIX-BUG3: extract complaint date
+  _extractDate(txt,r);
   const dM=txt.match(/(?:description|complaint|issue)\s*[:–-]?\s*(.+?)(?=\n[A-Za-z ]+\s*[:–-]|$)/is);if(dM)r.issue=dM[1].trim().slice(0,200);
   return r;
 }
@@ -305,7 +327,13 @@ function fmtDay(t){
     const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m,10)-1]||'';
     return mn+' '+parseInt(dd,10);
   }
-  return (t.day&&t.day>0)?'Day '+t.day:'—';
+  // Fix: use current WAT month so old "day-only" tickets show "May 26" not "Day 26"
+  if(t.day&&t.day>0){
+    const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+    const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]||'';
+    return mn+' '+t.day;
+  }
+  return '—';
 }
 function saveTix(id,tix){localStorage.setItem('ek_tix_'+id,JSON.stringify(tix));}
 function loadShifts(){try{return JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch{return{};}}
@@ -580,30 +608,35 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast}){
           </div>
           <div style={{overflowX:'auto'}}>
             <table className="ctbl">
-              <thead><tr><th>#</th><th>TICKET</th><th>TIME</th><th>DATE</th><th>CUSTOMER</th><th>PHONE</th><th>BU</th><th>CATEGORY</th><th>STATUS</th><th>ACTION TAKEN</th></tr></thead>
+              <colgroup>
+  <col style={{width:36}}/><col style={{width:100}}/><col style={{width:80}}/><col style={{width:72}}/>
+  <col style={{width:160}}/><col style={{width:130}}/><col style={{width:72}}/><col style={{width:160}}/>
+  <col style={{width:110}}/><col/>
+</colgroup>
+<thead><tr><th style={{width:36}}>#</th><th style={{width:100}}>TICKET</th><th style={{width:80}}>TIME</th><th style={{width:72}}>DATE</th><th style={{width:160}}>CUSTOMER</th><th style={{width:130}}>PHONE</th><th style={{width:72}}>BU</th><th style={{width:160}}>CATEGORY</th><th style={{width:110}}>STATUS</th><th>ACTION TAKEN</th></tr></thead>
               <tbody>
                 {filt.slice().reverse().map(function(t,i){const isEx=expanded===t.id;return(
                   <React.Fragment key={t.id||i}>
                     <tr className={isEx?'expanded':''} onClick={function(){toggleExpand(t);}}>
-                      <td style={{color:'var(--muted)',fontSize:10}}>{String(i+1).padStart(2,'0')}</td>
-                      <td><span style={{font:"700 12px/1 'JetBrains Mono',monospace",color:'#93C5FD'}}>#{t.num}</span></td>
-                      <td style={{color:'var(--muted)',fontSize:10}}>{t.time||'—'}</td>
-                      <td style={{color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
-                      <td style={{fontWeight:600,maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name}</td>
-                      <td><span className="mono" style={{fontSize:10,color:'var(--muted)'}}>{t.phone}</span></td>
+                      <td style={{color:'var(--text2)',fontSize:13}}>{String(i+1).padStart(2,'0')}</td>
+                      <td><span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
+                      <td style={{color:'var(--text2)',fontSize:13}}>{t.time||'—'}</td>
+                      <td style={{color:'var(--text2)',fontSize:13,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
+                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name}</td>
+                      <td><span className="mono" style={{fontSize:13,color:'var(--text2)'}}>{t.phone}</span></td>
                       <td><span className="bu-tag">{t.bu}</span></td>
-                      <td style={{maxWidth:160}}><div className="cat-main">{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div>{(t.issue||t.category||'').includes('/')||t.note?<div className="cat-sub">{(t.issue||'').slice(0,50)}</div>:null}</td>
+                      <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><div className="cat-main" style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div>{(t.issue||t.category||'').includes('/')||t.note?<div className="cat-sub">{(t.issue||'').slice(0,50)}</div>:null}</td>
                       <td>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
-                      <td style={{fontSize:10,color:'var(--muted)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼ details</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲ close</span>}</td>
+                      <td style={{fontSize:13,color:'var(--text2)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼ details</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲ close</span>}</td>
                     </tr>
                     {isEx&&(function(){const e=getEdit(t);return(<tr className="exp-row"><td colSpan={10} style={{padding:0}}>
-                      <div style={{background:'rgba(10,26,79,.6)',border:'1px solid var(--bsoft)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden'}}>
+                      <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
                         {/* Header */}
                         <div style={{background:'linear-gradient(135deg,#1E3A8A,#0F2461)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
                           <div style={{display:'flex',alignItems:'center',gap:12}}>
                             <div style={{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'5px 9px',font:'800 11px Sora,sans-serif',color:'#FFC72C',letterSpacing:'.05em'}}>EKEDP ⚡</div>
                             <div>
-                              <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'#93C5FD'}}>#{t.num}</span>
+                              <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span>
                               <span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginLeft:10}}>{t.name}</span>
                             </div>
                             <span style={{marginLeft:4}}>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</span>
@@ -805,30 +838,35 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
           </div>
           <div style={{overflowX:'auto'}}>
             <table className="ctbl">
-              <thead><tr><th>#</th><th>TICKET</th><th>TIME</th><th>DATE</th><th>CUSTOMER</th><th>PHONE</th><th>BU</th><th>CATEGORY</th><th>STATUS</th><th>ACTION TAKEN</th></tr></thead>
+              <colgroup>
+  <col style={{width:36}}/><col style={{width:100}}/><col style={{width:80}}/><col style={{width:72}}/>
+  <col style={{width:160}}/><col style={{width:130}}/><col style={{width:72}}/><col style={{width:160}}/>
+  <col style={{width:110}}/><col/>
+</colgroup>
+<thead><tr><th style={{width:36}}>#</th><th style={{width:100}}>TICKET</th><th style={{width:80}}>TIME</th><th style={{width:72}}>DATE</th><th style={{width:160}}>CUSTOMER</th><th style={{width:130}}>PHONE</th><th style={{width:72}}>BU</th><th style={{width:160}}>CATEGORY</th><th style={{width:110}}>STATUS</th><th>ACTION TAKEN</th></tr></thead>
               <tbody>
                 {paged.map(function(t,i){const isEx=expanded===t.id;const idx=page*PAGE+i+1;const e=getEdit(t);return(
                   <React.Fragment key={t.id||i}>
                     <tr className={isEx?'expanded':''} onClick={function(){toggleExpand(t);}}>
-                      <td style={{color:'var(--muted)',fontSize:10}}>{String(idx).padStart(2,'0')}</td>
-                      <td><span style={{font:"700 12px/1 'JetBrains Mono',monospace",color:'#93C5FD'}}>#{t.num}</span></td>
-                      <td style={{color:'var(--muted)',fontSize:10}}>{t.time||'—'}</td>
-                      <td style={{color:'var(--muted)',fontSize:10,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
-                      <td style={{fontWeight:600,maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name}</td>
-                      <td><span className="mono" style={{fontSize:10,color:'var(--muted)'}}>{t.phone}</span></td>
+                      <td style={{color:'var(--text2)',fontSize:13}}>{String(idx).padStart(2,'0')}</td>
+                      <td><span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
+                      <td style={{color:'var(--text2)',fontSize:13}}>{t.time||'—'}</td>
+                      <td style={{color:'var(--text2)',fontSize:13,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
+                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name}</td>
+                      <td><span className="mono" style={{fontSize:13,color:'var(--text2)'}}>{t.phone}</span></td>
                       <td><span className="bu-tag">{t.bu}</span></td>
-                      <td style={{maxWidth:160}}><div className="cat-main">{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div></td>
+                      <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><div className="cat-main" style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div></td>
                       <td>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
-                      <td style={{fontSize:10,color:'var(--muted)'}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼ details</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲ close</span>}</td>
+                      <td style={{fontSize:13,color:'var(--text2)'}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼ details</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲ close</span>}</td>
                     </tr>
                     {isEx&&<tr className="exp-row"><td colSpan={10} style={{padding:0}}>
-                      <div style={{background:'rgba(10,26,79,.6)',border:'1px solid var(--bsoft)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden'}}>
+                      <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
                         {/* ── Header ── */}
                         <div style={{background:'linear-gradient(135deg,#1E3A8A,#0F2461)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
                           <div style={{display:'flex',alignItems:'center',gap:12}}>
                             <div style={{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'5px 9px',font:'800 11px Sora,sans-serif',color:'#FFC72C',letterSpacing:'.05em'}}>EKEDP ⚡</div>
                             <div>
-                              <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'#93C5FD'}}>#{t.num}</span>
+                              <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span>
                               <span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginLeft:10}}>{t.name}</span>
                             </div>
                             <span style={{marginLeft:4}}>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</span>
@@ -925,7 +963,12 @@ function AddTicket({agent,onCreate}){
   const[sel,setSel]=useState([]);
   const[form,setForm]=useState(EMPTY);
   const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-  function stamp(){return{time:watNow.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),created:new Date().toISOString(),id:'tk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),day:watNow.getDate(),agent:agent.id};}
+  function stamp(t){
+    // FIX-BUG3: stamp() never overwrites a created date already parsed from complaint text
+    const base={time:watNow.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),created:new Date().toISOString(),id:'tk_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),day:watNow.getDate(),agent:agent.id};
+    if(t&&t.created)base.created=t.created; // preserve complaint date from parseSingle
+    return base;
+  }
   function handlePaste(txt){
     setPasted(txt);if(!txt.trim()){setBulk([]);setSel([]);return;}
     const parsed=parseMultiple(txt);
@@ -937,9 +980,9 @@ function AddTicket({agent,onCreate}){
   function toggleSel(i){setSel(function(s){return s.includes(i)?s.filter(function(x){return x!==i;}):[...s,i];});}
   function toggleAll(){setSel(sel.length===bulk.length?[]:[...bulk.keys()]);}
   function clearAll(){setPasted('');setBulk([]);setSel([]);setForm(EMPTY);}
-  function confirmBulk(){const chosen=bulk.filter(function(_,i){return sel.includes(i);});if(!chosen.length)return;onCreate(chosen.map(function(t){return Object.assign({},t,stamp());}));clearAll();}
+  function confirmBulk(){const chosen=bulk.filter(function(_,i){return sel.includes(i);});if(!chosen.length)return;onCreate(chosen.map(function(t){return Object.assign({},t,stamp(t));}));clearAll();}
   function setF(k,v){setForm(function(f){return Object.assign({},f,{[k]:v});});}
-  function submitForm(e){e.preventDefault();if(!form.num&&!form.name)return;onCreate(Object.assign({},form,stamp()));clearAll();}
+  function submitForm(e){e.preventDefault();if(!form.num&&!form.name)return;const s=stamp({});if(form.complaintDate){s.created=form.complaintDate+'T00:00:00.000Z';s.day=parseInt(form.complaintDate.slice(8,10),10);}onCreate(Object.assign({},form,s));clearAll();}
   const sSel={width:'100%',padding:'6px 8px',background:'rgba(0,0,0,.3)',border:'1px solid var(--bsoft)',borderRadius:6,font:'600 10.5px Sora,sans-serif',color:'var(--text)',outline:'none'};
   return(
     <div>
@@ -997,6 +1040,12 @@ function AddTicket({agent,onCreate}){
               <div><label className="lbl">Meter / Account #</label><input className="inp" value={form.meter} onChange={function(e){setF('meter',e.target.value);}} placeholder="Meter number"/></div>
               <div><label className="lbl">Business Unit</label><select className="sel" value={form.bu} onChange={function(e){setF('bu',e.target.value);}}>{BUS.map(function(b){return <option key={b} value={b}>{b}</option>;})}</select></div>
               <div><label className="lbl">Responsible</label><select className="sel" value={form.resp} onChange={function(e){setF('resp',e.target.value);}}>{RESP_LIST.map(function(r){return <option key={r} value={r}>{r.split(' ')[0]}</option>;})}</select></div>
+            </div>
+            {/* FIX-BUG3: Complaint Date — defaults to today, change if logging a missed/backdated ticket */}
+            <div style={{marginBottom:10,background:'rgba(255,199,44,.06)',border:'1px solid rgba(255,199,44,.18)',borderRadius:8,padding:'8px 12px',display:'flex',alignItems:'center',gap:12}}>
+              <span style={{font:'700 11px Sora,sans-serif',color:'var(--muted)',flexShrink:0}}>📅 Complaint Date</span>
+              <input className="inp" type="date" value={form.complaintDate||watNow.toISOString().slice(0,10)} onChange={function(e){setF('complaintDate',e.target.value);}} style={{maxWidth:160,margin:0}}/>
+              <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)'}}>Change this if the complaint is from a previous day</span>
             </div>
             <div style={{marginBottom:10}}><label className="lbl">Address</label><input className="inp" value={form.addr} onChange={function(e){setF('addr',e.target.value);}} placeholder="Street address"/></div>
             <div style={{marginBottom:10}}><label className="lbl">Complaint / Issue</label><textarea className="inp" rows={3} value={form.issue} onChange={function(e){setF('issue',e.target.value);}} placeholder="Describe the complaint…" style={{resize:'vertical'}}/></div>
@@ -1300,8 +1349,8 @@ function ImportJSON({agent,tickets,setTickets,showToast}){
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
                 <thead><tr style={{background:'rgba(0,0,0,.4)'}}>{['#','Ticket','Customer','BU','Status'].map(function(h){return <th key={h} style={{padding:'6px 8px',textAlign:'left',font:'700 9px/1 Sora,sans-serif',color:'rgba(255,255,255,.5)',textTransform:'uppercase',letterSpacing:'.08em'}}>{h}</th>;})}</tr></thead>
                 <tbody>{preview.tickets.slice(0,20).map(function(t,i){return(
-                  <tr key={i} style={{borderBottom:'1px solid var(--bsoft)'}}><td style={{padding:'6px 8px',color:'var(--muted)',fontSize:10}}>{i+1}</td><td style={{padding:'6px 8px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'#93C5FD'}}>#{t.num}</td><td style={{padding:'6px 8px',fontWeight:600}}>{t.name}</td><td style={{padding:'6px 8px'}}><span className="bu-tag">{t.bu}</span></td><td style={{padding:'6px 8px'}}>{t.status==='resolved'?<span className="st-res">RES</span>:t.status==='progress'?<span className="st-prg">PRG</span>:<span className="st-unr">UNR</span>}</td></tr>);})}
-                {preview.count>20&&<tr><td colSpan={5} style={{padding:'7px 8px',textAlign:'center',color:'var(--muted)',fontSize:10}}>...and {preview.count-20} more</td></tr>}
+                  <tr key={i} style={{borderBottom:'1px solid var(--bsoft)'}}><td style={{padding:'6px 8px',color:'var(--text2)',fontSize:13}}>{i+1}</td><td style={{padding:'6px 8px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)'}}>#{t.num}</td><td style={{padding:'6px 8px',fontWeight:600}}>{t.name}</td><td style={{padding:'6px 8px'}}><span className="bu-tag">{t.bu}</span></td><td style={{padding:'6px 8px'}}>{t.status==='resolved'?<span className="st-res">RES</span>:t.status==='progress'?<span className="st-prg">PRG</span>:<span className="st-unr">UNR</span>}</td></tr>);})}
+                {preview.count>20&&<tr><td colSpan={5} style={{padding:'7px 8px',textAlign:'center',color:'var(--text2)',fontSize:13}}>...and {preview.count-20} more</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1344,12 +1393,12 @@ function ExportDay({agent,tickets,showToast}){
             <thead><tr style={{background:'rgba(0,0,0,.4)'}}>{['#','Ticket','Time','Customer','BU','Category','Status'].map(function(h){return <th key={h} style={{padding:'8px 10px',textAlign:'left',font:'700 9px/1 Sora,sans-serif',color:'rgba(255,255,255,.5)',textTransform:'uppercase',letterSpacing:'.08em'}}>{h}</th>;})}</tr></thead>
             <tbody>{todayTix.map(function(t,i){return(
               <tr key={i} style={{borderBottom:'1px solid var(--bsoft)'}}>
-                <td style={{padding:'7px 10px',color:'var(--muted)',fontSize:10}}>{i+1}</td>
-                <td style={{padding:'7px 10px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'#93C5FD'}}>#{t.num}</td>
-                <td style={{padding:'7px 10px',color:'var(--muted)',fontSize:10}}>{t.time}</td>
+                <td style={{padding:'7px 10px',color:'var(--text2)',fontSize:13}}>{i+1}</td>
+                <td style={{padding:'7px 10px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)'}}>#{t.num}</td>
+                <td style={{padding:'7px 10px',color:'var(--text2)',fontSize:13}}>{t.time}</td>
                 <td style={{padding:'7px 10px',fontWeight:600}}>{t.name}</td>
                 <td style={{padding:'7px 10px'}}><span className="bu-tag">{t.bu}</span></td>
-                <td style={{padding:'7px 10px',color:'var(--muted)',fontSize:10}}>{(t.category||'').split('/')[0].trim()}</td>
+                <td style={{padding:'7px 10px',color:'var(--text2)',fontSize:13}}>{(t.category||'').split('/')[0].trim()}</td>
                 <td style={{padding:'7px 10px'}}>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
               </tr>);})}
             {!todayTix.length&&<tr><td colSpan={7} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets logged today yet.</td></tr>}
@@ -1452,43 +1501,49 @@ function SupportGuide({agent,showToast}){
 }
 
 function CloudSync({agent,tickets,setTickets,showToast}){
-  const GIST_ID='a15726378ff2053985d3f41ebf026010';
-  const GIST_FILENAME='data.json';
-  const RAW_URL='https://gist.githubusercontent.com/loveoffei22-web/'+GIST_ID+'/raw/'+GIST_FILENAME;
-  // Gist 2 — agents push here
-  const GIST2_ID='32f4e03644698904ce8f8265aa451265';
-  const GIST2_FILENAME='gistfile1.txt';
-  const RAW_URL2='https://gist.githubusercontent.com/loveoffei22-web/'+GIST2_ID+'/raw/'+GIST2_FILENAME;
-  const API_URL2='https://api.github.com/gists/'+GIST2_ID;
-  const API_URL='https://api.github.com/gists/'+GIST_ID;
-  const TOKEN_STORAGE='ek_gh_token';
-  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(TOKEN_STORAGE)||'');
-  const[keyDraft,setKeyDraft]=useState('');
-  const[showKey,setShowKey]=useState(false);
+  // ── Power Automate URL keys (no GitHub / Gist anywhere) ──
+  const PA_PULL_KEY='ek_pa_pull_url';
+  const PA_PUSH_KEY='ek_pa_push_url';
+  const[pullUrl,setPullUrl]=useState(()=>localStorage.getItem(PA_PULL_KEY)||'');
+  const[pushUrl,setPushUrl]=useState(()=>localStorage.getItem(PA_PUSH_KEY)||'');
+  const[pullDraft,setPullDraft]=useState('');
+  const[pushDraft,setPushDraft]=useState('');
   const[saving,setSaving]=useState(false);
   const[status,setStatus]=useState({msg:'',ok:true});
   const[lastSync,setLastSync]=useState(()=>localStorage.getItem('ek_last_sync')||'');
   const[preview,setPreview]=useState(null);
 
-  function saveKey(){const k=(keyDraft||'').trim();if(!k){showToast('Paste your GitHub token first','error');return;}localStorage.setItem(TOKEN_STORAGE,k);setApiKey(k);setKeyDraft('');showToast('GitHub token saved ✓');}
-  function clearKey(){if(!window.confirm('Clear GitHub token from this device?'))return;localStorage.removeItem(TOKEN_STORAGE);setApiKey('');showToast('Token cleared');}
-
+  // auto-pull once per session if Pull URL is already configured
   useEffect(function(){
     const done=sessionStorage.getItem('ek_ag_pulled_'+agent.id);
-    if(!done){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}
+    if(!done&&pullUrl){sessionStorage.setItem('ek_ag_pulled_'+agent.id,'1');setTimeout(pullNow,1200);}
   },[]); // eslint-disable-line
 
-  async function pullNow(){
-    setSaving(true);setStatus({msg:'Pulling from both Gists…',ok:true});
-    try{
-      const [res1,res2]=await Promise.all([
-        fetch(RAW_URL+'?t='+Date.now()),
-        fetch(RAW_URL2+'?t='+Date.now())
-      ]);
-      const cloud1=res1.ok?await res1.json():{};
-      const cloud2=res2.ok?await res2.json():{};
+  function savePullUrl(){
+    const u=(pullDraft||'').trim();
+    if(!u){showToast('Paste your Power Automate Pull URL first','error');return;}
+    localStorage.setItem(PA_PULL_KEY,u);setPullUrl(u);setPullDraft('');showToast('Pull URL saved ✓');
+  }
+  function savePushUrl(){
+    const u=(pushDraft||'').trim();
+    if(!u){showToast('Paste your Power Automate Push URL first','error');return;}
+    localStorage.setItem(PA_PUSH_KEY,u);setPushUrl(u);setPushDraft('');showToast('Push URL saved ✓');
+  }
+  function clearUrls(){
+    if(!window.confirm('Clear both Power Automate URLs from this device?'))return;
+    localStorage.removeItem(PA_PULL_KEY);localStorage.removeItem(PA_PUSH_KEY);
+    setPullUrl('');setPushUrl('');showToast('URLs cleared');
+  }
 
-      // Gist 1 (PA) may be in {days:[...]} format — flatten to manager key
+  async function pullNow(){
+    if(!pullUrl){showToast('Set your Pull URL first','error');return;}
+    setSaving(true);setStatus({msg:'Pulling from SharePoint via Power Automate…',ok:true});
+    try{
+      const res=await fetch(pullUrl,{method:'POST'});
+      if(!res.ok)throw new Error('HTTP '+res.status+' — check your Pull URL');
+      const cloud1=await res.json();
+
+      // Normalise {days:[...]} format produced by the Manager Hub PA flow
       var normalized1={};
       if(Array.isArray(cloud1.days)){
         var flatTickets=[];
@@ -1510,7 +1565,7 @@ function CloudSync({agent,tickets,setTickets,showToast}){
               status:(function(s){return s==='Pending'?'unresolved':s==='Resolved'?'resolved':s==='In Progress'?'progress':s||'unresolved';})(t.status),
               note:t.resolutionNote||'',
               agent:'manager',
-              day:day.dayNum||25,
+              day:day.dayNum||new Date().getDate(),
             });
           });
         });
@@ -1519,81 +1574,67 @@ function CloudSync({agent,tickets,setTickets,showToast}){
         normalized1=cloud1;
       }
 
-      // Merge Gist2 (agents) over Gist1 (PA) — agents own their keys
-      var cloud=Object.assign({},normalized1,cloud2);
+      var cloud=Object.assign({},normalized1);
 
-      // Save shifts/guide/sched
+      // Persist shifts / schedule / guide to localStorage (App polls every 5 s)
       if(cloud._shifts&&typeof cloud._shifts==='object'){
         try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloud._shifts));}catch(e){}
-        // Update live shift state
-        setShifts(function(s){return Object.assign({},s,cloud._shifts);});
       }
       if(cloud._sched&&typeof cloud._sched==='object'){
-        // Write each agent's daily schedule to localStorage
         Object.keys(cloud._sched).forEach(function(agId){
           const agSched=cloud._sched[agId];
           if(typeof agSched==='object'){
             Object.keys(agSched).forEach(function(dateStr){
-              localStorage.setItem('ek_sched_'+agId+'_'+dateStr, agSched[dateStr]);
+              localStorage.setItem('ek_sched_'+agId+'_'+dateStr,agSched[dateStr]);
             });
           }
         });
       }
       if(Array.isArray(cloud._guide)&&cloud._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}}
 
-      // Merge ALL tickets from ALL agent keys into one pool — agents see everything
+      // Merge all agent ticket arrays into one shared pool
       var myExisting=tickets.slice();
       var existingIds=new Set(myExisting.map(function(t){return t.id||t.num;}));
       var added=0;
-
       Object.keys(cloud).forEach(function(agId){
         if(agId.charAt(0)==='_')return;
         if(!Array.isArray(cloud[agId]))return;
-        // Save per-agent data to localStorage
         var existing=[];
         try{existing=JSON.parse(localStorage.getItem('ek_tix_'+agId)||'[]');}catch(e){}
         var existingAgIds=new Set(existing.map(function(t){return t.id||t.num;}));
         var newForAgent=cloud[agId].filter(function(t){return !existingAgIds.has(t.id||t.num);});
         localStorage.setItem('ek_tix_'+agId,JSON.stringify(existing.concat(newForAgent)));
-        // Add ALL new tickets into the shared view (not just this agent's)
         cloud[agId].forEach(function(t){
-          if(!existingIds.has(t.id||t.num)){
-            myExisting.push(t);existingIds.add(t.id||t.num);added++;
-          }
+          if(!existingIds.has(t.id||t.num)){myExisting.push(t);existingIds.add(t.id||t.num);added++;}
         });
       });
       setTickets(myExisting);
 
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);
-      const msg='✅ Pulled '+added+' new tickets from cloud.';
+      const msg='✅ Pulled '+added+' new tickets from SharePoint.';
       setStatus({msg,ok:true});showToast(msg);
     }catch(e){setStatus({msg:'Pull failed: '+e.message,ok:false});showToast('Pull failed','error');}
     finally{setSaving(false);}
   }
 
   async function pushNow(){
-    if(!apiKey){showToast('Set your GitHub token first','error');return;}
-    setSaving(true);setStatus({msg:'Pushing to GitHub Gist…',ok:true});
+    if(!pushUrl){showToast('Set your Push URL first','error');return;}
+    setSaving(true);setStatus({msg:'Pushing to SharePoint via Power Automate…',ok:true});
     try{
-      // Pull current gist first so we don't overwrite other agents
-      let current={};
-      try{const getRes=await fetch(RAW_URL2+'?t='+Date.now());if(getRes.ok)current=await getRes.json();}catch(e){}
       const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
       const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
       const todayTix=tickets.filter(function(t){return !t._baseline&&(t.created||'').slice(0,10)===todayStr;});
-      current[agent.id]=todayTix;
-      const res=await fetch(API_URL2,{
-        method:'PATCH',
-        headers:{'Content-Type':'application/json','Authorization':'token '+apiKey,'Accept':'application/vnd.github+json'},
-        body:JSON.stringify({files:{[GIST2_FILENAME]:{content:JSON.stringify(current,null,2)}}})
+      const payload={agentId:agent.id,agentName:agent.name,date:todayStr,tickets:todayTix,pushedAt:new Date().toISOString()};
+      const res=await fetch(pushUrl,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
       });
-      if(res.status===401)throw new Error('Invalid GitHub token');
-      if(res.status===404)throw new Error('Gist not found — check token has gist scope');
-      if(!res.ok)throw new Error('HTTP '+res.status);
+      if(!res.ok)throw new Error('HTTP '+res.status+' — check your Push URL');
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);
-      const msg='✅ Pushed '+todayTix.length+' tickets for today.';
+      const msg='✅ Pushed '+todayTix.length+' tickets to SharePoint.';
       setStatus({msg,ok:true});showToast(msg);
     }catch(e){setStatus({msg:'Push failed: '+e.message,ok:false});showToast('Push failed','error');}
     finally{setSaving(false);}
@@ -1601,34 +1642,73 @@ function CloudSync({agent,tickets,setTickets,showToast}){
 
   return(
     <div>
-      <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — Dual Gist</div></div></div>
+      <div className="topbar"><div><div className="eyebrow">CLOUD SYNC</div><div className="page-title">☁ Cloud Sync — SharePoint via Power Automate</div></div></div>
       <div className="pad">
-        {!apiKey&&(
+
+        {/* ── Pull URL setup (shown when not yet saved) ── */}
+        {!pullUrl&&(
           <div style={{background:'rgba(255,199,44,.06)',border:'1.5px solid rgba(255,199,44,.4)',borderRadius:12,padding:16,marginBottom:14}}>
-            <div style={{font:'800 14px Sora,sans-serif',color:'var(--text)',marginBottom:6}}>🔑 Set GitHub Token</div>
-            <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Generate at <b style={{color:'var(--text)'}}>github.com → Settings → Developer Settings → Tokens (classic)</b> — tick <b style={{color:'var(--text)'}}>gist</b> scope only. <b style={{color:'var(--text)'}}>Paste it once</b> — stays on this phone only.</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr auto auto',gap:8}}>
-              <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste GitHub token…"/>
-              <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈':'👁'}</button>
-              <button onClick={saveKey} style={{padding:'8px 14px',background:'#16A34A',color:'#fff',border:'none',borderRadius:8,font:'800 12px Sora,sans-serif',cursor:'pointer'}}>✓ Save</button>
+            <div style={{font:'800 14px Sora,sans-serif',color:'var(--text)',marginBottom:6}}>🔗 Set Power Automate Pull URL</div>
+            <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>In Power Automate, create an <b style={{color:'var(--text)'}}>HTTP request trigger</b> flow that reads your SharePoint ticket list and returns JSON. Paste the flow URL below — it stays on this device only.</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8}}>
+              <input className="inp" type="text" value={pullDraft} onChange={function(e){setPullDraft(e.target.value);}} placeholder="https://prod-xx.westeurope.logic.azure.com/…"/>
+              <button onClick={savePullUrl} style={{padding:'8px 14px',background:'#16A34A',color:'#fff',border:'none',borderRadius:8,font:'800 12px Sora,sans-serif',cursor:'pointer'}}>✓ Save</button>
             </div>
           </div>
         )}
+
+        {/* ── Push URL setup (shown when not yet saved) ── */}
+        {!pushUrl&&(
+          <div style={{background:'rgba(99,102,241,.06)',border:'1.5px solid rgba(99,102,241,.4)',borderRadius:12,padding:16,marginBottom:14}}>
+            <div style={{font:'800 14px Sora,sans-serif',color:'var(--text)',marginBottom:6}}>🔗 Set Power Automate Push URL</div>
+            <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Create a second <b style={{color:'var(--text)'}}>HTTP request trigger</b> flow that accepts a POST body with agent ticket data and writes it to your SharePoint list. Paste the URL below.</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8}}>
+              <input className="inp" type="text" value={pushDraft} onChange={function(e){setPushDraft(e.target.value);}} placeholder="https://prod-xx.westeurope.logic.azure.com/…"/>
+              <button onClick={savePushUrl} style={{padding:'8px 14px',background:'#1D4ED8',color:'#fff',border:'none',borderRadius:8,font:'800 12px Sora,sans-serif',cursor:'pointer'}}>✓ Save</button>
+            </div>
+          </div>
+        )}
+
         {status.msg&&<div style={{padding:'11px 14px',borderRadius:10,background:status.ok?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',border:'1px solid '+(status.ok?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'),font:'600 12px Sora,sans-serif',color:status.ok?'var(--okb)':'var(--bdb)',marginBottom:12}}>{status.msg}</div>}
-        {preview&&<div style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',font:'600 11px/1.4 JetBrains Mono,monospace',color:'var(--muted)',marginBottom:12}}>☁ Gist: {Object.entries(preview).filter(function([k]){return k.charAt(0)!=='_';}).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')}</div>}
+        {preview&&<div style={{padding:'10px 12px',borderRadius:8,background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',font:'600 11px/1.4 JetBrains Mono,monospace',color:'var(--muted)',marginBottom:12}}>☁ SharePoint: {Object.entries(preview).filter(function([k]){return k.charAt(0)!=='_';}).map(function([k,v]){return k+': '+(Array.isArray(v)?v.length:0);}).join(' · ')}</div>}
+
+        {/* ── Pull / Push buttons ── */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
-          <button onClick={pullNow} disabled={saving} style={{padding:'20px',background:saving?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:saving?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:saving?.55:1}}>
-            <span style={{fontSize:24}}>⬇</span><span>Pull from Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>Get everyone's latest</small>
+          <button onClick={pullNow} disabled={saving||!pullUrl} style={{padding:'20px',background:(saving||!pullUrl)?'rgba(255,255,255,.06)':'#16A34A',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!pullUrl)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!pullUrl)?.55:1}}>
+            <span style={{fontSize:24}}>⬇</span><span>Pull from SharePoint</span>
+            <small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!pullUrl?'Set Pull URL first':'Get everyone\'s latest'}</small>
           </button>
-          <button onClick={pushNow} disabled={saving||!apiKey} style={{padding:'20px',background:(saving||!apiKey)?'rgba(255,255,255,.06)':'#1D4ED8',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!apiKey)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!apiKey)?.55:1}}>
-            <span style={{fontSize:24}}>⬆</span><span>Push to Cloud</span><small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!apiKey?'Set token first':'Share your tickets'}</small>
+          <button onClick={pushNow} disabled={saving||!pushUrl} style={{padding:'20px',background:(saving||!pushUrl)?'rgba(255,255,255,.06)':'#1D4ED8',color:'#fff',border:'none',borderRadius:11,font:'800 14px Sora,sans-serif',cursor:(saving||!pushUrl)?'not-allowed':'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:8,opacity:(saving||!pushUrl)?.55:1}}>
+            <span style={{fontSize:24}}>⬆</span><span>Push to SharePoint</span>
+            <small style={{fontWeight:500,fontSize:11,opacity:.8}}>{!pushUrl?'Set Push URL first':'Share your tickets'}</small>
           </button>
         </div>
-        <div style={{padding:'10px 12px',borderRadius:8,background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>
-          💡 Pull reads Gist 1 (PA) + Gist 2 (agents). Push writes to Gist 2 only.
+
+        <div style={{padding:'10px 12px',borderRadius:8,background:'rgba(22,163,74,.08)',border:'1px solid rgba(22,163,74,.2)',font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>
+          🔒 All data stays within your company's Microsoft 365. No GitHub, no external services — only your Power Automate flows and SharePoint.
         </div>
+
         {lastSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginBottom:10}}>Last synced: <b style={{color:'var(--okb)'}}>{lastSync}</b></div>}
-        {apiKey&&<div style={{display:'flex',gap:8,marginTop:8}}><button className="btn btn-sm" onClick={clearKey} style={{padding:'6px 12px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear token</button><span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',alignSelf:'center'}}>Token: {apiKey.slice(0,6)}……{apiKey.slice(-4)}</span></div>}
+
+        {/* ── URL management (shown when at least one URL is saved) ── */}
+        {(pullUrl||pushUrl)&&(
+          <div style={{marginTop:12,borderTop:'1px solid var(--bsoft)',paddingTop:12}}>
+            <div style={{font:'700 9px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8}}>Manage URLs</div>
+            {pullUrl&&(
+              <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,marginBottom:8,alignItems:'center'}}>
+                <input className="inp" type="text" value={pullDraft} onChange={function(e){setPullDraft(e.target.value);}} placeholder={'Pull: '+pullUrl.slice(0,42)+'…'} style={{fontSize:10}}/>
+                <button onClick={savePullUrl} style={{padding:'7px 11px',background:'#16A34A',color:'#fff',border:'none',borderRadius:7,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>✓ Update</button>
+              </div>
+            )}
+            {pushUrl&&(
+              <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,marginBottom:8,alignItems:'center'}}>
+                <input className="inp" type="text" value={pushDraft} onChange={function(e){setPushDraft(e.target.value);}} placeholder={'Push: '+pushUrl.slice(0,42)+'…'} style={{fontSize:10}}/>
+                <button onClick={savePushUrl} style={{padding:'7px 11px',background:'#1D4ED8',color:'#fff',border:'none',borderRadius:7,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>✓ Update</button>
+              </div>
+            )}
+            <button onClick={clearUrls} style={{padding:'7px 14px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear all URLs</button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1676,7 +1756,12 @@ function DataScreen({agent,tickets,setTickets,showToast}){
   function dlAll(){const data={exportedBy:{name:agent.name,id:agent.id},exportedAt:new Date().toISOString(),tickets:tickets};const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));a.download='ekedp_agent_'+agent.id+'_all_'+todayStr+'.json';a.click();showToast('All exported ✓');}
   function exportCSV(){const rows=[['#','Ticket','Time','Customer','Phone','BU','Category','Status','Note']];tickets.slice().reverse().forEach(function(t,i){rows.push([i+1,t.num,t.time,t.name,t.phone,t.bu,t.category,t.status,t.note||'']);});const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='ekedp_agent_'+agent.id+'.csv';a.click();showToast('CSV exported ✓');}
   function processFile(file){const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);let imported=[];if(Array.isArray(data)){imported=data;}else if(Array.isArray(data.tickets)){imported=data.tickets;}else if(Array.isArray(data.days)){data.days.forEach(function(day){(day.tickets||[]).forEach(function(t){imported.push(t);});});}else{Object.keys(data).forEach(function(k){if(k.charAt(0)!=='_'&&Array.isArray(data[k]))data[k].forEach(function(t){imported.push(t);});});}if(!imported.length)throw new Error('No tickets found');setPreview({count:imported.length,by:data.exportedBy,tickets:imported});}catch(err){showToast('Invalid JSON: '+err.message,'error');}};reader.readAsText(file);}
-  function confirmImport(){if(!preview)return;const r=dedupTickets(tickets,preview.tickets);setTickets([...tickets,...r.kept]);showToast('Imported '+r.kept.length+' new'+(r.dropped>0?' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped':'')+' ✓');setPreview(null);}
+  function confirmImport(){if(!preview)return;
+    const r=dedupTickets(tickets,preview.tickets);
+    setTickets([...tickets,...r.kept]);
+    showToast('Imported '+r.kept.length+' new'+(r.dropped>0?' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped':'')+' ✓');
+    setPreview(null);
+  }
   const tabSt=function(id){return{padding:'8px 16px',border:'none',borderBottom:'2.5px solid '+(tab===id?'var(--agent)':'transparent'),background:'transparent',color:tab===id?'var(--agent)':'var(--muted)',font:'700 12px Sora,sans-serif',cursor:'pointer'};};
   return(
     <div>
@@ -1720,7 +1805,7 @@ function DataScreen({agent,tickets,setTickets,showToast}){
             <div style={{padding:14,overflowX:'auto',maxHeight:260,overflowY:'auto'}}>
               <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
                 <thead><tr style={{background:'rgba(0,0,0,.3)'}}>{['#','Ticket','Customer','BU','Status'].map(function(h){return <th key={h} style={{padding:'6px 8px',textAlign:'left',font:'700 9px Sora,sans-serif',color:'rgba(255,255,255,.6)',textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
-                <tbody>{preview.tickets.slice(0,20).map(function(t,i){return <tr key={i} style={{borderBottom:'1px solid var(--bsoft)'}}><td style={{padding:'6px 8px',color:'var(--muted)',fontSize:10}}>{i+1}</td><td style={{padding:'6px 8px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)'}}>#{t.num}</td><td style={{padding:'6px 8px',fontWeight:600}}>{t.name}</td><td style={{padding:'6px 8px'}}><span className="bu-tag">{t.bu}</span></td><td style={{padding:'6px 8px',fontWeight:800,color:t.status==='resolved'?'#15803D':t.status==='progress'?'#D97706':'#B91C1C',fontSize:10}}>{t.status==='resolved'?'RES':t.status==='progress'?'PRG':'UNR'}</td></tr>;})}
+                <tbody>{preview.tickets.slice(0,20).map(function(t,i){return <tr key={i} style={{borderBottom:'1px solid var(--bsoft)'}}><td style={{padding:'6px 8px',color:'var(--text2)',fontSize:13}}>{i+1}</td><td style={{padding:'6px 8px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)'}}>#{t.num}</td><td style={{padding:'6px 8px',fontWeight:600}}>{t.name}</td><td style={{padding:'6px 8px'}}><span className="bu-tag">{t.bu}</span></td><td style={{padding:'6px 8px',fontWeight:800,color:t.status==='resolved'?'#15803D':t.status==='progress'?'#D97706':'#B91C1C',fontSize:10}}>{t.status==='resolved'?'RES':t.status==='progress'?'PRG':'UNR'}</td></tr>;})}
                 </tbody>
               </table>
             </div>
@@ -1745,7 +1830,15 @@ function App(){
   useEffect(function(){document.body.setAttribute('data-theme',theme);localStorage.setItem('ek_global_theme',theme);},[theme]);
   useEffect(function(){const id=setInterval(function(){setShifts(loadShifts());},5000);return function(){clearInterval(id);};},[]);
 
-  const allTix=AGENTS.reduce(function(acc,a){return acc.concat(loadTix(a.id));}, []);
+  // FIX: deduplicate allTix by ticket number — prevents same ticket showing 3-4x after bad import
+  const _rawAllTix=AGENTS.reduce(function(acc,a){return acc.concat(loadTix(a.id));}, []);
+  const _seenNums={};
+  const allTix=_rawAllTix.filter(function(t){
+    const key=(t.num||'').trim().toLowerCase()+'|'+(t.name||'').trim().toLowerCase();
+    if(!key||key==='|')return true; // keep tickets with no num (edge case)
+    if(_seenNums[key])return false;
+    _seenNums[key]=true;return true;
+  });
 
   function setTickets(tix){setTicketsState(tix);if(agent)saveTix(agent.id,tix);}
   function onSignIn(a){

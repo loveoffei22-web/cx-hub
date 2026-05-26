@@ -398,20 +398,9 @@ function showToast(msg,type='ok'){
 })();
 
 
-// ── JSONBin Live Data Sync ─────────────────────────────────────────
-const JB_BIN  = 'a15726378ff2053985d3f41ebf026010'; // GitHub Gist
-const JB_BASE = 'https://gist.githubusercontent.com/loveoffei22-web';
-function getMasterKey(){return localStorage.getItem('ek_master_key')||'';}
-function promptForKey(){
-  const existing=getMasterKey();
-  const k=window.prompt('No key needed — Gist is public for reads:',existing||'');
-  if(k===null)return null;
-  const trimmed=k.trim();
-  if(!trimmed){localStorage.removeItem('ek_master_key');showToast('Key cleared.');return null;}
-  localStorage.setItem('ek_master_key',trimmed);
-  showToast('Master key saved on this device ✅');
-  return trimmed;
-}
+// ── Power Automate Live Data Sync ─────────────────────────────────
+const PA_PULL_KEY='ek_pa_pull_url';
+function getPullUrl(){return localStorage.getItem(PA_PULL_KEY)||'';}
 
 const RESP_MAP = {
   'Band Reclassification':              [1,'Nonye Angelina Nnadozie','Band Reclassification'],
@@ -434,11 +423,15 @@ const RESP_MAP = {
 };
 
 async function pullAndRefresh(){
-  let key=getMasterKey();
-  if(!key){key=promptForKey();if(!key)return;}
+  const pullUrl=getPullUrl();
+  if(!pullUrl){
+    const k=window.prompt('Paste your Power Automate Pull URL (saved once):','');
+    if(!k||!k.trim())return;
+    localStorage.setItem(PA_PULL_KEY,k.trim());
+    return pullAndRefresh();
+  }
   try{
-    const res=await fetch(JB_BASE+'/'+JB_BIN+'/raw/data.json?t='+Date.now());
-    // No auth needed for public Gist read
+    const res=await fetch(pullUrl,{method:'POST'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const data=await res.json();
     const cloud=data||{};
@@ -449,7 +442,7 @@ async function pullAndRefresh(){
       // Cloud empty — keep baseline as-is, just notify
       const b=document.createElement('div');
       b.style.cssText='position:fixed;bottom:16px;right:16px;background:#F59E0B;color:#0A1A4F;padding:10px 16px;border-radius:10px;font:800 12px Sora,sans-serif;z-index:9999;';
-      b.textContent='ℹ Cloud bin empty — showing baseline (24 May COB)';
+      b.textContent='ℹ SharePoint returned no tickets — showing baseline';
       document.body.appendChild(b);setTimeout(function(){b.remove();},4000);
       return;
     }
@@ -460,7 +453,7 @@ async function pullAndRefresh(){
     all.forEach(function(t){
       // Match party by responsible field first, then category keyword
       let row=null;
-      const r=(t.responsible||t.resp||'').toString().trim();
+      const r=(t.resp||t.responsible||t.assignee||'').toString().trim();
       if(r){GM_ROWS.forEach(function(g){if(g[1].toLowerCase()===r.toLowerCase())row=inc[g[0]];});}
       if(!row){
         const cat=(t.category||t.issue||'');
@@ -487,15 +480,15 @@ async function pullAndRefresh(){
     // Show sync status
     const banner=document.createElement('div');
     banner.style.cssText='position:fixed;bottom:16px;right:16px;background:#16A34A;color:#fff;padding:10px 16px;border-radius:10px;font:700 12px Sora,sans-serif;z-index:9999;';
-    banner.textContent='✅ Live data loaded from cloud ('+all.length+' tickets)';
+    banner.textContent='✅ Live data loaded from SharePoint ('+all.length+' tickets)';
     document.body.appendChild(banner);
     setTimeout(function(){banner.remove();},3000);
   }catch(e){
-    console.warn('JSONBin pull failed, using default data:',e.message);
+    console.warn('PA pull failed:',e.message);showToast('Pull failed: '+e.message,'warn');
   }
 }
 // Auto-pull on load — only if a key is saved
-window.addEventListener('load',function(){setTimeout(pullAndRefresh,800);});
+window.addEventListener('load',function(){if(getPullUrl())setTimeout(pullAndRefresh,800);});
 
 </script>
 </body>

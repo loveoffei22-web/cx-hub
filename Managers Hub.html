@@ -2352,21 +2352,17 @@ function Agents({tickets,shifts,onShift,showToast}){
             }
           });
         });
-        // Push _shifts + _sched to Gist 2 if token available
-        const ghToken=localStorage.getItem('ek_gh_token');
-        if(ghToken){
-          fetch('https://api.github.com/gists/32f4e03644698904ce8f8265aa451265',{
-            method:'PATCH',
-            headers:{'Content-Type':'application/json','Authorization':'token '+ghToken,'Accept':'application/vnd.github+json'},
-            body:JSON.stringify({files:{['gistfile1.txt']:{content:JSON.stringify(Object.assign(
-              {},
-              (function(){try{return JSON.parse(localStorage.getItem('ek_gist2_cache')||'{}')}catch(e){return{}}})(),
-              {_shifts:newShifts,_sched:schedObj}
-            ),null,2)}}})
-          }).then(function(){showToast('✅ Roster imported & pushed to Gist — agents will see updates on next pull');})
-            .catch(function(){showToast('✅ Roster imported locally. Push to Gist failed — try Cloud Sync manually.','error');});
+        // Push _shifts + _sched via Power Automate if Push URL is saved
+        const paPushUrl=localStorage.getItem('ek_pa_push_url');
+        if(paPushUrl){
+          fetch(paPushUrl,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({_shifts:newShifts,_sched:schedObj,pushedAt:new Date().toISOString()})
+          }).then(function(){showToast('✅ Roster imported & pushed to SharePoint — agents will see updates on next pull');})
+            .catch(function(){showToast('✅ Roster imported locally. Push to SharePoint failed — try Cloud Sync manually.','error');});
         } else {
-          showToast('✅ Roster imported — '+count+' entries. Set GitHub token in Cloud Sync to push to agents.');
+          showToast('✅ Roster imported — '+count+' entries. Set Push URL in Cloud Sync to push to agents.');
         }
       }catch(err){showToast('CSV parse error: '+err.message,'error');}
     };
@@ -2417,22 +2413,15 @@ function Agents({tickets,shifts,onShift,showToast}){
     </div>
   );
 }
-// ── CLOUD SYNC — GitHub Gist ──────────────────────────────────────
+// ── CLOUD SYNC — SharePoint via Power Automate ────────────────────
 function CloudSync({tickets,setTickets,showToast}){
-  const GIST_ID='a15726378ff2053985d3f41ebf026010';
-  const GIST_FILENAME='data.json';
-  const RAW_URL='https://gist.githubusercontent.com/loveoffei22-web/'+GIST_ID+'/raw/'+GIST_FILENAME;
-  // Gist 2 — agents push here, everyone pulls from here
-  const GIST2_ID='32f4e03644698904ce8f8265aa451265';
-  const GIST2_FILENAME='gistfile1.txt';
-  const RAW_URL2='https://gist.githubusercontent.com/loveoffei22-web/'+GIST2_ID+'/raw/'+GIST2_FILENAME;
-  const API_URL2='https://api.github.com/gists/'+GIST2_ID;
-  const API_URL='https://api.github.com/gists/'+GIST_ID;
-  const TOKEN_STORAGE='ek_gh_token';
+  const PA_PULL_KEY='ek_pa_pull_url';
+  const PA_PUSH_KEY='ek_pa_push_url';
 
-  const[apiKey,setApiKey]=useState(()=>localStorage.getItem(TOKEN_STORAGE)||'');
-  const[keyDraft,setKeyDraft]=useState('');
-  const[showKey,setShowKey]=useState(false);
+  const[pullUrl,setPullUrl]=useState(()=>localStorage.getItem(PA_PULL_KEY)||'');
+  const[pushUrl,setPushUrl]=useState(()=>localStorage.getItem(PA_PUSH_KEY)||'');
+  const[pullDraft,setPullDraft]=useState('');
+  const[pushDraft,setPushDraft]=useState('');
   const[saving,setSaving]=useState(false);
   const[status,setStatus]=useState({msg:'',ok:true});
   const[lastSync,setLastSync]=useState(()=>localStorage.getItem('ek_last_sync')||'');
@@ -2442,46 +2431,46 @@ function CloudSync({tickets,setTickets,showToast}){
 
   const addLog=(msg,ok)=>setLog(l=>[{time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Africa/Lagos'}),msg,ok},...l.slice(0,19)]);
 
-  function saveKey(){
-    const k=(keyDraft||'').trim();
-    if(!k){showToast('Paste your GitHub token first','error');return;}
-    localStorage.setItem(TOKEN_STORAGE,k);
-    setApiKey(k);setKeyDraft('');
-    showToast('GitHub token saved on this device ✅');
-    addLog('GitHub token saved',true);
+  function savePullUrl(){
+    const u=(pullDraft||'').trim();
+    if(!u){showToast('Paste your Power Automate Pull URL first','error');return;}
+    localStorage.setItem(PA_PULL_KEY,u);setPullUrl(u);setPullDraft('');
+    showToast('Pull URL saved ✅');addLog('Pull URL saved',true);
   }
-  function clearKey(){
-    if(!window.confirm('Clear the GitHub token from this device? Sync will stop working until you re-enter it.'))return;
-    localStorage.removeItem(TOKEN_STORAGE);
-    setApiKey('');setConnected(false);
-    showToast('GitHub token cleared');
-    addLog('GitHub token cleared',false);
+  function savePushUrl(){
+    const u=(pushDraft||'').trim();
+    if(!u){showToast('Paste your Power Automate Push URL first','error');return;}
+    localStorage.setItem(PA_PUSH_KEY,u);setPushUrl(u);setPushDraft('');
+    showToast('Push URL saved ✅');addLog('Push URL saved',true);
+  }
+  function clearUrls(){
+    if(!window.confirm('Clear both Power Automate URLs from this device?'))return;
+    localStorage.removeItem(PA_PULL_KEY);localStorage.removeItem(PA_PUSH_KEY);
+    setPullUrl('');setPushUrl('');setConnected(false);
+    showToast('URLs cleared');addLog('PA URLs cleared',false);
   }
 
-  // Request notification permission + auto-pull on mount
+  // Request notification permission + auto-pull on mount + 5-min refresh
   useEffect(()=>{
     if('Notification' in window && Notification.permission==='default'){
       Notification.requestPermission();
     }
     const done=sessionStorage.getItem('ek_mgr_pulled');
-    if(!done){sessionStorage.setItem('ek_mgr_pulled','1');setTimeout(pullNow,1400);}
-    // Auto-refresh every 5 minutes
-    const interval=setInterval(function(){pullNow();},5*60*1000);
+    if(!done&&pullUrl){sessionStorage.setItem('ek_mgr_pulled','1');setTimeout(pullNow,1400);}
+    const interval=setInterval(function(){if(pullUrl)pullNow();},5*60*1000);
     return function(){clearInterval(interval);};
-  },[]);
+  },[]); // eslint-disable-line
 
   async function pullNow(){
-    setSaving(true);setStatus({msg:'Pulling from both Gists…',ok:true});
-    addLog('Fetching from Gist 1 (PA) + Gist 2 (Agents)…',null);
+    if(!pullUrl){showToast('Set your Pull URL first','error');return;}
+    setSaving(true);setStatus({msg:'Pulling from SharePoint via Power Automate…',ok:true});
+    addLog('Fetching from SharePoint…',null);
     try{
-      const [res1,res2]=await Promise.all([
-        fetch(RAW_URL+'?t='+Date.now()),
-        fetch(RAW_URL2+'?t='+Date.now())
-      ]);
-      const cloud1=res1.ok?await res1.json():{};
-      const cloud2=res2.ok?await res2.json():{};
-      // Merge both Gists
-      // Normalize Gist 1 — may be {days:[...]} PA snapshot format
+      const res=await fetch(pullUrl,{method:'POST'});
+      if(!res.ok)throw new Error('HTTP '+res.status+' — check your Pull URL');
+      const cloud1=await res.json();
+
+      // Normalise {days:[...]} format from Manager Hub PA flow
       const STATUS_MAP_N={'pending':'unresolved','assigned':'progress','closed':'resolved','in progress':'progress','resolved':'resolved','unresolved':'unresolved'};
       let norm1=cloud1;
       if(Array.isArray(cloud1.days)){
@@ -2502,7 +2491,7 @@ function CloudSync({tickets,setTickets,showToast}){
               resp:     t.assignee||'',
               status:   STATUS_MAP_N[(t.status||'').toLowerCase()]||'unresolved',
               note:     t.resolutionNote||'',
-              day:      day.dayNum||25,
+              day:      day.dayNum||new Date().getDate(),
               agent:    t.agent||'manager',
               created:  t.created||'',
             });
@@ -2510,8 +2499,8 @@ function CloudSync({tickets,setTickets,showToast}){
         });
         norm1={manager:flatTickets};
       }
-      // Merge: Gist2 agent keys take priority over Gist1 manager keys
-      const cloudNorm=Object.assign({},norm1,cloud2);
+
+      const cloudNorm=Object.assign({},norm1);
       let count=0;
       const merged=[...tickets];
       Object.keys(cloudNorm).forEach(function(agentId){
@@ -2532,13 +2521,12 @@ function CloudSync({tickets,setTickets,showToast}){
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);
       setPreview(cloudNorm);setConnected(true);
-      const msg='✅ Pulled '+count+' tickets from '+Object.keys(cloudNorm).filter(function(k){return k.charAt(0)!=='_';}).length+' agent(s).';
+      const agentCount=Object.keys(cloudNorm).filter(function(k){return k.charAt(0)!=='_';}).length;
+      const msg='✅ Pulled '+count+' tickets from '+agentCount+' agent(s).';
       setStatus({msg,ok:true});addLog(msg,true);showToast(msg);
-      // Browser notification for new tickets
       if(count>0&&'Notification' in window&&Notification.permission==='granted'){
         new Notification('📱 EKEDP Power App',{
           body:count+' new complaint'+(count>1?'s':'')+' received',
-          icon:'https://loveoffei22-web.github.io/cx-hub/ekedpappicon.png',
           tag:'ek-new-tickets'
         });
       }
@@ -2549,8 +2537,8 @@ function CloudSync({tickets,setTickets,showToast}){
   }
 
   async function pushNow(){
-    if(!apiKey){showToast('Set your GitHub token first','error');return;}
-    setSaving(true);setStatus({msg:'Pushing to GitHub Gist…',ok:true});addLog('Preparing data…',null);
+    if(!pushUrl){showToast('Set your Push URL first','error');return;}
+    setSaving(true);setStatus({msg:'Pushing to SharePoint via Power Automate…',ok:true});addLog('Preparing data…',null);
     try{
       const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
       const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
@@ -2566,17 +2554,16 @@ function CloudSync({tickets,setTickets,showToast}){
       const incrementalCount=Object.values(byAgent).reduce(function(a,arr){return a+arr.length;},0);
       try{byAgent._shifts=JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch(e){}
       try{var g=localStorage.getItem('ek_guide');if(g){byAgent._guide=JSON.parse(g);}}catch(e){}
-      const res=await fetch(API_URL2,{
-        method:'PATCH',
-        headers:{'Content-Type':'application/json','Authorization':'token '+apiKey,'Accept':'application/vnd.github+json'},
-        body:JSON.stringify({files:{[GIST2_FILENAME]:{content:JSON.stringify(byAgent,null,2)}}})
+      const payload=Object.assign({},byAgent,{pushedAt:new Date().toISOString(),date:todayStr});
+      const res=await fetch(pushUrl,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
       });
-      if(res.status===401)throw new Error('Invalid GitHub token');
-      if(res.status===404)throw new Error('Gist not found — check token has gist scope');
-      if(!res.ok)throw new Error('HTTP '+res.status);
+      if(!res.ok)throw new Error('HTTP '+res.status+' — check your Push URL');
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);setConnected(true);
-      const msg='✅ Pushed '+incrementalCount+' new tickets to GitHub Gist.';
+      const msg='✅ Pushed '+incrementalCount+' tickets to SharePoint.';
       setStatus({msg,ok:true});addLog(msg,true);showToast(msg);
     }catch(e){
       const msg='Push failed: '+e.message;
@@ -2601,17 +2588,18 @@ function CloudSync({tickets,setTickets,showToast}){
     <div>
       <div className="hero" style={{padding:'18px 28px'}}>
         <div style={{font:'700 10px/1 Sora,sans-serif',color:'var(--ek-gold)',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:8}}>Cloud Sync</div>
-        <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:6}}>☁ Cloud Sync — Dual Gist</div>
-        <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>Pulls from Gist 1 (PA flow) + Gist 2 (agents). Push writes to Gist 2 only.</div>
+        <div style={{font:'800 20px/1 Sora,sans-serif',color:'#fff',marginBottom:6}}>☁ Cloud Sync — SharePoint via Power Automate</div>
+        <div style={{font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>All data stays in Microsoft 365 — no GitHub, no external services. Auto-refreshes every 5 minutes.</div>
       </div>
       <div style={{padding:'18px 28px',display:'grid',gridTemplateColumns:'1fr 320px',gap:16}}>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
+
           {/* Status bar */}
           <div className="card" style={{borderColor:connected?'var(--okb)':'var(--bsoft)'}}>
             <div style={{padding:'14px 16px',display:'flex',alignItems:'center',gap:12}}>
               <span style={{fontSize:20}}>{connected?'🟢':'⚪'}</span>
               <div style={{flex:1}}>
-                <div style={{font:'700 12px/1 Sora,sans-serif',color:connected?'var(--okb)':'var(--muted)'}}>{connected?'Connected to GitHub Gist':'Not yet synced'}</div>
+                <div style={{font:'700 12px/1 Sora,sans-serif',color:connected?'var(--okb)':'var(--muted)'}}>{connected?'Connected to SharePoint':'Not yet synced'}</div>
                 {fmtSync&&<div style={{font:'500 11px Sora,sans-serif',color:'var(--sub)',marginTop:3}}>Last sync: {fmtSync} WAT</div>}
                 {agentSummary&&<div style={{font:'500 11px JetBrains Mono,monospace',color:'var(--muted)',marginTop:3}}>{agentSummary}</div>}
               </div>
@@ -2623,57 +2611,51 @@ function CloudSync({tickets,setTickets,showToast}){
           <div className="card">
             <div className="card-head"><h3>⚡ Sync Actions</h3></div>
             <div style={{padding:16,display:'flex',gap:10}}>
-              <button className="btn btn-gold" onClick={pullNow} disabled={saving} style={{flex:1,padding:'12px 0',font:'700 13px Sora,sans-serif'}}>
-                {saving?'⟳ Working…':'⬇ Pull from Gist'}
+              <button className="btn btn-gold" onClick={pullNow} disabled={saving||!pullUrl} style={{flex:1,padding:'12px 0',font:'700 13px Sora,sans-serif',opacity:pullUrl?1:.45}}>
+                {saving?'⟳ Working…':'⬇ Pull from SharePoint'}
               </button>
-              <button className="btn" onClick={pushNow} disabled={saving||!apiKey} style={{flex:1,padding:'12px 0',font:'700 13px Sora,sans-serif',opacity:apiKey?1:.45}}>
-                {saving?'⟳ Working…':'⬆ Push to Gist'}
+              <button className="btn" onClick={pushNow} disabled={saving||!pushUrl} style={{flex:1,padding:'12px 0',font:'700 13px Sora,sans-serif',opacity:pushUrl?1:.45}}>
+                {saving?'⟳ Working…':'⬆ Push to SharePoint'}
               </button>
             </div>
             <div style={{padding:'0 16px 14px',font:'500 11px Sora,sans-serif',color:'var(--sub)'}}>
-              Pull is always free — no token needed. Push requires your GitHub token below.
+              🔒 Both Pull and Push use your Power Automate HTTP trigger flows — data never leaves Microsoft 365.
             </div>
           </div>
 
-          {/* GitHub token */}
-          <div className="card" style={{borderColor:apiKey?'rgba(74,222,128,.3)':'var(--bsoft)'}}>
-            <div className="card-head" style={{background:apiKey?'rgba(74,222,128,.06)':''}}>
-              <h3>{apiKey?'🔑 GitHub Token (saved)':'🔑 GitHub Token — required to Push'}</h3>
-              {apiKey&&<button className="btn btn-sm btn-danger" onClick={clearKey}>Clear</button>}
+          {/* Pull URL setup */}
+          <div className="card" style={{borderColor:pullUrl?'rgba(74,222,128,.3)':'var(--bsoft)'}}>
+            <div className="card-head" style={{background:pullUrl?'rgba(74,222,128,.06)':''}}>
+              <h3>{pullUrl?'🔗 Pull URL (saved)':'🔗 Power Automate Pull URL — required to Pull'}</h3>
+              {pullUrl&&<button className="btn btn-sm btn-danger" onClick={function(){if(window.confirm('Clear Pull URL?')){localStorage.removeItem(PA_PULL_KEY);setPullUrl('');addLog('Pull URL cleared',false);}}}>Clear</button>}
             </div>
-            {!apiKey&&(
-              <div style={{padding:16}}>
-                <div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>
-                  Generate at <b style={{color:'var(--text)'}}>github.com → Settings → Developer Settings → Personal Access Tokens (classic)</b> — tick <b style={{color:'var(--text)'}}>gist</b> scope only.
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,alignItems:'center'}}>
-                  <input className="inp" type={showKey?'text':'password'} value={keyDraft} onChange={function(e){setKeyDraft(e.target.value);}} placeholder="Paste GitHub token here…" autoFocus/>
-                  <div style={{display:'flex',gap:6}}>
-                    <button className="btn btn-sm" onClick={function(){setShowKey(!showKey);}}>{showKey?'🙈 Hide':'👁 Show'}</button>
-                    <button className="btn btn-gold btn-sm" onClick={saveKey}>✓ Save</button>
-                  </div>
-                </div>
-                <div style={{marginTop:10,padding:'8px 12px',background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',borderRadius:8,font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)'}}>
-                  Token is saved on this device only — never in source code.
-                </div>
+            <div style={{padding:16}}>
+              {pullUrl&&<div style={{font:'600 11px Sora,sans-serif',color:'var(--okb)',marginBottom:10}}>✓ Pull URL saved — update below if needed.</div>}
+              {!pullUrl&&<div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Create an <b style={{color:'var(--text)'}}>HTTP request trigger</b> flow in Power Automate that reads your SharePoint ticket list and returns JSON. Paste the URL below.</div>}
+              <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,alignItems:'center'}}>
+                <input className="inp" type="text" value={pullDraft} onChange={function(e){setPullDraft(e.target.value);}} placeholder={pullUrl?pullUrl.slice(0,48)+'…':'https://prod-xx.westeurope.logic.azure.com/…'}/>
+                <button className="btn btn-gold btn-sm" onClick={savePullUrl}>✓ {pullUrl?'Update':'Save'}</button>
               </div>
-            )}
-            {apiKey&&(
-              <div style={{padding:'12px 16px',font:'600 12px Sora,sans-serif',color:'var(--okb)'}}>✓ Token saved on this device — Push is enabled.</div>
-            )}
-          </div>
-
-          {/* Gist info */}
-          <div className="card">
-            <div className="card-head"><h3>ℹ Gist Info</h3></div>
-            <div style={{padding:16,display:'flex',flexDirection:'column',gap:8}}>
-              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist ID</div>
-              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist 1 — PA flow (read only)</div>
-              <div style={{font:'700 11px JetBrains Mono,monospace',color:'var(--text)',wordBreak:'break-all',marginBottom:8}}>{GIST_ID}</div>
-              <div style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Gist 2 — Agents push here</div>
-              <div style={{font:'700 11px JetBrains Mono,monospace',color:'var(--ek-gold)',wordBreak:'break-all'}}>{GIST2_ID}</div>
             </div>
           </div>
+
+          {/* Push URL setup */}
+          <div className="card" style={{borderColor:pushUrl?'rgba(99,102,241,.4)':'var(--bsoft)'}}>
+            <div className="card-head" style={{background:pushUrl?'rgba(99,102,241,.06)':''}}>
+              <h3>{pushUrl?'🔗 Push URL (saved)':'🔗 Power Automate Push URL — required to Push'}</h3>
+              {pushUrl&&<button className="btn btn-sm btn-danger" onClick={function(){if(window.confirm('Clear Push URL?')){localStorage.removeItem(PA_PUSH_KEY);setPushUrl('');addLog('Push URL cleared',false);}}}>Clear</button>}
+            </div>
+            <div style={{padding:16}}>
+              {pushUrl&&<div style={{font:'600 11px Sora,sans-serif',color:'var(--infob)',marginBottom:10}}>✓ Push URL saved — update below if needed.</div>}
+              {!pushUrl&&<div style={{font:'600 12px/1.6 Sora,sans-serif',color:'var(--muted)',marginBottom:12}}>Create a second <b style={{color:'var(--text)'}}>HTTP request trigger</b> flow that accepts ticket data (POST JSON) and writes to your SharePoint list. Paste the URL below.</div>}
+              <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,alignItems:'center'}}>
+                <input className="inp" type="text" value={pushDraft} onChange={function(e){setPushDraft(e.target.value);}} placeholder={pushUrl?pushUrl.slice(0,48)+'…':'https://prod-xx.westeurope.logic.azure.com/…'}/>
+                <button className="btn btn-sm" style={{padding:'8px 12px',background:'#4F46E5',color:'#fff',border:'none',borderRadius:7,font:'800 11px Sora,sans-serif',cursor:'pointer'}} onClick={savePushUrl}>✓ {pushUrl?'Update':'Save'}</button>
+              </div>
+            </div>
+          </div>
+
+          {(pullUrl||pushUrl)&&<button onClick={clearUrls} style={{padding:'9px 16px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,font:'700 12px Sora,sans-serif',cursor:'pointer',alignSelf:'flex-start'}}>✕ Clear all URLs</button>}
         </div>
 
         {/* Sync Log */}
