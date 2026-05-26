@@ -2312,9 +2312,7 @@ function Agents({tickets,shifts,onShift,showToast}){
     const reader=new FileReader();
     reader.onload=function(ev){
       try{
-        const lines=ev.target.result.replace(/
-/g,'').split('
-').filter(Boolean);
+        const lines=ev.target.result.split(/\r?\n/).filter(Boolean);
         const headers=lines[0].replace(/"/g,'').split(',');
         const iDate=headers.indexOf('TitleDate');
         const iName=headers.indexOf('AgentName');
