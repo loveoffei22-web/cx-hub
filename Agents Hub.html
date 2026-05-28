@@ -239,7 +239,7 @@ const THEMES=[
 const NAV=[
   {id:'dashboard',icon:'📊',label:'Dashboard'},
   {id:'all',      icon:'📂',label:'All Complaints'},
-  {id:'tickets',  icon:'📋',label:'Tickets'},
+  {id:'tickets',  icon:'📋',label:'My Tickets'},
   {id:'slot',     icon:'📤',label:'Slot Reports'},
   {id:'guide',    icon:'📖',label:'Support Guide'},
   {id:'data',     icon:'📁',label:'Export / Import'},
@@ -307,19 +307,9 @@ function parseMultiple(txt){
 }
 function loadTix(id){try{return JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');}catch{return[];}}
 
-// ── DAILY RESET: clear agent tickets at start of each new day ─────
-(function(){
-  var watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-  var todayKey=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
-  var lastDay=localStorage.getItem('ek_agent_day');
-  if(lastDay&&lastDay!==todayKey){
-    // New day — wipe all agent ticket stores so everyone starts fresh
-    ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){
-      localStorage.removeItem('ek_tix_'+id);
-    });
-  }
-  localStorage.setItem('ek_agent_day',todayKey);
-})();
+// Tickets are now cumulative — no daily wipe.
+// "My Tickets" + Slot Reports are scoped to the duty window via getDutyWindow().
+// "All Complaints" shows the full historical store for all agents.
 function fmtDay(t){
   const d=String(t.created||t.received||'').slice(0,10);
   if(d&&/^\d{4}-\d{2}-\d{2}$/.test(d)){
@@ -472,7 +462,7 @@ function Dashboard({agent,allTix,shifts}){
         {/* Roster cards */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10,marginBottom:20}}>
           {AGENTS.map(function(a){
-            const myTix=allTix.filter(function(t){return(t.agent||'')===a.id;});
+            const myTix=allTix.filter(function(t){return(t.agent||'')===a.id&&inDutyWindow(t);});
             const res=myTix.filter(function(t){return t.status==='resolved';}).length;
             const rate=myTix.length?Math.round(res/myTix.length*100):0;
             const shift=shifts[a.id]||'off';
@@ -536,12 +526,53 @@ function Dashboard({agent,allTix,shifts}){
 }
 
 // ── MY TICKETS ──────────────────────────────────────────────
+// ── DUTY WINDOW ─────────────────────────────────────────────
+// Returns {start, end} as Date objects in WAT
+// Mon–Fri: prev day 17:01 → today 17:00
+// Saturday: prev Fri 17:01 → today 16:00
+// Sunday: prev Sat 16:01 → today 16:00
+function getDutyWindow(){
+  var now=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  var dow=now.getDay(); // 0=Sun,1=Mon...6=Sat
+  var todayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var start,end;
+  if(dow===6){// Saturday
+    var fri=new Date(todayBase);fri.setDate(fri.getDate()-1);
+    start=new Date(fri.getFullYear(),fri.getMonth(),fri.getDate(),17,1,0);
+    end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),16,0,0);
+  } else if(dow===0){// Sunday
+    var sat=new Date(todayBase);sat.setDate(sat.getDate()-1);
+    start=new Date(sat.getFullYear(),sat.getMonth(),sat.getDate(),16,1,0);
+    end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),16,0,0);
+  } else {// Mon–Fri
+    var prev=new Date(todayBase);
+    if(dow===1){prev.setDate(prev.getDate()-3);}// Mon → go back to Fri
+    else{prev.setDate(prev.getDate()-1);}
+    start=new Date(prev.getFullYear(),prev.getMonth(),prev.getDate(),17,1,0);
+    end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
+  }
+  return{start:start,end:end};
+}
+function inDutyWindow(t){
+  var w=getDutyWindow();
+  var d=new Date(t.created||t.receivedAt||'');
+  if(isNaN(d.getTime()))return false;
+  var watD=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  return watD>=w.start&&watD<=w.end;
+}
+function fmtDutyWindow(){
+  var w=getDutyWindow();
+  var opts={weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Africa/Lagos'};
+  return w.start.toLocaleString('en-GB',opts)+' → '+w.end.toLocaleString('en-GB',opts);
+}
+
 function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast}){
   const[search,setSearch]=useState('');
   const[fSt,setFSt]=useState('all');
   const[expanded,setExpanded]=useState(null);
   const[editState,setEditState]=useState({});
-  const filt=tickets.filter(function(t){
+  const dutyTix=tickets.filter(function(t){return inDutyWindow(t);});
+  const filt=dutyTix.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(search){const q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+t.category+t.addr).toLowerCase().includes(q);}
     return true;
@@ -578,7 +609,10 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast}){
   return(
     <div>
       <div className="topbar" style={{padding:'10px 28px',minHeight:0}}>
-        <div style={{font:'700 10px Sora,sans-serif',color:'var(--muted)',letterSpacing:'.12em',textTransform:'uppercase'}}>My Tickets · {filt.length}</div>
+        <div>
+          <div style={{font:'700 10px Sora,sans-serif',color:'var(--muted)',letterSpacing:'.12em',textTransform:'uppercase'}}>My Tickets · {filt.length}</div>
+          <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:3,opacity:.7}}>⏱ {fmtDutyWindow()}</div>
+        </div>
         <div style={{display:'flex',gap:8}}>
           <button onClick={exportCSV} className="btn btn-sm" style={{background:'#E30613',color:'#fff',border:'none',fontWeight:800}}>⬆ Export CSV</button>
           <button onClick={dlJSON} className="btn btn-sm" style={{background:'#1D4ED8',color:'#fff',border:'none',fontWeight:800}}>⬇ Download JSON</button>
@@ -722,12 +756,39 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
   const[fSt,setFSt]=useState('all');
   const[fBu,setFBu]=useState('all');
   const[fCat,setFCat]=useState('all');
-  const[fOwn,setFOwn]=useState('all'); // 'all' | 'mine' | 'updated'
+  const[fOwn,setFOwn]=useState('all');
   const[sort,setSort]=useState('newest');
   const[expanded,setExpanded]=useState(null);
   const[editState,setEditState]=useState({});
   const[page,setPage]=useState(0);
+  const[selected,setSelected]=useState(new Set());
+  const lastChecked=useRef(null);
   const PAGE=50;
+
+  function toggleSel(id,e){
+    setSelected(function(s){
+      const n=new Set(s);
+      if(e&&e.shiftKey&&lastChecked.current){
+        // Shift+click: select range between lastChecked and current
+        const ids=paged.map(function(t){return t.id;});
+        const a=ids.indexOf(lastChecked.current);
+        const b=ids.indexOf(id);
+        const [from,to]=[Math.min(a,b),Math.max(a,b)];
+        ids.slice(from,to+1).forEach(function(i){n.add(i);});
+      } else {
+        n.has(id)?n.delete(id):n.add(id);
+      }
+      return n;
+    });
+    lastChecked.current=id;
+  }
+  function deleteSelected(){
+    if(!selected.size)return;
+    if(!window.confirm('Delete '+selected.size+' ticket(s)? This cannot be undone.'))return;
+    selected.forEach(function(id){onDelete&&onDelete(id);});
+    setSelected(new Set());
+    showToast('🗑 '+selected.size+' tickets deleted');
+  }
   const filt=allTix.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(fBu!=='all'&&t.bu!==fBu)return false;
@@ -832,6 +893,13 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
           </div>
         </div>
         <div style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderRadius:10,overflow:'hidden',marginBottom:10}}>
+          {selected.size>0&&(
+            <div style={{display:'flex',alignItems:'center',gap:12,padding:'9px 14px',background:'rgba(239,68,68,.1)',borderBottom:'1px solid rgba(239,68,68,.25)'}}>
+              <span style={{font:'700 12px Sora,sans-serif',color:'#F87171'}}>{selected.size} selected</span>
+              <button onClick={deleteSelected} style={{padding:'5px 13px',background:'#EF4444',color:'#fff',border:'none',borderRadius:7,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>🗑 Delete Selected</button>
+              <button onClick={function(){setSelected(new Set());}} style={{padding:'5px 11px',background:'transparent',color:'var(--muted)',border:'1px solid var(--bsoft)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✕ Clear</button>
+              <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginLeft:4}}>Shift+click to select range</span>
+            </div>)}
           <div style={{padding:'8px 14px',background:'rgba(0,0,0,.3)',font:'600 11px Sora,sans-serif',color:'var(--muted)',display:'flex',justifyContent:'space-between'}}>
             <span>Tickets · {filt.length}</span>
             <span>Sorted {sort==='newest'?'newest first':sort==='oldest'?'oldest first':sort==='num_desc'?'by ticket # (high → low)':'by ticket # (low → high)'} · Row expanded — click again to close</span>
@@ -839,27 +907,29 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
           <div style={{overflowX:'auto'}}>
             <table className="ctbl">
               <colgroup>
-  <col style={{width:36}}/><col style={{width:100}}/><col style={{width:80}}/><col style={{width:72}}/>
+  <col style={{width:32}}/><col style={{width:36}}/><col style={{width:100}}/><col style={{width:80}}/><col style={{width:72}}/>
   <col style={{width:160}}/><col style={{width:130}}/><col style={{width:72}}/><col style={{width:160}}/>
-  <col style={{width:110}}/><col/>
+  <col style={{width:110}}/><col/><col style={{width:36}}/>
 </colgroup>
-<thead><tr><th style={{width:36}}>#</th><th style={{width:100}}>TICKET</th><th style={{width:80}}>TIME</th><th style={{width:72}}>DATE</th><th style={{width:160}}>CUSTOMER</th><th style={{width:130}}>PHONE</th><th style={{width:72}}>BU</th><th style={{width:160}}>CATEGORY</th><th style={{width:110}}>STATUS</th><th>ACTION TAKEN</th></tr></thead>
+<thead><tr><th style={{width:32}}></th><th style={{width:36}}>#</th><th style={{width:100}}>TICKET</th><th style={{width:80}}>TIME</th><th style={{width:72}}>DATE</th><th style={{width:160}}>CUSTOMER</th><th style={{width:130}}>PHONE</th><th style={{width:72}}>BU</th><th style={{width:160}}>CATEGORY</th><th style={{width:110}}>STATUS</th><th>ACTION TAKEN</th><th></th></tr></thead>
               <tbody>
                 {paged.map(function(t,i){const isEx=expanded===t.id;const idx=page*PAGE+i+1;const e=getEdit(t);return(
                   <React.Fragment key={t.id||i}>
-                    <tr className={isEx?'expanded':''} onClick={function(){toggleExpand(t);}}>
-                      <td style={{color:'var(--text2)',fontSize:13}}>{String(idx).padStart(2,'0')}</td>
-                      <td><span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
-                      <td style={{color:'var(--text2)',fontSize:13}}>{t.time||'—'}</td>
-                      <td style={{color:'var(--text2)',fontSize:13,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
-                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.name}</td>
-                      <td><span className="mono" style={{fontSize:13,color:'var(--text2)'}}>{t.phone}</span></td>
-                      <td><span className="bu-tag">{t.bu}</span></td>
-                      <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><div className="cat-main" style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div></td>
-                      <td>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
-                      <td style={{fontSize:13,color:'var(--text2)'}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼ details</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲ close</span>}</td>
+                    <tr className={isEx?'expanded':''} style={{background:selected.has(t.id)?'rgba(239,68,68,.07)':''}}>
+                      <td style={{padding:'0 6px',textAlign:'center'}} onClick={function(ev){ev.stopPropagation();toggleSel(t.id,ev);}}><input type="checkbox" readOnly checked={selected.has(t.id)} style={{cursor:'pointer',width:14,height:14,pointerEvents:'none'}}/></td>
+                      <td style={{color:'var(--text2)',fontSize:13}} onClick={function(){toggleExpand(t);}}>{String(idx).padStart(2,'0')}</td>
+                      <td onClick={function(){toggleExpand(t);}}><span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
+                      <td style={{color:'var(--text2)',fontSize:13}} onClick={function(){toggleExpand(t);}}>{t.time||'—'}</td>
+                      <td style={{color:'var(--text2)',fontSize:13,whiteSpace:'nowrap'}} onClick={function(){toggleExpand(t);}}>{fmtDay(t)}</td>
+                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} onClick={function(){toggleExpand(t);}}>{t.name}</td>
+                      <td onClick={function(){toggleExpand(t);}}><span className="mono" style={{fontSize:13,color:'var(--text2)'}}>{t.phone}</span></td>
+                      <td onClick={function(){toggleExpand(t);}}><span className="bu-tag">{t.bu}</span></td>
+                      <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} onClick={function(){toggleExpand(t);}}><div className="cat-main" style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div></td>
+                      <td onClick={function(){toggleExpand(t);}}>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
+                      <td style={{fontSize:13,color:'var(--text2)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} onClick={function(){toggleExpand(t);}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲</span>}</td>
+                      <td><button onClick={function(ev){ev.stopPropagation();handleDelete(t);}} title="Delete" style={{background:'none',border:'none',color:'rgba(239,68,68,.4)',cursor:'pointer',font:'700 14px Sora,sans-serif',padding:'2px 6px',borderRadius:5}} onMouseEnter={function(ev){ev.target.style.color='#EF4444';}} onMouseLeave={function(ev){ev.target.style.color='rgba(239,68,68,.4)';}}>✕</button></td>
                     </tr>
-                    {isEx&&<tr className="exp-row"><td colSpan={10} style={{padding:0}}>
+                    {isEx&&<tr className="exp-row"><td colSpan={12} style={{padding:0}}>
                       <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
                         {/* ── Header ── */}
                         <div style={{background:'linear-gradient(135deg,#1E3A8A,#0F2461)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
@@ -936,7 +1006,7 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
                       </div>
                     </td></tr>}
                   </React.Fragment>);})}
-                {!paged.length&&<tr><td colSpan={10} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets match your filters.</td></tr>}
+                {!paged.length&&<tr><td colSpan={12} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets match your filters.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -1089,7 +1159,7 @@ function SlotReport({agent,tickets,showToast}){
   const[slot,setSlot]=useState(nowSlot);
   const s=SLOTS.find(function(x){return x.id===slot;})||SLOTS[0];
 
-  const todayTix=tickets.filter(function(t){return t.created?t.created.slice(0,10)===todayStr:true;});
+  const todayTix=tickets.filter(function(t){return inDutyWindow(t);});
   const resTix=todayTix.filter(function(t){return t.status==='resolved';});
   const prgTix=todayTix.filter(function(t){return t.status==='progress';});
   const unrTix=todayTix.filter(function(t){return t.status==='unresolved';});
@@ -1365,7 +1435,7 @@ function ImportJSON({agent,tickets,setTickets,showToast}){
 function ExportDay({agent,tickets,showToast}){
   const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const todayStr=watNow.toISOString().slice(0,10);
-  const todayTix=tickets.filter(function(t){return t.created?t.created.slice(0,10)===todayStr:watNow.getDate()===(t.day||0);});
+  const todayTix=tickets.filter(function(t){return inDutyWindow(t);});
   function dl(){
     const data={exportedBy:{name:agent.name,id:agent.id,role:agent.role},exportedAt:new Date().toISOString(),period:{date:todayStr,dayLong:watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})},tickets:todayTix};
     const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));a.download='ekedp_agent_'+agent.id+'_'+todayStr+'.json';a.click();
@@ -1543,9 +1613,22 @@ function CloudSync({agent,tickets,setTickets,showToast}){
       if(!res.ok)throw new Error('HTTP '+res.status+' — check your Pull URL');
       const cloud1=await res.json();
 
-      // Normalise {days:[...]} format produced by the Manager Hub PA flow
+      // Normalise {manager:[...]} format from Pull All Tickets flow
       var normalized1={};
-      if(Array.isArray(cloud1.days)){
+      if(Array.isArray(cloud1.manager)){
+        // Pull All returns {manager:[tickets]} — assign each ticket correct agent from AssignedTo field
+        var flatAll=cloud1.manager.map(function(t){
+          var spStatus=t.status||t.Status||'';
+          return Object.assign({},t,{
+            id:t.id||('tk_mgr_'+t.num),
+            agent:t.agent||'manager',
+            issue:t.issue||t.description||t.Description||t.note||'',
+            status:(function(s){s=s||'';return s==='Closed'||s==='Resolved'?'resolved':s==='Assigned'||s==='In Progress'||s==='progress'?'progress':'unresolved';})(spStatus),
+          });
+        });
+        normalized1={manager:flatAll};
+      } else if(Array.isArray(cloud1.days)){
+      } else if(Array.isArray(cloud1.days)){
         var flatTickets=[];
         cloud1.days.forEach(function(day){
           (day.tickets||[]).forEach(function(t){
@@ -1562,7 +1645,7 @@ function CloudSync({agent,tickets,setTickets,showToast}){
               issue:t.note||t.title||'',
               resp:t.assignee||'',
               category:t.category&&t.subcategory?t.category+' — '+t.subcategory:(t.category||''),
-              status:(function(s){return s==='Pending'?'unresolved':s==='Resolved'?'resolved':s==='In Progress'?'progress':s||'unresolved';})(t.status),
+              status:(function(s){s=s||'';return s==='Closed'?'resolved':s==='Resolved'?'resolved':s==='Assigned'?'progress':s==='In Progress'?'progress':s==='Pending'?'unresolved':'unresolved';})(t.status||t.Status||''),
               note:t.resolutionNote||'',
               agent:'manager',
               day:day.dayNum||new Date().getDate(),
@@ -1575,6 +1658,18 @@ function CloudSync({agent,tickets,setTickets,showToast}){
       }
 
       var cloud=Object.assign({},normalized1);
+
+      // If response uses 'agent' key (pull_today flow), remap to signed-in agent's id
+      if(Array.isArray(cloud.agent)&&!cloud[agent.id]){
+        cloud[agent.id]=cloud.agent.map(function(t){
+          return Object.assign({},t,{
+            agent:agent.id,
+            id:t.id||('tk_'+agent.id+'_'+t.num),
+            status:(function(s){return s==='Pending'?'unresolved':s==='Resolved'?'resolved':s==='In Progress'?'progress':(s||'unresolved').toLowerCase();})(t.status||t.Status||''),
+          });
+        });
+        delete cloud.agent;
+      }
 
       // Persist shifts / schedule / guide to localStorage (App polls every 5 s)
       if(cloud._shifts&&typeof cloud._shifts==='object'){
@@ -1624,8 +1719,10 @@ function CloudSync({agent,tickets,setTickets,showToast}){
     try{
       const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
       const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
-      const todayTix=tickets.filter(function(t){return !t._baseline&&(t.created||'').slice(0,10)===todayStr;});
-      const payload={agentId:agent.id,agentName:agent.name,date:todayStr,tickets:todayTix,pushedAt:new Date().toISOString()};
+      const todayTix=tickets.filter(function(t){return !t._baseline&&inDutyWindow(t);});
+      function toSpStatus(s){return s==='resolved'?'Closed':s==='progress'?'Assigned':'Pending';}
+      const mappedTix=todayTix.map(function(t){return Object.assign({},t,{spStatus:toSpStatus(t.status)});});
+      const payload={agentId:agent.id,agentName:agent.name,date:todayStr,tickets:mappedTix,pushedAt:new Date().toISOString()};
       const res=await fetch(pushUrl,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -1747,7 +1844,7 @@ function EditModal({ticket,agent,onSave,onDelete,onClose}){
 function DataScreen({agent,tickets,setTickets,showToast}){
   const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const todayStr=watNow.toISOString().slice(0,10);
-  const todayTix=tickets.filter(function(t){return t.created?t.created.slice(0,10)===todayStr:watNow.getDate()===(t.day||0);});
+  const todayTix=tickets.filter(function(t){return inDutyWindow(t);});
   const[dragging,setDragging]=useState(false);
   const[preview,setPreview]=useState(null);
   const[tab,setTab]=useState('export');
@@ -1773,8 +1870,9 @@ function DataScreen({agent,tickets,setTickets,showToast}){
       <div className="pad">
         {tab==='export'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
           <div className="card">
-            <div className="card-head"><h3>📅 Today — {todayStr}</h3><button onClick={dlToday} style={{padding:'8px 12px',background:'var(--agent)',color:'#0A1A4F',border:'none',borderRadius:8,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>⬇ JSON</button></div>
+            <div className="card-head"><h3>📋 My Tickets ({todayTix.length})</h3><button onClick={dlToday} style={{padding:'8px 12px',background:'var(--agent)',color:'#0A1A4F',border:'none',borderRadius:8,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>⬇ JSON</button></div>
             <div style={{padding:14}}>
+              <div style={{font:'500 10px/1.4 Sora,sans-serif',color:'var(--muted)',marginBottom:10,background:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.15)',borderRadius:6,padding:'6px 10px'}}>⏱ {fmtDutyWindow()}</div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
                 {[{l:"Today's",v:todayTix.length,c:'var(--infob)'},{l:'Resolved',v:todayTix.filter(function(t){return t.status==='resolved';}).length,c:'#22C55E'},{l:'Unresolved',v:todayTix.filter(function(t){return t.status==='unresolved';}).length,c:'#EF4444'}].map(function(k){return(
                   <div key={k.l} style={{background:'rgba(0,0,0,.1)',border:'1px solid var(--bsoft)',borderRadius:8,padding:'10px',textAlign:'center'}}>
@@ -1787,7 +1885,7 @@ function DataScreen({agent,tickets,setTickets,showToast}){
             </div>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
-            <div className="card"><div className="card-head"><h3>📦 All ({tickets.length})</h3><button onClick={dlAll} style={{padding:'7px 12px',background:'#3730A3',color:'#fff',border:'none',borderRadius:8,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>⬇ All</button></div><div style={{padding:'10px 14px',font:'500 11px Sora,sans-serif',color:'var(--muted)'}}>All {tickets.length} tickets as JSON.</div></div>
+            <div className="card"><div className="card-head"><h3>🌐 All Complaints ({tickets.length})</h3><button onClick={dlAll} style={{padding:'7px 12px',background:'#3730A3',color:'#fff',border:'none',borderRadius:8,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>⬇ All</button></div><div style={{padding:'10px 14px',font:'500 11px Sora,sans-serif',color:'var(--muted)'}}>All {tickets.length} tickets pulled from SharePoint.</div></div>
             <div className="card"><div className="card-head"><h3>📊 CSV Export</h3><button onClick={exportCSV} style={{padding:'7px 12px',background:'#E30613',color:'#fff',border:'none',borderRadius:8,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>⬆ CSV</button></div><div style={{padding:'10px 14px',font:'500 11px Sora,sans-serif',color:'var(--muted)'}}>Opens in Excel with all fields.</div></div>
             <div style={{background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',borderRadius:10,padding:'12px 14px',font:'500 11px/1.6 Sora,sans-serif',color:'var(--muted)'}}>💡 File: <code>ekedp_agent_{agent.id}_{todayStr}.json</code> — send to Love for Managers Hub import.</div>
           </div>
