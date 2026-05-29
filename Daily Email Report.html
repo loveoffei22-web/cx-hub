@@ -27,10 +27,16 @@ html,body{background:var(--bg);font:600 13px/1.4 'Sora',sans-serif;color:var(--t
 .btn-edit.editing{background:#DC2626;}
 .btn-add{background:#059669;color:#fff;}
 .btn-json{background:#0F766E;color:#fff;}
+.btn-app{background:#6D28D9;color:#fff;}
+.btn-refresh{background:#B45309;color:#fff;}
 .btn-email{background:#0078D4;color:#fff;}
 .btn-excel{background:#107C41;color:#fff;}
 .btn-print{background:var(--red);color:#fff;}
 #jsonInput{display:none;}
+/* Live data badge */
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:#ECFDF5;border:1.5px solid #6EE7B7;font:700 10px 'Sora';color:#065F46;white-space:nowrap;}
+.live-badge .dot{width:7px;height:7px;border-radius:50%;background:#10B981;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 
 /* DOCUMENT — landscape style */
 .doc{width:900px;max-width:100%;margin:10px auto;background:#fff;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,12,40,.07);}
@@ -149,9 +155,12 @@ table.t tfoot td.r{font-family:'JetBrains Mono',monospace;}
   <div class="tb-sep"></div>
   <button class="tb-btn btn-edit" id="editBtn" onclick="toggleEdit()">✏️ Edit</button>
   <button class="tb-btn btn-add" id="addBtn" style="display:none" onclick="addRow()">＋ Row</button>
+  <button class="tb-btn btn-app" id="appBtn" onclick="loadFromApp()">⚡ Load from App</button>
+  <button class="tb-btn btn-refresh" id="refreshBtn" onclick="refreshFromApp()" title="Re-read live app data">🔄 Refresh</button>
   <button class="tb-btn btn-json" onclick="document.getElementById('jsonInput').click()">📂 Load JSON</button>
   <input type="file" id="jsonInput" accept=".json" onchange="loadJSON(event)">
   <span class="spacer"></span>
+  <span class="live-badge" id="liveBadge" style="display:none"><span class="dot"></span><span id="liveLabel">Live</span></span>
   <button class="tb-btn btn-email" onclick="copyEmail()">📧 Outlook</button>
   <button class="tb-btn btn-excel" onclick="downloadExcel()">📊 Excel</button>
   <button class="tb-btn btn-print" onclick="window.print()">🖨 Print</button>
@@ -385,7 +394,7 @@ function processJSON(data){
 
   // Show agent banner
   const banner = document.getElementById('agentBanner');
-  const updatedToday = tickets.filter(t=>(t.updatedAt||'').startsWith(today.slice(0,10))).length;
+  const updatedToday = tickets.filter(t=>{const d=t.updatedAt||t.modified||t.modifiedAt||t.created||'';return d.startsWith(today);}).length;
   banner.classList.add('show');
   document.getElementById('agentName').textContent = agentName;
   document.getElementById('agentBadge').textContent = tickets.length+' tickets total';
@@ -540,15 +549,47 @@ function deleteRow(i){
   saveRows(); render();
 }
 
+// ── LOAD FROM APP (reads ek_v2_tickets from localStorage) ───────────────────
+function loadFromApp(){
+  try{
+    const raw=localStorage.getItem('ek_v2_tickets');
+    if(!raw){toast('No app data found. Open Managers Hub or Agents Hub first, then return here.','warn');return;}
+    const tickets=JSON.parse(raw);
+    if(!Array.isArray(tickets)||!tickets.length){toast('App data is empty — log some tickets first.','warn');return;}
+    processJSON({tickets,exportedBy:{name:'EKEDP App (Live)'},exportedAt:new Date().toISOString()});
+    const badge=document.getElementById('liveBadge');
+    const lbl=document.getElementById('liveLabel');
+    badge.style.display='inline-flex';
+    lbl.textContent='Live · '+tickets.length+' tickets';
+    toast('✅ Loaded '+tickets.length+' tickets from App Data');
+  }catch(e){toast('Error reading app data: '+e.message,'warn');}
+}
+function refreshFromApp(){
+  loadFromApp();
+}
+
 // ── COPY FOR OUTLOOK ─────────────────────────────────────────────────────────
 function copyEmail(){
   const doc=document.getElementById('doc');
+  // Try modern Clipboard API first (works in Chromium 86+)
+  if(navigator.clipboard&&window.ClipboardItem){
+    const html=doc.outerHTML;
+    const blob=new Blob([html],{type:'text/html'});
+    const item=new ClipboardItem({'text/html':blob});
+    navigator.clipboard.write([item])
+      .then(()=>toast('✅ Copied! Paste into Outlook with Ctrl+V.'))
+      .catch(()=>legacyCopy(doc));
+  } else {
+    legacyCopy(doc);
+  }
+}
+function legacyCopy(doc){
   const range=document.createRange();
   range.selectNode(doc);
   const sel=window.getSelection();
   sel.removeAllRanges();sel.addRange(range);
-  try{document.execCommand('copy');sel.removeAllRanges();toast('Copied! Paste into Outlook with Ctrl+V.');}
-  catch(e){sel.removeAllRanges();toast('Select all (Ctrl+A), copy, then paste into Outlook.','warn');}
+  try{document.execCommand('copy');sel.removeAllRanges();toast('✅ Copied! Paste into Outlook with Ctrl+V.');}
+  catch(e){sel.removeAllRanges();toast('Press Ctrl+A then Ctrl+C to select & copy, then paste into Outlook.','warn');}
 }
 
 // ── EXCEL EXPORT ─────────────────────────────────────────────────────────────
@@ -599,6 +640,48 @@ document.querySelectorAll('.slot-btn').forEach(b=>{
 (function autoSlot(){
   const h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
   render(h<12?'9am':h<16?'12pm':h<17?'4pm':'5pm');
+})();
+
+// ── AUTO-LOAD FROM APP DATA ON PAGE OPEN ─────────────────────────────────────
+(function autoLoad(){
+  try{
+    const raw=localStorage.getItem('ek_v2_tickets');
+    if(raw){
+      const tix=JSON.parse(raw);
+      if(Array.isArray(tix)&&tix.length>0){
+        processJSON({tickets:tix,exportedBy:{name:'EKEDP App (auto-loaded)'},exportedAt:new Date().toISOString()});
+        const badge=document.getElementById('liveBadge');
+        const lbl=document.getElementById('liveLabel');
+        badge.style.display='inline-flex';
+        lbl.textContent='Live · '+tix.length+' tickets';
+        // Auto-refresh every 60 seconds
+        setInterval(function(){
+          try{
+            const r=localStorage.getItem('ek_v2_tickets');
+            if(r){
+              const t=JSON.parse(r);
+              if(Array.isArray(t)&&t.length>0){
+                processJSON({tickets:t,exportedBy:{name:'EKEDP App (auto-refreshed)'},exportedAt:new Date().toISOString()});
+                lbl.textContent='Live · '+t.length+' tickets · refreshed '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+              }
+            }
+          }catch(e){}
+        },60000);
+        // Also listen for cross-tab changes
+        window.addEventListener('storage',function(e){
+          if(e.key==='ek_v2_tickets'&&e.newValue){
+            try{
+              const t=JSON.parse(e.newValue);
+              if(Array.isArray(t)&&t.length>0){
+                processJSON({tickets:t,exportedBy:{name:'EKEDP App (sync)'},exportedAt:new Date().toISOString()});
+                lbl.textContent='Live · '+t.length+' tickets · synced '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+              }
+            }catch(e){}
+          }
+        });
+      }
+    }
+  }catch(e){}
 })();
 </script>
 </body>

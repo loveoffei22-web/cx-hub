@@ -140,6 +140,19 @@ border-right:1px solid rgba(42,64,153,.5);display:flex;flex-direction:column;ove
 .ctbl td{padding:8px 10px;border-bottom:1px solid var(--bsoft);color:var(--text2);vertical-align:top;}
 .ctbl tbody tr{cursor:pointer;}
 .ctbl tbody tr:hover td{background:rgba(255,255,255,.03);}
+/* Excel-like inline editing */
+.xls-cell{cursor:cell;transition:background .1s;}
+.xls-cell:hover{background:rgba(255,198,44,.06)!important;}
+.xls-cell.xls-active{outline:2px solid #FFC72C;outline-offset:-2px;position:relative;z-index:2;}
+.xls-cell.xls-editing{outline:2px solid #60A5FA;outline-offset:-2px;position:relative;z-index:3;padding:0!important;overflow:visible!important;}
+.xls-inp,.xls-sel{display:block;width:100%;min-height:28px;border:none;background:rgba(30,58,138,.9);color:#fff;font:700 11px/1.4 'Sora',sans-serif;padding:3px 6px;outline:none;cursor:auto;border-radius:0;}
+.xls-inp{resize:none;height:100%;}
+.xls-sel{cursor:pointer;}
+.xls-hint{font:500 9px 'Sora',sans-serif;color:rgba(255,255,255,.3);display:block;margin-top:1px;}
+/* Make table header sticky */
+.ctbl thead tr,.tbl thead tr{position:sticky;top:0;z-index:10;}
+/* Constrain the scroll container */
+.xls-scroll{max-height:65vh;overflow-y:auto;overflow-x:auto;}
 .ctbl tbody tr.expanded td{background:rgba(99,102,241,.06);}
 .ctbl .exp-row td{background:rgba(0,0,0,.2);padding:12px 14px;}
 .st-res{color:#22C55E;font:800 11px/1 Sora,sans-serif;}
@@ -199,7 +212,14 @@ body[data-theme="lavender"] .toast.err{background:#7F1D1D !important;border-colo
 </style>
 </head>
 <body>
-<script>localStorage.setItem('ek_global_theme','lavender');</script>
+<script>(function(){
+  var h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
+  var auto=h>=6&&h<12?'lavender':h>=12&&h<17?'solar':'violet';
+  var mode=localStorage.getItem('ek_theme_mode');
+  var t=(!mode||mode==='auto')?auto:mode;
+  document.body.setAttribute('data-theme',t);
+  localStorage.setItem('ek_global_theme',t);
+})();</script>
 
 <div id="root"></div>
 <script>
@@ -315,7 +335,22 @@ function parseMultiple(txt){
   if(blocks.length<=1)return[parseSingle(txt)];
   return blocks.map(parseSingle).filter(function(b){return b.num||b.name||b.phone;});
 }
-function loadTix(id){try{return JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');}catch{return[];}}
+function loadTix(id){
+  try{
+    var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+    if(!id)return all;
+    var byAgent=all.filter(function(t){return t.agent===id||t.agentId===id;});
+    // Fallback: also load from legacy per-agent key and merge
+    try{
+      var legacy=JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');
+      if(legacy.length>0){
+        var byAgentIds=new Set(byAgent.map(function(t){return t.id||t.num;}));
+        legacy.forEach(function(t){if(!byAgentIds.has(t.id||t.num))byAgent.push(Object.assign({},t,{agent:id}));});
+      }
+    }catch(e){}
+    return byAgent;
+  }catch(e){return[];}
+}
 
 // Tickets are now cumulative — no daily wipe.
 // "My Tickets" + Slot Reports are scoped to the duty window via getDutyWindow().
@@ -335,7 +370,15 @@ function fmtDay(t){
   }
   return '—';
 }
-function saveTix(id,tix){localStorage.setItem('ek_tix_'+id,JSON.stringify(tix));}
+function saveTix(id,tix){
+  try{
+    var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+    var others=all.filter(function(t){return t.agent!==id&&t.agentId!==id;});
+    localStorage.setItem('ek_v2_tickets',JSON.stringify(others.concat(tix)));
+  }catch(e){}
+  // Also keep legacy key as backup
+  try{localStorage.setItem('ek_tix_'+id,JSON.stringify(tix));}catch(e){}
+}
 function loadShifts(){try{return JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch{return{};}}
 // De-dup signature: ticket# + name + complaint text
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
@@ -770,7 +813,7 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast}){
             <span>Tickets · {filt.length}</span>
             <span>Click any row to expand all 20 fields</span>
           </div>
-          <div style={{overflowX:'auto'}}>
+          <div className="xls-scroll">
             <table className="ctbl">
               <colgroup>
   <col style={{width:36}}/><col style={{width:100}}/><col style={{width:80}}/><col style={{width:72}}/>
@@ -894,6 +937,28 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
   const[page,setPage]=useState(0);
   const[selected,setSelected]=useState(new Set());
   const lastChecked=useRef(null);
+  const[cellEdit,setCellEdit]=useState(null); // {id,field,val}
+  const XLS_COLS_A=['category','status','note']; // editable columns in order
+  function commitCellA(t,noClose){
+    if(!cellEdit||cellEdit.id!==t.id)return;
+    const val=cellEdit.val;
+    const upd=Object.assign({},t,{[cellEdit.field]:val});
+    if(cellEdit.field==='status'&&val==='resolved'&&!upd.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
+    onUpdate&&onUpdate(upd);
+    if(!noClose)setCellEdit(null);
+  }
+  function xlsNavA(ev,t,field,rows){
+    const ci=XLS_COLS_A.indexOf(field);
+    const ri=rows.findIndex(function(x){return x.id===t.id;});
+    if(ev.key==='Escape'){ev.preventDefault();setCellEdit(null);return;}
+    if(ev.key==='Enter'&&field!=='note'){ev.preventDefault();commitCellA(t,true);if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field,val:rows[ri+1][field]||''});else setCellEdit(null);return;}
+    if(ev.key==='ArrowDown'&&!ev.shiftKey){ev.preventDefault();commitCellA(t,true);if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field,val:rows[ri+1][field]||''});return;}
+    if(ev.key==='ArrowUp'){ev.preventDefault();commitCellA(t,true);if(ri>0)setCellEdit({id:rows[ri-1].id,field,val:rows[ri-1][field]||''});return;}
+    if(ev.key==='Tab'){ev.preventDefault();commitCellA(t,true);
+      if(!ev.shiftKey){if(ci<XLS_COLS_A.length-1)setCellEdit({id:t.id,field:XLS_COLS_A[ci+1],val:t[XLS_COLS_A[ci+1]]||''});else if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field:XLS_COLS_A[0],val:rows[ri+1][XLS_COLS_A[0]]||''});else setCellEdit(null);}
+      else{if(ci>0)setCellEdit({id:t.id,field:XLS_COLS_A[ci-1],val:t[XLS_COLS_A[ci-1]]||''});else if(ri>0)setCellEdit({id:rows[ri-1].id,field:XLS_COLS_A[XLS_COLS_A.length-1],val:rows[ri-1][XLS_COLS_A[XLS_COLS_A.length-1]]||''});else setCellEdit(null);}
+    }
+  }
   const PAGE=100;
 
   const filt=safeTix.filter(function(t){
@@ -1053,9 +1118,9 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
             </div>)}
           <div style={{padding:'8px 14px',background:'rgba(0,0,0,.3)',font:'600 11px Sora,sans-serif',color:'var(--muted)',display:'flex',justifyContent:'space-between'}}>
             <span>Tickets · {filt.length}</span>
-            <span>Sorted {sort==='newest'?'newest first':sort==='oldest'?'oldest first':sort==='num_desc'?'by ticket # (high → low)':'by ticket # (low → high)'} · Row expanded — click again to close</span>
+            <span>Sorted {sort==='newest'?'newest first':sort==='oldest'?'oldest first':sort==='num_desc'?'by ticket # (high → low)':'by ticket # (low → high)'} · <span style={{color:'var(--ek-gold)'}}>Double-click cells to edit inline · Tab/Arrow to navigate · Enter to save · Esc to cancel</span></span>
           </div>
-          <div style={{overflowX:'auto'}}>
+          <div className="xls-scroll">
             <table className="ctbl">
               <colgroup>
   <col style={{width:36}}/><col style={{width:36}}/><col style={{width:100}}/><col style={{width:80}}/><col style={{width:72}}/>
@@ -1080,9 +1145,24 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
                       <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} onClick={function(){toggleExpand(t);}}>{t.name}</td>
                       <td onClick={function(){toggleExpand(t);}}><span className="mono" style={{fontSize:13,color:'var(--text2)'}}>{t.phone}</span></td>
                       <td onClick={function(){toggleExpand(t);}}><span className="bu-tag">{t.bu}</span></td>
-                      <td style={{maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} onClick={function(){toggleExpand(t);}}><div className="cat-main" style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div></td>
-                      <td onClick={function(){toggleExpand(t);}}>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
-                      <td style={{fontSize:13,color:'var(--text2)',maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} onClick={function(){toggleExpand(t);}}>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲</span>}</td>
+                      <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?' xls-editing':'')} style={{maxWidth:160,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'category',val:t.category||t.issue||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else toggleExpand(t);}}>
+                        {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'
+                          ?<select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellA(t);}} onKeyDown={function(ev){xlsNavA(ev,t,'category',paged);}}>{CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}</select>
+                          :<><div className="cat-main" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(t.category||t.issue||'—').split(/[—/]/)[0].trim()}</div><span className="xls-hint">dbl-click to edit</span></>
+                        }
+                      </td>
+                      <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'?' xls-editing':'')} style={{padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'?0:undefined,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'?'visible':'hidden'}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'status',val:t.status||'unresolved'});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else toggleExpand(t);}}>
+                        {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'
+                          ?<select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellA(t);}} onKeyDown={function(ev){xlsNavA(ev,t,'status',paged);}}><option value="unresolved">UNRESOLVED</option><option value="progress">IN PROGRESS</option><option value="resolved">RESOLVED</option></select>
+                          :t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>
+                        }
+                      </td>
+                      <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?' xls-editing':'')} style={{fontSize:13,color:'var(--text2)',maxWidth:140,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'note',val:t.note||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else toggleExpand(t);}}>
+                        {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'
+                          ?<textarea className="xls-inp" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellA(t);}} onKeyDown={function(ev){if(ev.key!=='Enter')xlsNavA(ev,t,'note',paged);}}/>
+                          :<>{t.note||'—'} {!isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▼</span>}{isEx&&<span style={{color:'var(--ek-gold)',cursor:'pointer',fontSize:10}}>▲</span>}</>
+                        }
+                      </td>
                     </tr>
                     {isEx&&<tr className="exp-row"><td colSpan={11} style={{padding:0}}>
                       <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
@@ -2163,25 +2243,47 @@ function DataScreen({agent,tickets,setTickets,showToast}){
 function App(){
   const[agent,setAgent]=useState(null);
   const[screen,setScreen]=useState('dashboard');
-  const[theme,setTheme]=useState(()=>'lavender');
+  const[theme,setTheme]=useState(function(){
+    const mode=localStorage.getItem('ek_theme_mode');
+    if(!mode||mode==='auto')return getAutoTheme();
+    return mode;
+  });
   const[tickets,setTicketsState]=useState([]);
   const[shifts,setShifts]=useState(()=>loadShifts());
   const[editing,setEditing]=useState(null);
   const[toast,setToast]=useState(null);
+  const[syncTick,setSyncTick]=useState(0);
   const toastRef=useRef(null);
 
   useEffect(function(){document.body.setAttribute('data-theme',theme);localStorage.setItem('ek_global_theme',theme);},[theme]);
+  // Auto theme: switch every minute when in auto mode
+  useEffect(function(){
+    const id=setInterval(function(){
+      const mode=localStorage.getItem('ek_theme_mode');
+      if(!mode||mode==='auto')setTheme(getAutoTheme());
+    },60000);
+    return function(){clearInterval(id);};
+  },[]);
+  // Cross-tab sync: refresh when Managers Hub writes to ek_v2_tickets
+  useEffect(function(){
+    function onStorage(e){if(e.key==='ek_v2_tickets')setSyncTick(function(n){return n+1;});}
+    window.addEventListener('storage',onStorage);
+    // Poll every 15s as fallback (same-tab changes don't fire storage events)
+    var poll=setInterval(function(){setSyncTick(function(n){return n+1;});},15000);
+    return function(){window.removeEventListener('storage',onStorage);clearInterval(poll);};
+  },[]);
   useEffect(function(){const id=setInterval(function(){setShifts(loadShifts());},5000);return function(){clearInterval(id);};},[]);
 
-  // FIX: deduplicate allTix by ticket number — prevents same ticket showing 3-4x after bad import
-  const _rawAllTix=AGENTS.reduce(function(acc,a){return acc.concat(loadTix(a.id));}, []);
-  const _seenNums={};
-  const allTix=_rawAllTix.filter(function(t){
-    const key=(t.num||'').trim().toLowerCase()+'|'+(t.name||'').trim().toLowerCase();
-    if(!key||key==='|')return true; // keep tickets with no num (edge case)
-    if(_seenNums[key])return false;
-    _seenNums[key]=true;return true;
-  });
+  // Load all tickets from shared global store (synced with Managers Hub)
+  const allTix=(function(){
+    try{
+      var raw=localStorage.getItem('ek_v2_tickets');
+      if(raw){var parsed=JSON.parse(raw);if(parsed.length>0)return parsed;}
+    }catch(e){}
+    // Fallback: aggregate from per-agent legacy stores
+    var raw2=AGENTS.reduce(function(acc,a){return acc.concat(loadTix(a.id));}, []);
+    var seen={};return raw2.filter(function(t){var k=(t.num||'').trim().toLowerCase()+'|'+(t.name||'').trim().toLowerCase();if(!k||k==='|')return true;if(seen[k])return false;seen[k]=true;return true;});
+  })();
 
   function setTickets(tix){setTicketsState(tix);if(agent)saveTix(agent.id,tix);}
   function onSignIn(a){
@@ -2226,17 +2328,29 @@ function App(){
     setScreen('tickets');
   }
   function onUpdateAllTix(updated){
+    // Update in global shared store
+    try{
+      var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+      var found=all.some(function(t){return t.id===updated.id;});
+      var next=found?all.map(function(t){return t.id===updated.id?updated:t;}):all.concat([updated]);
+      localStorage.setItem('ek_v2_tickets',JSON.stringify(next));
+    }catch(e){}
+    // Update agent-local state if it's their ticket
     if(tickets.some(function(t){return t.id===updated.id;})){
       setTickets(tickets.map(function(t){return t.id===updated.id?updated:t;}));
-    } else {
-      AGENTS.forEach(function(a){const ag=loadTix(a.id);if(ag.some(function(t){return t.id===updated.id;}))saveTix(a.id,ag.map(function(t){return t.id===updated.id?updated:t;}));});
     }
+    setSyncTick(function(n){return n+1;});
     pushToSharePoint(updated);
     showToast('Ticket #'+updated.num+' updated.');
   }
   function onDeleteAllTix(id){
+    // Delete from global store
+    try{
+      var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+      localStorage.setItem('ek_v2_tickets',JSON.stringify(all.filter(function(t){return t.id!==id;})));
+    }catch(e){}
     setTickets(tickets.filter(function(t){return t.id!==id;}));
-    AGENTS.forEach(function(a){const ag=loadTix(a.id);if(ag.some(function(t){return t.id===id;}))saveTix(a.id,ag.filter(function(t){return t.id!==id;}));});
+    setSyncTick(function(n){return n+1;});
     showToast('Ticket deleted.');
   }
 
@@ -2278,7 +2392,7 @@ function App(){
           <div className="theme-row">
             {THEMES.map(function(t){return(
               <div key={t.id} className={'tdot'+(theme===t.id?' on':'')} title={t.label}
-                onClick={function(){setTheme(t.id);}}
+                onClick={function(){const actual=t.id==='auto'?getAutoTheme():t.id;setTheme(actual);localStorage.setItem('ek_theme_mode',t.id);}}
                 style={{background:t.sw,border:t.light?'1.5px solid #94A3B8':'1.5px solid transparent'}}/>);})}
           </div>
           <button className="signout" onClick={onSignOut}><span style={{fontSize:12}}>↩</span>Sign out</button>
