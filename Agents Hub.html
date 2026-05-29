@@ -1400,13 +1400,28 @@ function SlotReport({agent,tickets,showToast}){
   function doExcel(){
     if(typeof XLSX==='undefined'){(showToast||alert)('Excel library not loaded yet — try again in a moment.','error');return;}
     const wb=XLSX.utils.book_new();
-    const H=['Ticket #','Time','Customer','Phone','Meter #','BU','Category / Issue','Status','Note'];
+    const H=['S/N','ID','Customer Name','Customer Address','Meter No./Account No.','Action Taken','Telephone Number','Email Address','Business Unit','Complaint Description','Responsible Responsible','Status','Complaint Category','Complaint Sub-category','Channel of Complaint','Resolved Date','RESOLVED By','Created','Modified By','Resolved by'];
+    const COLS=[5,10,22,28,18,30,16,24,10,60,22,14,36,22,16,14,22,12,22,22].map(function(w){return{wch:w};});
     function makeSheet(list,name){
+      var rows=list.map(function(t,i){
+        var statusLabel=t.status==='resolved'?'RESOLVED':t.status==='progress'?'IN PROGRESS':'UNRESOLVED';
+        var catLabel=(t.category||t.issue||'').toUpperCase();
+        var subcat=(t.subcategory||'').toUpperCase();
+        var resolvedDate=t.resolvedDate||(t.status==='resolved'&&t.updatedAt?t.updatedAt.slice(0,10):'');
+        var resolvedBy=t.status==='resolved'?(t.resp||t.updatedBy||agent.name):'';
+        return[
+          i+1,t.num||'',t.name||'',t.addr||t.address||'',t.meter||'',
+          t.note||'',t.phone||'',t.email||'',t.bu||'',t.issue||'',
+          t.resp||'',statusLabel,catLabel,subcat,t.source||'Mobile App',
+          resolvedDate,resolvedBy,t.created?t.created.slice(0,10):'',
+          t.updatedBy||agent.id,resolvedBy
+        ];
+      });
       const ws=XLSX.utils.aoa_to_sheet([
         ['EKEDP Power App — '+s.label],['Agent: '+agent.name],['Date: '+dateStr],[''],H,
-        ...list.map(function(t){return[t.num,t.time,t.name,t.phone,t.meter||'',t.bu,t.issue,t.status,t.note||''];})
+        ...rows
       ]);
-      ws['!cols']=[10,8,22,14,14,10,26,12,30].map(function(w){return{wch:w};});
+      ws['!cols']=COLS;
       XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));
     }
     makeSheet(todayTix,'All');
