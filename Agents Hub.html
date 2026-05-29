@@ -212,7 +212,7 @@ body[data-theme="lavender"] .toast.err{background:#7F1D1D !important;border-colo
 </style>
 </head>
 <body>
-<script>localStorage.setItem('ek_global_theme','lavender');</script>
+<script>if(!localStorage.getItem('ek_global_theme'))localStorage.setItem('ek_global_theme','lavender');</script>
 
 <div id="root"></div>
 <script>
