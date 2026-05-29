@@ -1400,28 +1400,13 @@ function SlotReport({agent,tickets,showToast}){
   function doExcel(){
     if(typeof XLSX==='undefined'){(showToast||alert)('Excel library not loaded yet — try again in a moment.','error');return;}
     const wb=XLSX.utils.book_new();
-    const H=['S/N','ID','Customer Name','Customer Address','Meter No./Account No.','Action Taken','Telephone Number','Email Address','Business Unit','Complaint Description','Responsible Responsible','Status','Complaint Category','Complaint Sub-category','Channel of Complaint','Resolved Date','RESOLVED By','Created','Modified By','Resolved by'];
-    const COLS=[5,10,22,28,18,30,16,24,10,60,22,14,36,22,16,14,22,12,22,22].map(function(w){return{wch:w};});
+    const H=['Ticket #','Time','Customer','Phone','Meter #','BU','Category / Issue','Status','Note'];
     function makeSheet(list,name){
-      var rows=list.map(function(t,i){
-        var statusLabel=t.status==='resolved'?'RESOLVED':t.status==='progress'?'IN PROGRESS':'UNRESOLVED';
-        var catLabel=(t.category||t.issue||'').toUpperCase();
-        var subcat=(t.subcategory||'').toUpperCase();
-        var resolvedDate=t.resolvedDate||(t.status==='resolved'&&t.updatedAt?t.updatedAt.slice(0,10):'');
-        var resolvedBy=t.status==='resolved'?(t.resp||t.updatedBy||agent.name):'';
-        return[
-          i+1,t.num||'',t.name||'',t.addr||t.address||'',t.meter||'',
-          t.note||'',t.phone||'',t.email||'',t.bu||'',t.issue||'',
-          t.resp||'',statusLabel,catLabel,subcat,t.source||'Mobile App',
-          resolvedDate,resolvedBy,t.created?t.created.slice(0,10):'',
-          t.updatedBy||agent.id,resolvedBy
-        ];
-      });
       const ws=XLSX.utils.aoa_to_sheet([
         ['EKEDP Power App — '+s.label],['Agent: '+agent.name],['Date: '+dateStr],[''],H,
-        ...rows
+        ...list.map(function(t){return[t.num,t.time,t.name,t.phone,t.meter||'',t.bu,t.issue,t.status,t.note||''];})
       ]);
-      ws['!cols']=COLS;
+      ws['!cols']=[10,8,22,14,14,10,26,12,30].map(function(w){return{wch:w};});
       XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));
     }
     makeSheet(todayTix,'All');
@@ -2206,7 +2191,30 @@ function App(){
   function onSignOut(){setAgent(null);setScreen('dashboard');}
   function showToast(msg,type){if(toastRef.current)clearTimeout(toastRef.current);setToast({msg,type});toastRef.current=setTimeout(function(){setToast(null);},3000);}
   function onEdit(t){setEditing(t);}
-  function onSave(t){setTickets(tickets.map(function(x){return x.id===t.id?t:x;}));setEditing(null);showToast('Ticket updated.');}
+  // ── PA Push ──────────────────────────────────────────────
+  function getPaUrl(){try{return localStorage.getItem('ek_pa_push_url')||'';}catch(e){return '';}}
+  function setPaUrl(url){try{localStorage.setItem('ek_pa_push_url',url.trim());}catch(e){}}
+
+  function pushToSharePoint(t){
+    const url=getPaUrl();
+    if(!url)return; // silent if not configured
+    const body={
+      num:       String(t.num||''),
+      status:    t.status==='resolved'?'RESOLVED':t.status==='progress'?'IN PROGRESS':'UNRESOLVED',
+      responsible: t.resp||'',
+      actionTaken: t.note||'',
+      resolvedBy:  t.status==='resolved'?(t.resp||agent.name):'',
+      resolvedDate:t.status==='resolved'?new Date().toISOString().slice(0,10):'',
+      agentName:   agent.name,
+      updatedBy:   agent.name,
+    };
+    fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){if(r.ok)showToast('✅ Synced to SharePoint','success');else showToast('⚠️ Sync failed ('+r.status+')','warn');})
+      .catch(function(){showToast('⚠️ Sync failed — check PA URL','warn');});
+  }
+  // ─────────────────────────────────────────────────────────
+
+  function onSave(t){setTickets(tickets.map(function(x){return x.id===t.id?t:x;}));setEditing(null);pushToSharePoint(t);showToast('Ticket updated.');}
   function onDelete(t){setTickets(tickets.filter(function(x){return x.id!==t.id;}));setEditing(null);showToast('Deleted.');}
   function onCreate(t){
     const arr=Array.isArray(t)?t:[t];
@@ -2223,6 +2231,7 @@ function App(){
     } else {
       AGENTS.forEach(function(a){const ag=loadTix(a.id);if(ag.some(function(t){return t.id===updated.id;}))saveTix(a.id,ag.map(function(t){return t.id===updated.id?updated:t;}));});
     }
+    pushToSharePoint(updated);
     showToast('Ticket #'+updated.num+' updated.');
   }
   function onDeleteAllTix(id){
