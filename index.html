@@ -105,7 +105,7 @@ header{
 .sync-meta{margin-left:auto;font:600 10px/1 'JetBrains Mono';color:rgba(134,239,172,.5);white-space:nowrap;}
 
 /* FOOTER */
-footer{margin-top:auto;padding:28px 40px;text-align:center;}
+footer{margin-top:auto;padding:4px 0;text-align:center;}
 .scripture{font:500 italic 13px/1.7 'Sora';color:rgba(255,255,255,.25);max-width:460px;margin:0 auto 5px;}
 .scripture-ref{font:700 9px/1 'Sora';color:#FFC72C;letter-spacing:.16em;text-transform:uppercase;}
 </style>
@@ -134,6 +134,10 @@ footer{margin-top:auto;padding:28px 40px;text-align:center;}
 
 <div class="hero">
   <h1 class="greeting" id="greeting">Good morning, <span>Best CX Team! ✨</span></h1>
+  <div id="quote-wrap" style="transition:opacity .6s ease;margin-top:10px;">
+    <p class="scripture" id="quote-text">"Strength and honour are her clothing, and she rejoices in time to come."</p>
+    <p class="scripture-ref" id="quote-ref">— Proverbs 31:25</p>
+  </div>
   <p class="hero-sub">Agents Hub · Marina HQ</p>
 </div>
 
@@ -216,12 +220,7 @@ footer{margin-top:auto;padding:28px 40px;text-align:center;}
   </div>
 </div>
 
-<footer>
-  <div id="quote-wrap" style="transition:opacity .6s ease;">
-    <p class="scripture" id="quote-text">"Strength and honour are her clothing, and she rejoices in time to come."</p>
-    <p class="scripture-ref" id="quote-ref">— Proverbs 31:25</p>
-  </div>
-</footer>
+<footer></footer>
 
 <script>
 function updateClock(){
