@@ -212,7 +212,14 @@ body[data-theme="lavender"] .toast.err{background:#7F1D1D !important;border-colo
 </style>
 </head>
 <body>
-<script>if(!localStorage.getItem('ek_global_theme'))localStorage.setItem('ek_global_theme','lavender');</script>
+<script>(function(){
+  var h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
+  var auto=h>=6&&h<12?'lavender':h>=12&&h<17?'solar':'violet';
+  var mode=localStorage.getItem('ek_theme_mode');
+  var t=(!mode||mode==='auto')?auto:mode;
+  document.body.setAttribute('data-theme',t);
+  localStorage.setItem('ek_global_theme',t);
+})();</script>
 
 <div id="root"></div>
 <script>
@@ -2251,7 +2258,11 @@ function DataScreen({agent,tickets,setTickets,showToast}){
 function App(){
   const[agent,setAgent]=useState(null);
   const[screen,setScreen]=useState('dashboard');
-  const[theme,setTheme]=useState(()=>'lavender');
+  const[theme,setTheme]=useState(function(){
+    const mode=localStorage.getItem('ek_theme_mode');
+    if(!mode||mode==='auto')return getAutoTheme();
+    return mode;
+  });
   const[tickets,setTicketsState]=useState([]);
   const[shifts,setShifts]=useState(()=>loadShifts());
   const[editing,setEditing]=useState(null);
@@ -2260,6 +2271,14 @@ function App(){
   const toastRef=useRef(null);
 
   useEffect(function(){document.body.setAttribute('data-theme',theme);localStorage.setItem('ek_global_theme',theme);},[theme]);
+  // Auto theme: switch every minute when in auto mode
+  useEffect(function(){
+    const id=setInterval(function(){
+      const mode=localStorage.getItem('ek_theme_mode');
+      if(!mode||mode==='auto')setTheme(getAutoTheme());
+    },60000);
+    return function(){clearInterval(id);};
+  },[]);
   // Cross-tab sync: refresh when Managers Hub writes to ek_v2_tickets
   useEffect(function(){
     function onStorage(e){if(e.key==='ek_v2_tickets')setSyncTick(function(n){return n+1;});}
@@ -2364,7 +2383,7 @@ function App(){
           <div className="theme-row">
             {THEMES.map(function(t){return(
               <div key={t.id} className={'tdot'+(theme===t.id?' on':'')} title={t.label}
-                onClick={function(){setTheme(t.id);}}
+                onClick={function(){const actual=t.id==='auto'?getAutoTheme():t.id;setTheme(actual);localStorage.setItem('ek_theme_mode',t.id);}}
                 style={{background:t.sw,border:t.light?'1.5px solid #94A3B8':'1.5px solid transparent'}}/>);})}
           </div>
           <button className="signout" onClick={onSignOut}><span style={{fontSize:12}}>↩</span>Sign out</button>

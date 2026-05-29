@@ -3383,16 +3383,17 @@ function App(){
   const[screen,setScreen]=useState('dashboard');
   const[collapsed,setCollapsed]=useState(false);
 
-  // Auto theme: lavender 6am–7pm WAT, midnight otherwise
+  // Auto theme: lavender morning, solar afternoon, midnight night (WAT)
   function getAutoTheme(){
     const h=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).getHours();
-    return (h>=6&&h<19)?'lavender':'midnight';
+    return h>=6&&h<12?'lavender':h>=12&&h<17?'solar':'midnight';
   }
   const[theme,setTheme]=useState(()=>{
-    const saved=localStorage.getItem('ek_v2_theme');
-    return saved||'lavender';
+    const mode=localStorage.getItem('ek_theme_mode');
+    if(!mode||mode==='auto')return getAutoTheme();
+    return mode;
   });
-  const[autoTheme,setAutoTheme]=useState(false);
+  const[autoTheme,setAutoTheme]=useState(()=>!localStorage.getItem('ek_theme_mode')||localStorage.getItem('ek_theme_mode')==='auto');
   const[shifts,setShifts]=useState(()=>loadShifts());
   const[tickets,setTickets]=useState(()=>window.EK_TICKETS||[]);
   const[showSettings,setShowSettings]=useState(false);
@@ -3478,7 +3479,7 @@ function App(){
       <main className={'main'+(collapsed?' nc':'')} style={{paddingLeft:W}}>
         {screens[screen]||screens.dashboard}
       </main>
-      {showSettings&&<Settings theme={theme} onTheme={setTheme} onClose={()=>setShowSettings(false)} onReset={onReset}/>}
+      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset}/>}
       <Toast toast={toast}/>
     </div>
   );

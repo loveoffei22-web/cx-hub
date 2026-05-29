@@ -14,6 +14,7 @@ body{
              radial-gradient(ellipse 80% 60% at 10% 10%,#1a0a5e 0%,transparent 55%),
              #0d0826;
   color:#F0F4FF;min-height:100vh;display:flex;flex-direction:column;
+  transition:background 2s ease;
 }
 a{text-decoration:none;color:inherit;}
 
@@ -223,6 +224,29 @@ footer{margin-top:auto;padding:4px 0;text-align:center;}
 <footer></footer>
 
 <script>
+// Auto theme: change page background based on time of day
+const BG_THEMES={
+  morning:{
+    bg:'radial-gradient(ellipse 120% 80% at 60% 120%,#1a3a6e 0%,transparent 55%),radial-gradient(ellipse 80% 60% at 10% 10%,#0a2040 0%,transparent 55%),#060f1e',
+    accent:'#FFC72C'
+  },
+  afternoon:{
+    bg:'radial-gradient(ellipse 120% 80% at 60% 120%,#5c2800 0%,transparent 55%),radial-gradient(ellipse 80% 60% at 10% 10%,#3a1800 0%,transparent 55%),#1a0e00',
+    accent:'#FFC72C'
+  },
+  evening:{
+    bg:'radial-gradient(ellipse 120% 80% at 60% 120%,#3b1c8c 0%,transparent 55%),radial-gradient(ellipse 80% 60% at 10% 10%,#1a0a5e 0%,transparent 55%),#0d0826',
+    accent:'#FFC72C'
+  }
+};
+let _lastPeriod=null;
+function applyAutoTheme(h){
+  const period=h>=6&&h<12?'morning':h>=12&&h<17?'afternoon':'evening';
+  if(period===_lastPeriod)return;
+  _lastPeriod=period;
+  document.body.style.background=BG_THEMES[period].bg;
+}
+
 function updateClock(){
   const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
@@ -231,6 +255,7 @@ function updateClock(){
   const greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   const emoji=h<12?'☀️':h<17?'🌤️':'🌙';
   document.getElementById('greeting').innerHTML=greet+', <span style="color:#FFC72C">Best CX Team! '+emoji+'</span>';
+  applyAutoTheme(h);
 }
 setInterval(updateClock,1000);
 updateClock();
