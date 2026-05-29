@@ -328,7 +328,22 @@ function parseMultiple(txt){
   if(blocks.length<=1)return[parseSingle(txt)];
   return blocks.map(parseSingle).filter(function(b){return b.num||b.name||b.phone;});
 }
-function loadTix(id){try{return JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');}catch{return[];}}
+function loadTix(id){
+  try{
+    var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+    if(!id)return all;
+    var byAgent=all.filter(function(t){return t.agent===id||t.agentId===id;});
+    // Fallback: also load from legacy per-agent key and merge
+    try{
+      var legacy=JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');
+      if(legacy.length>0){
+        var byAgentIds=new Set(byAgent.map(function(t){return t.id||t.num;}));
+        legacy.forEach(function(t){if(!byAgentIds.has(t.id||t.num))byAgent.push(Object.assign({},t,{agent:id}));});
+      }
+    }catch(e){}
+    return byAgent;
+  }catch(e){return[];}
+}
 
 // Tickets are now cumulative — no daily wipe.
 // "My Tickets" + Slot Reports are scoped to the duty window via getDutyWindow().
@@ -348,7 +363,15 @@ function fmtDay(t){
   }
   return '—';
 }
-function saveTix(id,tix){localStorage.setItem('ek_tix_'+id,JSON.stringify(tix));}
+function saveTix(id,tix){
+  try{
+    var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+    var others=all.filter(function(t){return t.agent!==id&&t.agentId!==id;});
+    localStorage.setItem('ek_v2_tickets',JSON.stringify(others.concat(tix)));
+  }catch(e){}
+  // Also keep legacy key as backup
+  try{localStorage.setItem('ek_tix_'+id,JSON.stringify(tix));}catch(e){}
+}
 function loadShifts(){try{return JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch{return{};}}
 // De-dup signature: ticket# + name + complaint text
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
@@ -2233,20 +2256,30 @@ function App(){
   const[shifts,setShifts]=useState(()=>loadShifts());
   const[editing,setEditing]=useState(null);
   const[toast,setToast]=useState(null);
+  const[syncTick,setSyncTick]=useState(0);
   const toastRef=useRef(null);
 
   useEffect(function(){document.body.setAttribute('data-theme',theme);localStorage.setItem('ek_global_theme',theme);},[theme]);
+  // Cross-tab sync: refresh when Managers Hub writes to ek_v2_tickets
+  useEffect(function(){
+    function onStorage(e){if(e.key==='ek_v2_tickets')setSyncTick(function(n){return n+1;});}
+    window.addEventListener('storage',onStorage);
+    // Poll every 15s as fallback (same-tab changes don't fire storage events)
+    var poll=setInterval(function(){setSyncTick(function(n){return n+1;});},15000);
+    return function(){window.removeEventListener('storage',onStorage);clearInterval(poll);};
+  },[]);
   useEffect(function(){const id=setInterval(function(){setShifts(loadShifts());},5000);return function(){clearInterval(id);};},[]);
 
-  // FIX: deduplicate allTix by ticket number — prevents same ticket showing 3-4x after bad import
-  const _rawAllTix=AGENTS.reduce(function(acc,a){return acc.concat(loadTix(a.id));}, []);
-  const _seenNums={};
-  const allTix=_rawAllTix.filter(function(t){
-    const key=(t.num||'').trim().toLowerCase()+'|'+(t.name||'').trim().toLowerCase();
-    if(!key||key==='|')return true; // keep tickets with no num (edge case)
-    if(_seenNums[key])return false;
-    _seenNums[key]=true;return true;
-  });
+  // Load all tickets from shared global store (synced with Managers Hub)
+  const allTix=(function(){
+    try{
+      var raw=localStorage.getItem('ek_v2_tickets');
+      if(raw){var parsed=JSON.parse(raw);if(parsed.length>0)return parsed;}
+    }catch(e){}
+    // Fallback: aggregate from per-agent legacy stores
+    var raw2=AGENTS.reduce(function(acc,a){return acc.concat(loadTix(a.id));}, []);
+    var seen={};return raw2.filter(function(t){var k=(t.num||'').trim().toLowerCase()+'|'+(t.name||'').trim().toLowerCase();if(!k||k==='|')return true;if(seen[k])return false;seen[k]=true;return true;});
+  })();
 
   function setTickets(tix){setTicketsState(tix);if(agent)saveTix(agent.id,tix);}
   function onSignIn(a){
@@ -2268,16 +2301,28 @@ function App(){
     setScreen('tickets');
   }
   function onUpdateAllTix(updated){
+    // Update in global shared store
+    try{
+      var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+      var found=all.some(function(t){return t.id===updated.id;});
+      var next=found?all.map(function(t){return t.id===updated.id?updated:t;}):all.concat([updated]);
+      localStorage.setItem('ek_v2_tickets',JSON.stringify(next));
+    }catch(e){}
+    // Update agent-local state if it's their ticket
     if(tickets.some(function(t){return t.id===updated.id;})){
       setTickets(tickets.map(function(t){return t.id===updated.id?updated:t;}));
-    } else {
-      AGENTS.forEach(function(a){const ag=loadTix(a.id);if(ag.some(function(t){return t.id===updated.id;}))saveTix(a.id,ag.map(function(t){return t.id===updated.id?updated:t;}));});
     }
+    setSyncTick(function(n){return n+1;});
     showToast('Ticket #'+updated.num+' updated.');
   }
   function onDeleteAllTix(id){
+    // Delete from global store
+    try{
+      var all=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');
+      localStorage.setItem('ek_v2_tickets',JSON.stringify(all.filter(function(t){return t.id!==id;})));
+    }catch(e){}
     setTickets(tickets.filter(function(t){return t.id!==id;}));
-    AGENTS.forEach(function(a){const ag=loadTix(a.id);if(ag.some(function(t){return t.id===id;}))saveTix(a.id,ag.filter(function(t){return t.id!==id;}));});
+    setSyncTick(function(n){return n+1;});
     showToast('Ticket deleted.');
   }
 

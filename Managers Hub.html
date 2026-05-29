@@ -3400,6 +3400,19 @@ function App(){
   const toastTimer=useRef(null);
 
   useEffect(()=>{document.body.setAttribute('data-theme',theme);localStorage.setItem('ek_global_theme',theme);},[theme]);
+  // Cross-tab sync: refresh when Agents Hub writes to ek_v2_tickets
+  useEffect(function(){
+    function onStorage(e){
+      if(e.key==='ek_v2_tickets'&&e.newValue){
+        try{
+          var next=JSON.parse(e.newValue);
+          setTickets(next);window.EK_TICKETS=next;
+        }catch(e){}
+      }
+    }
+    window.addEventListener('storage',onStorage);
+    return function(){window.removeEventListener('storage',onStorage);};
+  },[]);
 
   // Auto theme watcher — checks every minute
   useEffect(()=>{
