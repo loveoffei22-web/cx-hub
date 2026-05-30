@@ -382,7 +382,21 @@ if(localStorage.getItem('ek_data_version')!==EK_DATA_VERSION){
 
 // Shift persistence
 var EK_SHIFTS_KEY='ek_v2_shifts';
-function loadShifts(){try{var s=localStorage.getItem(EK_SHIFTS_KEY);return s?JSON.parse(s):{matthew:'day',racheal:'day',tomina:'off',esther:'off',loveth:'day'};}catch(e){return{matthew:'day',racheal:'day',tomina:'off',esther:'off',loveth:'day'};}}
+function loadShifts(){
+  var base;
+  try{var s=localStorage.getItem(EK_SHIFTS_KEY);base=s?JSON.parse(s):{matthew:'day',racheal:'day',tomina:'off',esther:'off',loveth:'day'};}
+  catch(e){base={matthew:'day',racheal:'day',tomina:'off',esther:'off',loveth:'day'};}
+  // Apply any dated schedule overrides for today (from CSV import)
+  try{
+    var n=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+    var d=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+    ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){
+      var v=localStorage.getItem('ek_sched_'+id+'_'+d);
+      if(v)base[id]=v;
+    });
+  }catch(e){}
+  return base;
+}
 function saveShifts(s){localStorage.setItem(EK_SHIFTS_KEY,JSON.stringify(s));}
 
 // Ticket persistence helpers
