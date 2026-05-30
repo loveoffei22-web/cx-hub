@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EKEDC CX Team · Email Helpdesk Performance Appraisal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0a1628;
+  --gold:#e8b84b;
+  --gold-light:#fdf3d8;
+  --bg:#f6f5f1;
+  --white:#ffffff;
+  --card:#ffffff;
+  --border:#e2e0d8;
+  --text:#1a1a2e;
+  --text-muted:#6b6b80;
+  --green:#1a7a4a;
+  --green-bg:#e6f7ee;
+  --amber:#b45309;
+  --amber-bg:#fef3c7;
+  --red:#b91c1c;
+  --red-bg:#fee2e2;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.10);
+  --transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  line-height:1.6;
+  min-height:100vh;
+}
+
+/* ── TOP BAR ───────────────────────────────────────────── */
+#topbar{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:var(--navy);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:0 24px;
+  height:60px;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+  flex-wrap:wrap;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:-.2px;
+  white-space:nowrap;
+}
+.brand-icon{
+  font-size:22px;
+  filter:drop-shadow(0 0 6px #e8b84b88);
+}
+.brand-sub{
+  font-size:10px;
+  font-weight:400;
+  color:#a0aec0;
+  display:block;
+  line-height:1.2;
+}
+
+.topbar-divider{width:1px;height:32px;background:#ffffff22;flex-shrink:0;}
+
+.quarter-pills{display:flex;gap:4px;}
+.q-pill{
+  background:transparent;
+  border:1px solid #ffffff33;
+  color:#c0cce0;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  padding:4px 12px;
+  border-radius:20px;
+  cursor:pointer;
+  transition:var(--transition);
+  letter-spacing:.3px;
+}
+.q-pill:hover{border-color:#ffffff66;color:#fff;}
+.q-pill.active{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+
+.year-input-wrap{display:flex;align-items:center;gap:6px;font-size:12px;color:#a0aec0;}
+.year-input-wrap input{
+  width:64px;
+  background:#ffffff15;
+  border:1px solid #ffffff33;
+  border-radius:6px;
+  color:#fff;
+  font-family:'DM Mono',monospace;
+  font-size:13px;
+  padding:4px 8px;
+  text-align:center;
+}
+.year-input-wrap input:focus{outline:none;border-color:var(--gold);}
+
+.topbar-right{margin-left:auto;display:flex;gap:8px;}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:600;
+  padding:6px 14px;border-radius:8px;
+  border:none;cursor:pointer;transition:var(--transition);
+  white-space:nowrap;
+}
+.btn-ghost{background:#ffffff15;color:#e2e8f0;border:1px solid #ffffff22;}
+.btn-ghost:hover{background:#ffffff25;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover{background:#f0c75a;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+
+/* ── NAV TABS ──────────────────────────────────────────── */
+#navtabs{
+  background:var(--navy);
+  border-bottom:1px solid #ffffff12;
+  display:flex;
+  gap:2px;
+  padding:0 20px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+#navtabs::-webkit-scrollbar{display:none;}
+
+.nav-tab{
+  background:transparent;
+  border:none;
+  color:#8899b4;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  padding:12px 16px 10px;
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:var(--transition);
+  white-space:nowrap;
+  position:relative;
+}
+.nav-tab:hover{color:#c8d8ec;}
+.nav-tab.active{color:#fff;border-bottom-color:var(--gold);}
+.nav-tab[data-agent].active{color:#fff;}
+
+/* ── MAIN CONTENT ──────────────────────────────────────── */
+#main{padding:24px;max-width:1200px;margin:0 auto;}
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── SECTION HEADING ───────────────────────────────────── */
+.section-heading{
+  font-size:11px;font-weight:700;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin:28px 0 12px;
+}
+
+/* ── TEAM SUMMARY GRID ─────────────────────────────────── */
+.summary-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;flex-wrap:wrap;gap:12px;
+}
+.summary-title{font-size:22px;font-weight:700;color:var(--navy);}
+.summary-subtitle{font-size:13px;color:var(--text-muted);margin-top:2px;}
+
+.agent-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:16px;
+}
+
+.summary-card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:20px;
+  display:flex;gap:16px;
+  align-items:flex-start;
+  cursor:pointer;
+  transition:var(--transition);
+  border:2px solid transparent;
+}
+.summary-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.summary-card.active-card{border-color:var(--gold);}
+
+.summary-donut{flex-shrink:0;position:relative;width:80px;height:80px;}
+.donut-label{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;
+  font-size:15px;font-weight:700;
+  line-height:1.1;
+}
+.donut-label .donut-pct{font-size:11px;color:var(--text-muted);font-weight:500;}
+
+.summary-info{flex:1;min-width:0;}
+.summary-name{font-size:15px;font-weight:700;margin-bottom:2px;}
+.summary-role{font-size:11px;color:var(--text-muted);margin-bottom:8px;}
+.summary-score-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.score-badge{
+  font-family:'DM Mono',monospace;
+  font-size:22px;font-weight:700;
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;
+  padding:2px 10px;border-radius:20px;
+}
+.status-pill.green{background:var(--green-bg);color:var(--green);}
+.status-pill.amber{background:var(--amber-bg);color:var(--amber);}
+.status-pill.red{background:var(--red-bg);color:var(--red);}
+
+.summary-meta{margin-top:10px;display:flex;flex-direction:column;gap:3px;}
+.meta-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;}
+.meta-label{color:var(--text-muted);}
+.meta-val{font-weight:600;}
+
+.no-data-banner{
+  background:var(--gold-light);
+  border:1px solid var(--gold);
+  border-radius:var(--radius-sm);
+  padding:12px 16px;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:12px;
+  font-size:13px;
+}
+.no-data-banner .btn-start{
+  margin-left:auto;
+  background:var(--gold);
+  color:var(--navy);
+  border:none;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:700;
+  padding:6px 14px;border-radius:8px;
+  cursor:pointer;transition:var(--transition);
+  white-space:nowrap;
+}
+.no-data-banner .btn-start:hover{background:#f0c75a;}
+
+/* ── AGENT VIEW ────────────────────────────────────────── */
+.agent-hero{
+  background:var(--navy);
+  border-radius:var(--radius);
+  padding:28px;
+  color:#fff;
+  display:flex;
+  gap:24px;
+  align-items:flex-start;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+}
+.agent-hero::after{
+  content:'';position:absolute;
+  right:-60px;top:-60px;
+  width:240px;height:240px;
+  border-radius:50%;
+  background:radial-gradient(circle, #e8b84b22 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-avatar{
+  width:72px;height:72px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:800;
+  flex-shrink:0;
+  border:3px solid rgba(255,255,255,.15);
+}
+.hero-info{flex:1;}
+.hero-name{font-size:22px;font-weight:700;margin-bottom:2px;}
+.hero-role{font-size:13px;color:#8899b4;margin-bottom:12px;}
+.hero-badges{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.quarter-badge{
+  background:#ffffff15;
+  border:1px solid #ffffff22;
+  font-size:12px;font-weight:600;
+  padding:4px 12px;border-radius:20px;
+  font-family:'DM Mono',monospace;
+}
+.hero-score-wrap{text-align:right;margin-left:auto;}
+.hero-score{
+  font-family:'DM Mono',monospace;
+  font-size:52px;font-weight:700;
+  line-height:1;
+  color:var(--gold);
+}
+.hero-score-label{font-size:11px;color:#8899b4;margin-top:4px;text-align:center;}
+.trend-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:600;
+  padding:3px 10px;border-radius:20px;
+  margin-top:6px;
+}
+.trend-up{background:#1a7a4a22;color:#4ade80;}
+.trend-down{background:#b91c1c22;color:#f87171;}
+.trend-flat{background:#ffffff15;color:#94a3b8;}
+
+/* ── CARDS ─────────────────────────────────────────────── */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:20px;
+  margin-bottom:16px;
+}
+.card-title{
+  font-size:13px;font-weight:700;
+  letter-spacing:.3px;
+  color:var(--navy);
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .badge-count{
+  background:var(--bg);
+  color:var(--text-muted);
+  font-size:11px;font-weight:600;
+  padding:1px 8px;border-radius:10px;
+  font-family:'DM Mono',monospace;
+}
+
+/* ── MONTHLY METRICS ───────────────────────────────────── */
+.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.month-card{
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:12px;
+  background:var(--bg);
+}
+.month-label{
+  font-size:11px;font-weight:700;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:10px;
+}
+.metric-row{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
+.metric-row:last-child{margin-bottom:0;}
+.metric-name{font-size:12px;color:var(--text-muted);}
+.metric-input{
+  width:70px;
+  border:1px solid var(--border);
+  border-radius:5px;
+  background:var(--white);
+  font-family:'DM Mono',monospace;
+  font-size:12px;font-weight:600;
+  padding:3px 7px;
+  text-align:right;
+  color:var(--text);
+  transition:var(--transition);
+}
+.metric-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px #e8b84b33;}
+
+/* ── KPI TABLE ─────────────────────────────────────────── */
+.kpi-table{width:100%;border-collapse:collapse;font-size:13px;}
+.kpi-table th{
+  text-align:left;
+  padding:8px 10px;
+  font-size:11px;font-weight:700;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  border-bottom:2px solid var(--border);
+  background:var(--bg);
+}
+.kpi-table td{
+  padding:8px 10px;
+  border-bottom:1px solid var(--border);
+  vertical-align:top;
+}
+.kpi-table tr:last-child td{border-bottom:none;}
+.kpi-table tr:hover td{background:#fafaf8;}
+.kpi-num{
+  font-family:'DM Mono',monospace;
+  font-size:11px;font-weight:600;
+  color:var(--text-muted);
+  width:24px;
+}
+.kpi-area{font-weight:600;font-size:13px;line-height:1.4;}
+.kpi-action{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.kpi-metric{font-size:11px;color:#9090a0;margin-top:2px;font-style:italic;}
+.weight-chip{
+  display:inline-flex;align-items:center;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:20px;
+  font-family:'DM Mono',monospace;
+  font-size:11px;font-weight:700;
+  padding:2px 9px;
+  color:var(--text-muted);
+}
+.score-cell{text-align:center;}
+.score-input{
+  width:52px;
+  border:2px solid var(--border);
+  border-radius:7px;
+  font-family:'DM Mono',monospace;
+  font-size:14px;font-weight:700;
+  padding:4px 6px;
+  text-align:center;
+  background:var(--white);
+  transition:var(--transition);
+}
+.score-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #e8b84b22;}
+.score-green{color:var(--green);}
+.score-amber{color:var(--amber);}
+.score-red{color:var(--red);}
+.note-input,.comment-input{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  padding:5px 8px;
+  resize:vertical;
+  min-height:40px;
+  background:var(--white);
+  color:var(--text);
+  transition:var(--transition);
+}
+.note-input:focus,.comment-input:focus{outline:none;border-color:var(--gold);}
+
+.kpi-total-row td{
+  background:var(--navy);
+  color:#fff;
+  font-weight:700;
+  border-radius:0;
+}
+.kpi-total-row td:first-child{border-radius:0 0 0 var(--radius-sm);}
+.kpi-total-row td:last-child{border-radius:0 0 var(--radius-sm) 0;}
+
+/* ── TEXTAREA ──────────────────────────────────────────── */
+.styled-textarea{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  padding:10px 12px;
+  resize:vertical;
+  min-height:90px;
+  background:var(--white);
+  color:var(--text);
+  line-height:1.6;
+  transition:var(--transition);
+}
+.styled-textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px #e8b84b22;}
+
+/* ── SIGN-OFF ──────────────────────────────────────────── */
+.signoff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.signoff-field{display:flex;flex-direction:column;gap:4px;}
+.signoff-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);}
+.signoff-input{
+  border:none;
+  border-bottom:2px solid var(--border);
+  border-radius:0;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  padding:6px 2px;
+  background:transparent;
+  color:var(--text);
+  transition:var(--transition);
+}
+.signoff-input:focus{outline:none;border-bottom-color:var(--gold);}
+
+/* ── FOLDER STATUS ─────────────────────────────────────── */
+.folder-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.folder-item{display:flex;flex-direction:column;gap:4px;}
+.folder-label{font-size:12px;font-weight:600;color:var(--text-muted);}
+
+/* ── SCORE DONUT SVG ───────────────────────────────────── */
+.score-ring-wrap{position:relative;display:inline-flex;}
+
+/* ── PRINT ─────────────────────────────────────────────── */
+@media print{
+  #topbar,#navtabs,.no-print{display:none!important;}
+  body{background:#fff;}
+  .card,.agent-hero{box-shadow:none;border:1px solid #ddd;}
+  .view{display:block!important;}
+  .view:not(.print-active){display:none!important;}
+  textarea,.styled-textarea{border:none!important;resize:none!important;}
+  input{border:none!important;}
+  .btn{display:none!important;}
+  .no-data-banner{display:none!important;}
+}
+
+/* ── RESPONSIVE ────────────────────────────────────────── */
+@media(max-width:680px){
+  #main{padding:12px;}
+  .month-grid{grid-template-columns:1fr;}
+  .signoff-grid{grid-template-columns:1fr;}
+  .agent-hero{flex-direction:column;}
+  .hero-score-wrap{text-align:left;margin-left:0;}
+}
+
+/* ── UTILITY ───────────────────────────────────────────── */
+.flex{display:flex;}.gap-8{gap:8px;}.gap-12{gap:12px;}.items-center{align-items:center;}
+.justify-between{justify-content:space-between;}
+.mt-4{margin-top:4px;}.mt-8{margin-top:8px;}.mt-12{margin-top:12px;}
+.label-text{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;display:block;}
+.hidden{display:none!important;}
+.text-muted{color:var(--text-muted);}
+.font-mono{font-family:'DM Mono',monospace;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="brand">
+    <span class="brand-icon">⚡</span>
+    <div>
+      <span>EKEDC / EKEDP</span>
+      <span class="brand-sub">Email Helpdesk · Marina HQ</span>
+    </div>
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="quarter-pills" id="quarterPills">
+    <button class="q-pill active" data-q="Q1">Q1</button>
+    <button class="q-pill" data-q="Q2">Q2</button>
+    <button class="q-pill" data-q="Q3">Q3</button>
+    <button class="q-pill" data-q="Q4">Q4</button>
+  </div>
+  <div class="year-input-wrap">
+    <span>Year</span>
+    <input type="number" id="yearInput" value="2026" min="2020" max="2099"/>
+  </div>
+  <div class="topbar-right no-print">
+    <button class="btn btn-ghost" onclick="saveHTML()">💾 Save HTML</button>
+    <button class="btn btn-gold" onclick="printCurrent()">🖨 Print</button>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div id="navtabs">
+  <button class="nav-tab active" data-view="summary">📊 Team Summary</button>
+  <!-- agent tabs injected by JS -->
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TEAM SUMMARY VIEW -->
+  <div class="view active" id="view-summary">
+    <div class="summary-header">
+      <div>
+        <div class="summary-title">Team Performance Summary</div>
+        <div class="summary-subtitle" id="summarySubtitle">CX Team · Email Helpdesk · Q1 2026</div>
+      </div>
+      <button class="btn btn-ghost no-print" onclick="exportAllHTML()">⬇ Export All to HTML</button>
+    </div>
+    <div class="agent-grid" id="agentGrid"><!-- injected --></div>
+  </div>
+
+  <!-- AGENT VIEWS (injected by JS) -->
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════════════ */
+const KPI_AREAS = [
+  {
+    area:'Complaint Resolution & Case Management',
+    action:'Escalation Management',
+    metric:'% of complaints resolved within SLA; escalation rate',
+    weight:25
+  },
+  {
+    area:'Customer Communication & Relationship Management',
+    action:'Response quality, tone, follow-up',
+    metric:'Response time adherence; CSAT score',
+    weight:15
+  },
+  {
+    area:'CRM & Data Management',
+    action:'Accurate logging, ticket hygiene, folder management',
+    metric:'Data accuracy rate; CRM update compliance',
+    weight:25
+  },
+  {
+    area:'Service Delivery & Customer Education',
+    action:'Proactive customer guidance, query clarity',
+    metric:'First-contact resolution; education touchpoints',
+    weight:10
+  },
+  {
+    area:'Compliance with Complaint Handling Procedure',
+    action:'Adherence to NERC guidelines & internal SOP',
+    metric:'Compliance audit score',
+    weight:5
+  },
+  {
+    area:'Collaboration & Process Improvement',
+    action:'Cross-team coordination; process suggestions',
+    metric:'Collaboration index; improvement submissions',
+    weight:10
+  },
+  {
+    area:'Health & Safety Compliance',
+    action:'Adherence to H&S protocols',
+    metric:'Incident-free score',
+    weight:5
+  },
+  {
+    area:'Personal Development & Training',
+    action:'Participation in training & self-improvement',
+    metric:'Training hours logged; certifications earned',
+    weight:5
+  }
+];
+
+const QUARTER_MONTHS = {
+  Q1:['January','February','March'],
+  Q2:['April','May','June'],
+  Q3:['July','August','September'],
+  Q4:['October','November','December']
+};
+
+const BASE_AGENTS = [
+  {id:'afo', name:'Matthew Akhigbe',  prefix:'AFO-', color:'#185FA5', avatarBg:'#E6F1FB', initials:'MA'},
+  {id:'rac', name:'Racheal Ogunleke', prefix:'RAC-', color:'#3B6D11', avatarBg:'#EAF3DE', initials:'RO'},
+  {id:'est', name:'Esther Okafor',    prefix:'EST-', color:'#A32D2D', avatarBg:'#FCEBEB', initials:'EO'},
+  {id:'luv', name:'Loveth Okpara',    prefix:'LUV-', color:'#854F0B', avatarBg:'#FAEEDA', initials:'LO'},
+  {id:'teg', name:'Tomina Egbokwu',   prefix:'TEG-', color:'#3C3489', avatarBg:'#EEEDFE', initials:'TE'},
+];
+
+// Q1 2026 pre-filled scores
+const Q1_SCORES = {
+  afo:[22,12,20,9,4,8,4,4],
+  rac:[23,13,25,10,5,10,5,4],
+  est:[17,10,17,6,3,7,4,3],
+  luv:[20,11,15,10,5,10,5,4],
+  teg:[12,6,13,5,2,5,4,3]
+};
+
+// Q1 monthly data (realistic sample)
+const Q1_MONTHS = {
+  afo:[
+    {label:'January',  assigned:148, responded:144, closed:138, escalated:6,  returned:4},
+    {label:'February', assigned:132, responded:130, closed:124, escalated:5,  returned:3},
+    {label:'March',    assigned:157, responded:154, closed:149, escalated:7,  returned:5}
+  ],
+  rac:[
+    {label:'January',  assigned:162, responded:161, closed:155, escalated:4,  returned:2},
+    {label:'February', assigned:145, responded:145, closed:141, escalated:3,  returned:2},
+    {label:'March',    assigned:170, responded:169, closed:165, escalated:3,  returned:2}
+  ],
+  est:[
+    {label:'January',  assigned:131, responded:126, closed:118, escalated:10, returned:8},
+    {label:'February', assigned:118, responded:112, closed:104, escalated:9,  returned:7},
+    {label:'March',    assigned:140, responded:133, closed:125, escalated:11, returned:9}
+  ],
+  luv:[
+    {label:'January',  assigned:143, responded:140, closed:133, escalated:6,  returned:5},
+    {label:'February', assigned:129, responded:127, closed:121, escalated:5,  returned:4},
+    {label:'March',    assigned:152, responded:149, closed:143, escalated:6,  returned:5}
+  ],
+  teg:[
+    {label:'January',  assigned:118, responded:111, closed:101, escalated:14, returned:10},
+    {label:'February', assigned:104, responded:97,  closed:87,  escalated:13, returned:9},
+    {label:'March',    assigned:125, responded:116, closed:106, escalated:15, returned:11}
+  ]
+};
+
+const Q1_NOTES = {
+  afo:[
+    'Handled escalations promptly; reduced back-log in Q1.',
+    'Maintained professional tone across all channels.',
+    'CRM entries 96% accurate; minor folder misfiling in Feb.',
+    'Sent proactive outage advisory to 23 accounts.',
+    'Followed NERC SOP in all recorded complaints.',
+    'Assisted 2 team members on complex billing disputes.',
+    'Zero incidents recorded.',
+    'Attended 2 internal CX training sessions.'
+  ],
+  rac:[
+    'Top resolver in team; 0 SLA breaches in Q1.',
+    'Received verbal commendation from customer in March.',
+    'Maintained near-perfect CRM record across all months.',
+    'Proactively educated 30+ customers on estimated billing.',
+    'Full compliance; zero deviations noted.',
+    'Led a process audit suggestion for ticket tagging.',
+    'Zero incidents recorded.',
+    'Completed online NERC consumer regulation module.'
+  ],
+  est:[
+    'Escalation rate higher than team average; coaching recommended.',
+    'Communication quality inconsistent in February.',
+    'Multiple CRM update delays flagged by QA.',
+    'Limited proactive outreach; needs improvement.',
+    'One minor SOP deviation flagged in Jan.',
+    'Collaboration score reduced due to missed handovers.',
+    'Zero incidents recorded.',
+    'Attended 1 training session; needs more engagement.'
+  ],
+  luv:[
+    'Good escalation control; March slightly elevated.',
+    'Strong customer rapport; response tone consistently warm.',
+    'Data quality good; Q1 audit returned 92% accuracy.',
+    'Initiated customer education on meter tampering in Feb.',
+    'Compliant throughout; minor documentation lag.',
+    'Contributed to team SLA tracker improvement.',
+    'Zero incidents recorded.',
+    'Completed internal billing dispute module.'
+  ],
+  teg:[
+    'High escalation & return rate; performance intervention needed.',
+    'Communication tone requires improvement; flagged by QA.',
+    'Multiple CRM errors in Q1; re-training recommended.',
+    'Minimal customer education activity.',
+    'Two compliance deviations flagged.',
+    'Low cross-team engagement in Q1.',
+    'Zero incidents recorded.',
+    'Attended 1 session; certification pending.'
+  ]
+};
+
+const Q1_POINTS = {
+  afo:['Escalation turnaround improved vs Q4 2025.','Folder pending count reduced by 30%.','Customer commendation received for March complaint resolution.'],
+  rac:['Highest overall score in team.','Led knowledge-sharing session on NERC guidelines.','Zero SLA breaches — consistent across all 3 months.'],
+  est:['Escalation rate requires attention — coaching plan initiated.','CRM accuracy below threshold in February.','Improvement trajectory expected in Q2 with structured support.'],
+  luv:['Solid all-round performance.','Customer education initiative well-received.','Minor SOP lag to be addressed in Q2.'],
+  teg:['Performance Improvement Plan (PIP) discussion recommended.','High return rate indicates review gaps.','Regular 1-on-1 coaching scheduled for Q2.']
+};
+
+const Q1_OUTLOOK = {
+  afo:'Target escalation rate below 4% in Q2. Continue proactive customer education. Maintain CRM accuracy above 97%.',
+  rac:'Sustain top performance. Lead at least one team process improvement initiative. Target 97/100 in Q2.',
+  est:'Reduce escalation rate to team average by Q2. Complete CRM re-training by end of April. Weekly check-ins with manager.',
+  luv:'Maintain score above 80. Close documentation lag. Expand proactive education touchpoints to 40+ customers in Q2.',
+  teg:'Address all PIP action points by end of Q2. Attend all scheduled training. Target minimum 65/100 in Q2.'
+};
+
+const Q1_COMMENTS = {
+  afo:'Matthew demonstrates consistent performance and good professional conduct. With continued focus on CRM accuracy and proactive customer outreach, he is well-positioned to exceed targets in Q2.',
+  rac:'Racheal continues to set the standard for the team. Her attention to compliance and customer experience is exemplary. Recommend for recognition.',
+  est:'Esther\'s Q1 performance reflects areas needing structured support. A coaching programme has been initiated and measurable improvement is expected by Q2.',
+  luv:'Loveth performed well overall with a commendable customer-first approach. Minor procedural gaps should be addressed early in Q2 to maintain trajectory.',
+  teg:'Tomina\'s Q1 score is below the team threshold. A Performance Improvement Plan is in place. Support, monitoring and regular feedback sessions are critical for Q2.'
+};
+
+function makeBlankMonths(q){
+  return QUARTER_MONTHS[q].map(label=>({
+    label, assigned:0, responded:0, closed:0, escalated:0, returned:0
+  }));
+}
+
+function makeBlankKpis(){
+  return KPI_AREAS.map(k=>({
+    area:k.area, action:k.action, metric:k.metric, weight:k.weight,
+    score:0, note:'', comment:''
+  }));
+}
+
+function makeQ1Data(agentId){
+  const scores = Q1_SCORES[agentId];
+  return {
+    months: Q1_MONTHS[agentId].map(m=>({...m})),
+    kpis: KPI_AREAS.map((k,i)=>({
+      area:k.area, action:k.action, metric:k.metric, weight:k.weight,
+      score:scores[i],
+      note:Q1_NOTES[agentId][i],
+      comment:''
+    })),
+    points: [...Q1_POINTS[agentId]],
+    outlook: Q1_OUTLOOK[agentId],
+    overallComment: Q1_COMMENTS[agentId],
+    sigEmployee:'', sigManager:'Love Offei — Manager CX', sigDate:'',
+    folderPending:'', folderReturned:''
+  };
+}
+
+// Build initial data store
+const AGENTS = BASE_AGENTS.map(a=>({
+  ...a,
+  quarters:{
+    Q1: makeQ1Data(a.id),
+    Q2: null,
+    Q3: null,
+    Q4: null
+  }
+}));
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+let currentQ = 'Q1';
+let currentYear = 2026;
+let currentView = 'summary';
+
+/* ══════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════ */
+function getScore(agent, q){
+  const qData = agent.quarters[q];
+  if(!qData) return null;
+  return qData.kpis.reduce((s,k)=>s+Number(k.score),0);
+}
+
+function scoreColor(score){
+  if(score === null) return 'var(--text-muted)';
+  if(score >= 80) return 'var(--green)';
+  if(score >= 60) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function statusClass(score){
+  if(score === null) return '';
+  if(score >= 80) return 'green';
+  if(score >= 60) return 'amber';
+  return 'red';
+}
+
+function statusLabel(score){
+  if(score === null) return '—';
+  if(score >= 80) return '✓ On Track';
+  if(score >= 60) return '⚠ Needs Focus';
+  return '✗ Below Standard';
+}
+
+function buildDonut(score, color, size=80){
+  if(score === null) score = 0;
+  const r = (size/2)-8;
+  const circ = 2*Math.PI*r;
+  const pct = Math.min(score,100)/100;
+  const dash = circ*pct;
+  const gap = circ - dash;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#e2e0d8" stroke-width="7"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+      stroke-dasharray="${dash} ${gap}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function esc(str){
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function agentById(id){ return AGENTS.find(a=>a.id===id); }
+
+/* ══════════════════════════════════════════════════════════
+   BUILD TABS
+══════════════════════════════════════════════════════════ */
+function buildTabs(){
+  const nav = document.getElementById('navtabs');
+  // remove old agent tabs
+  nav.querySelectorAll('[data-agent]').forEach(t=>t.remove());
+  AGENTS.forEach(a=>{
+    const btn = document.createElement('button');
+    btn.className = 'nav-tab';
+    btn.dataset.agent = a.id;
+    btn.dataset.view = 'agent-'+a.id;
+    btn.textContent = a.initials + ' ' + a.name.split(' ')[0];
+    btn.style.setProperty('--agent-color', a.color);
+    btn.addEventListener('click',()=>switchView('agent-'+a.id));
+    nav.appendChild(btn);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   AGENT VIEW RENDERING
+══════════════════════════════════════════════════════════ */
+function renderAgentView(agentId){
+  const agent = agentById(agentId);
+  const viewId = 'view-agent-'+agentId;
+  let el = document.getElementById(viewId);
+  if(!el){
+    el = document.createElement('div');
+    el.className = 'view';
+    el.id = viewId;
+    document.getElementById('main').appendChild(el);
+  }
+  el.innerHTML = buildAgentHTML(agent);
+  bindAgentEvents(agent, el);
+}
+
+function buildAgentHTML(agent){
+  const q = currentQ;
+  const year = currentYear;
+  const qData = agent.quarters[q];
+  const score = getScore(agent, q);
+  const prevQ = {Q1:null,Q2:'Q1',Q3:'Q2',Q4:'Q3'}[q];
+  const prevScore = prevQ ? getScore(agent, prevQ) : null;
+  const sc = scoreColor(score);
+  const months = QUARTER_MONTHS[q];
+
+  // Banner if no data
+  let bannerHTML = '';
+  if(!qData){
+    bannerHTML = `<div class="no-data-banner">
+      <span>📋 <strong>${q} ${year}</strong> not started for ${agent.name}.</span>
+      <button class="btn-start" onclick="startQuarter('${agent.id}','${q}')">Start ${q} — copy KPI structure from Q1</button>
+    </div>`;
+  }
+
+  // Trend
+  let trendHTML = '';
+  if(prevScore !== null && score !== null){
+    const delta = score - prevScore;
+    const cls = delta>0?'trend-up':delta<0?'trend-down':'trend-flat';
+    const arrow = delta>0?'↑':delta<0?'↓':'→';
+    trendHTML = `<span class="trend-badge ${cls}">${arrow} ${Math.abs(delta)} vs ${prevQ}</span>`;
+  }
+
+  // Hero donut
+  const heroDonut = buildDonut(score||0, '#e8b84b', 90);
+
+  // Monthly metrics
+  let monthsHTML = '';
+  if(qData){
+    monthsHTML = qData.months.map((m,mi)=>{
+      const qMonthLabel = `${q} ${year} · ${m.label}`;
+      return `<div class="month-card">
+        <div class="month-label">${esc(qMonthLabel)}</div>
+        ${buildMetricRow('Assigned',    m.assigned,    agent.id, q, mi, 'assigned')}
+        ${buildMetricRow('Responded',   m.responded,   agent.id, q, mi, 'responded')}
+        ${buildMetricRow('Closed',      m.closed,      agent.id, q, mi, 'closed')}
+        ${buildMetricRow('Escalated',   m.escalated,   agent.id, q, mi, 'escalated')}
+        ${buildMetricRow('Returned',    m.returned,    agent.id, q, mi, 'returned')}
+      </div>`;
+    }).join('');
+  } else {
+    months.forEach((m,mi)=>{
+      const qMonthLabel = `${q} ${year} · ${m}`;
+      monthsHTML += `<div class="month-card" style="opacity:.4">
+        <div class="month-label">${esc(qMonthLabel)}</div>
+        <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px 0">Start quarter to enable</div>
+      </div>`;
+    });
+  }
+
+  // KPI table
+  let kpiRows = '';
+  let totalScore = 0;
+  if(qData){
+    qData.kpis.forEach((k,i)=>{
+      const sc2 = Number(k.score);
+      totalScore += sc2;
+      const pct = k.weight > 0 ? Math.round((sc2/k.weight)*100) : 0;
+      const scCls = pct>=80?'score-green':pct>=60?'score-amber':'score-red';
+      kpiRows += `<tr>
+        <td class="kpi-num">${i+1}</td>
+        <td>
+          <div class="kpi-area">${esc(k.area)}</div>
+          <div class="kpi-action">${esc(k.action)}</div>
+          <div class="kpi-metric">${esc(k.metric)}</div>
+        </td>
+        <td style="text-align:center"><span class="weight-chip">${k.weight}%</span></td>
+        <td class="score-cell">
+          <input type="number" class="score-input ${scCls}" min="0" max="${k.weight}"
+            value="${sc2}"
+            data-agent="${agent.id}" data-q="${q}" data-kpi="${i}" data-field="score"
+            onchange="updateKpi(this)" oninput="colorScore(this,${k.weight})"/>
+        </td>
+        <td>
+          <textarea class="note-input" rows="2"
+            data-agent="${agent.id}" data-q="${q}" data-kpi="${i}" data-field="note"
+            onchange="updateKpiText(this)">${esc(k.note)}</textarea>
+        </td>
+        <td>
+          <textarea class="comment-input" rows="2"
+            data-agent="${agent.id}" data-q="${q}" data-kpi="${i}" data-field="comment"
+            onchange="updateKpiText(this)">${esc(k.comment)}</textarea>
+        </td>
+      </tr>`;
+    });
+  } else {
+    KPI_AREAS.forEach((k,i)=>{
+      kpiRows += `<tr style="opacity:.4">
+        <td class="kpi-num">${i+1}</td>
+        <td><div class="kpi-area">${esc(k.area)}</div></td>
+        <td style="text-align:center"><span class="weight-chip">${k.weight}%</span></td>
+        <td class="score-cell">—</td><td>—</td><td>—</td>
+      </tr>`;
+    });
+  }
+
+  const scoreDisplay = score !== null ? score : '—';
+  const statusCls = statusClass(score);
+  const statusLbl = statusLabel(score);
+
+  // Talking points & outlook
+  const pointsVal = qData ? esc(qData.points.join('\n')) : '';
+  const outlookLabel = `${q === 'Q4' ? 'Year-End Summary & Next Year Targets' : 'Q'+({Q1:'2',Q2:'3',Q3:'4',Q4:'1'}[q])+' '+year+' Outlook & Targets'}`;
+  const outlookVal = qData ? esc(qData.outlook) : '';
+  const overallVal = qData ? esc(qData.overallComment) : '';
+  const sigEmp = qData ? esc(qData.sigEmployee) : '';
+  const sigMgr = qData ? esc(qData.sigManager) : 'Love Offei — Manager CX';
+  const sigDate = qData ? esc(qData.sigDate) : '';
+  const fp = qData ? esc(qData.folderPending) : '';
+  const fr = qData ? esc(qData.folderReturned) : '';
+
+  return `
+${bannerHTML}
+
+<!-- HERO -->
+<div class="agent-hero">
+  <div class="hero-avatar" style="background:${agent.avatarBg};color:${agent.color}">${agent.initials}</div>
+  <div class="hero-info">
+    <div class="hero-name">${agent.name}</div>
+    <div class="hero-role">CX Agent · Email Helpdesk · ${agent.prefix.replace('-','')} Prefix</div>
+    <div class="hero-badges">
+      <span class="quarter-badge">${q} ${year} · ${scoreDisplay}/100</span>
+      <span class="status-pill ${statusCls}">${statusLbl}</span>
+      ${trendHTML}
+    </div>
+  </div>
+  <div class="hero-score-wrap">
+    <div style="position:relative;display:inline-block;">
+      ${buildDonut(score||0,'#e8b84b',90)}
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <span class="hero-score" style="font-size:26px;">${scoreDisplay}</span>
+        <span style="font-size:10px;color:#8899b4;">/100</span>
+      </div>
+    </div>
+    <div class="hero-score-label">Overall Score</div>
+  </div>
+</div>
+
+<!-- MONTHLY METRICS -->
+<div class="card">
+  <div class="card-title">📅 Monthly Metrics</div>
+  <div class="month-grid">${monthsHTML}</div>
+</div>
+
+<!-- KPI SCORECARD -->
+<div class="card">
+  <div class="card-title">📋 KPI Scorecard
+    <span class="badge-count">Total: <span id="total-${agent.id}">${totalScore}</span>/100</span>
+  </div>
+  <div style="overflow-x:auto;">
+  <table class="kpi-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>KPI Area</th>
+        <th>Weight</th>
+        <th>Score</th>
+        <th>Performance Notes / Evidence</th>
+        <th>Officer Comment</th>
+      </tr>
+    </thead>
+    <tbody>${kpiRows}</tbody>
+    <tfoot>
+      <tr class="kpi-total-row">
+        <td colspan="2" style="font-size:13px;padding:10px;">TOTAL SCORE</td>
+        <td style="text-align:center;"><span class="weight-chip" style="background:#ffffff22;color:#fff;border-color:#ffffff33;">100%</span></td>
+        <td style="text-align:center;font-family:'DM Mono',monospace;font-size:16px;"><span id="total2-${agent.id}">${totalScore}</span>/100</td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+</div>
+
+<!-- TALKING POINTS -->
+<div class="card">
+  <div class="card-title">💬 Key Talking Points</div>
+  <label class="label-text">Enter each talking point on a new line</label>
+  <textarea class="styled-textarea" rows="5"
+    data-agent="${agent.id}" data-q="${q}" data-field="points"
+    onchange="updateField(this)" placeholder="• Q1 highlights and key discussion points..."
+    ${!qData?'disabled':''}>
+${pointsVal}</textarea>
+</div>
+
+<!-- OUTLOOK -->
+<div class="card">
+  <div class="card-title">🔭 ${outlookLabel}</div>
+  <textarea class="styled-textarea" rows="4"
+    data-agent="${agent.id}" data-q="${q}" data-field="outlook"
+    onchange="updateField(this)" placeholder="Targets, development areas, expectations for next quarter..."
+    ${!qData?'disabled':''}>
+${outlookVal}</textarea>
+</div>
+
+<!-- FOLDER STATUS -->
+<div class="card">
+  <div class="card-title">📁 Folder Status</div>
+  <div class="folder-grid">
+    <div class="folder-item">
+      <label class="folder-label">Pending Folder Count</label>
+      <input type="text" class="signoff-input" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;"
+        data-agent="${agent.id}" data-q="${q}" data-field="folderPending"
+        value="${fp}" onchange="updateField(this)"
+        placeholder="e.g. 12 tickets pending"
+        ${!qData?'disabled':''}/>
+    </div>
+    <div class="folder-item">
+      <label class="folder-label">Returned Folder Count</label>
+      <input type="text" class="signoff-input" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;"
+        data-agent="${agent.id}" data-q="${q}" data-field="folderReturned"
+        value="${fr}" onchange="updateField(this)"
+        placeholder="e.g. 3 tickets returned"
+        ${!qData?'disabled':''}/>
+    </div>
+  </div>
+</div>
+
+<!-- OVERALL COMMENT -->
+<div class="card">
+  <div class="card-title">📝 Manager's Overall Comment</div>
+  <textarea class="styled-textarea" rows="4"
+    data-agent="${agent.id}" data-q="${q}" data-field="overallComment"
+    onchange="updateField(this)" placeholder="Manager's overall assessment and recommendations..."
+    ${!qData?'disabled':''}>
+${overallVal}</textarea>
+</div>
+
+<!-- SIGN-OFF -->
+<div class="card">
+  <div class="card-title">✍️ Sign-Off</div>
+  <div class="signoff-grid">
+    <div class="signoff-field">
+      <label class="signoff-label">Employee Signature</label>
+      <input type="text" class="signoff-input"
+        data-agent="${agent.id}" data-q="${q}" data-field="sigEmployee"
+        value="${sigEmp}" onchange="updateField(this)"
+        placeholder="Employee full name / signature"
+        ${!qData?'disabled':''}/>
+    </div>
+    <div class="signoff-field">
+      <label class="signoff-label">Appraiser (Manager)</label>
+      <input type="text" class="signoff-input"
+        data-agent="${agent.id}" data-q="${q}" data-field="sigManager"
+        value="${sigMgr}" onchange="updateField(this)"
+        ${!qData?'disabled':''}/>
+    </div>
+    <div class="signoff-field">
+      <label class="signoff-label">Date</label>
+      <input type="date" class="signoff-input"
+        data-agent="${agent.id}" data-q="${q}" data-field="sigDate"
+        value="${sigDate}" onchange="updateField(this)"
+        ${!qData?'disabled':''}/>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="text-align:center;font-size:11px;color:var(--text-muted);">
+    EKEDC / EKEDP · CX Team · Email Helpdesk Performance Appraisal · ${q} ${year}
+    <br/>Prepared by: Love Offei — Manager CX
+  </div>
+</div>`;
+}
+
+function buildMetricRow(label, val, agentId, q, mi, field){
+  return `<div class="metric-row">
+    <span class="metric-name">${label}</span>
+    <input type="number" class="metric-input" min="0"
+      value="${val}"
+      data-agent="${agentId}" data-q="${q}" data-month="${mi}" data-field="${field}"
+      onchange="updateMonth(this)"/>
+  </div>`;
+}
+
+function bindAgentEvents(agent, el){}
+
+/* ══════════════════════════════════════════════════════════
+   TEAM SUMMARY
+══════════════════════════════════════════════════════════ */
+function renderSummary(){
+  const q = currentQ;
+  const year = currentYear;
+  document.getElementById('summarySubtitle').textContent = `CX Team · Email Helpdesk · ${q} ${year}`;
+
+  const grid = document.getElementById('agentGrid');
+  grid.innerHTML = AGENTS.map(agent=>{
+    const score = getScore(agent, q);
+    const sc = scoreColor(score);
+    const statusCls = statusClass(score);
+    const statusLbl = statusLabel(score);
+    const donut = buildDonut(score, sc, 80);
+
+    // Top KPI
+    let topKpi = '—', topGap = '—';
+    const qData = agent.quarters[q];
+    if(qData){
+      const best = qData.kpis.reduce((b,k)=> Number(k.score)>Number(b.score)?k:b, qData.kpis[0]);
+      const worst = qData.kpis.reduce((b,k)=>{
+        const kPct = k.weight>0 ? Number(k.score)/k.weight : 0;
+        const bPct = b.weight>0 ? Number(b.score)/b.weight : 1;
+        return kPct < bPct ? k : b;
+      }, qData.kpis[0]);
+      topKpi = best.area.split('&')[0].trim().substring(0,28)+'…';
+      topGap = worst.area.split('&')[0].trim().substring(0,28)+'…';
+    }
+
+    return `<div class="summary-card" onclick="switchView('agent-${agent.id}')">
+      <div class="summary-donut">
+        ${donut}
+        <div class="donut-label">
+          <span style="font-size:16px;font-weight:800;color:${sc};">${score !== null ? score : '—'}</span>
+          <span class="donut-pct">/100</span>
+        </div>
+      </div>
+      <div class="summary-info">
+        <div class="summary-name" style="color:${agent.color}">${agent.name}</div>
+        <div class="summary-role">CX Agent · ${agent.prefix}*</div>
+        <div class="summary-score-row">
+          <span class="status-pill ${statusCls}">${statusLbl}</span>
+        </div>
+        <div class="summary-meta">
+          ${qData ? `
+          <div class="meta-row"><span class="meta-label">Top KPI</span><span class="meta-val" style="font-size:11px;max-width:160px;text-align:right;">${topKpi}</span></div>
+          <div class="meta-row"><span class="meta-label">Focus Gap</span><span class="meta-val" style="font-size:11px;max-width:160px;text-align:right;">${topGap}</span></div>
+          ` : `<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">No data for ${q} ${year}</div>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   VIEW SWITCHING
+══════════════════════════════════════════════════════════ */
+function switchView(viewName){
+  currentView = viewName;
+  // render if agent view
+  if(viewName.startsWith('agent-')){
+    const agentId = viewName.replace('agent-','');
+    renderAgentView(agentId);
+  }
+  // hide all views
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const target = document.getElementById('view-'+viewName);
+  if(target) target.classList.add('active');
+
+  // update tabs
+  document.querySelectorAll('.nav-tab').forEach(t=>{
+    t.classList.remove('active');
+    t.style.borderBottomColor = 'transparent';
+  });
+  const activeTab = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
+  if(activeTab){
+    activeTab.classList.add('active');
+    // color the border for agent tabs
+    const agentId2 = activeTab.dataset.agent;
+    if(agentId2){
+      const a2 = agentById(agentId2);
+      if(a2) activeTab.style.borderBottomColor = a2.color;
+    } else {
+      activeTab.style.borderBottomColor = 'var(--gold)';
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   QUARTER / YEAR CONTROLS
+══════════════════════════════════════════════════════════ */
+document.getElementById('quarterPills').addEventListener('click', e=>{
+  const pill = e.target.closest('.q-pill');
+  if(!pill) return;
+  document.querySelectorAll('.q-pill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');
+  currentQ = pill.dataset.q;
+  refreshAll();
+});
+
+document.getElementById('yearInput').addEventListener('change', e=>{
+  currentYear = parseInt(e.target.value) || 2026;
+  refreshAll();
+});
+
+function refreshAll(){
+  renderSummary();
+  // re-render current agent view if open
+  if(currentView.startsWith('agent-')){
+    const agentId = currentView.replace('agent-','');
+    renderAgentView(agentId);
+    const el = document.getElementById('view-'+currentView);
+    if(el) el.classList.add('active');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   START QUARTER
+══════════════════════════════════════════════════════════ */
+function startQuarter(agentId, q){
+  const agent = agentById(agentId);
+  // copy KPI structure from Q1, zeroed
+  const q1Data = agent.quarters['Q1'];
+  agent.quarters[q] = {
+    months: makeBlankMonths(q),
+    kpis: (q1Data ? q1Data.kpis : KPI_AREAS).map(k=>({
+      area:k.area, action:k.action, metric:k.metric, weight:k.weight,
+      score:0, note:'', comment:''
+    })),
+    points:[],
+    outlook:'',
+    overallComment:'',
+    sigEmployee:'', sigManager:'Love Offei — Manager CX', sigDate:'',
+    folderPending:'', folderReturned:''
+  };
+  renderAgentView(agentId);
+  const el = document.getElementById('view-agent-'+agentId);
+  if(el) el.classList.add('active');
+  renderSummary();
+}
+
+/* ══════════════════════════════════════════════════════════
+   DATA UPDATE HANDLERS
+══════════════════════════════════════════════════════════ */
+function updateKpi(input){
+  const {agent: agentId, q, kpi, field} = input.dataset;
+  const a = agentById(agentId);
+  if(!a || !a.quarters[q]) return;
+  a.quarters[q].kpis[parseInt(kpi)][field] = Number(input.value);
+  // update totals
+  const total = a.quarters[q].kpis.reduce((s,k)=>s+Number(k.score),0);
+  const t1 = document.getElementById('total-'+agentId);
+  const t2 = document.getElementById('total2-'+agentId);
+  if(t1) t1.textContent = total;
+  if(t2) t2.textContent = total;
+  renderSummary();
+}
+
+function colorScore(input, maxWeight){
+  const v = Number(input.value);
+  const pct = maxWeight > 0 ? (v/maxWeight)*100 : 0;
+  input.className = 'score-input ' + (pct>=80?'score-green':pct>=60?'score-amber':'score-red');
+}
+
+function updateKpiText(textarea){
+  const {agent: agentId, q, kpi, field} = textarea.dataset;
+  const a = agentById(agentId);
+  if(!a || !a.quarters[q]) return;
+  a.quarters[q].kpis[parseInt(kpi)][field] = textarea.value;
+}
+
+function updateMonth(input){
+  const {agent: agentId, q, month, field} = input.dataset;
+  const a = agentById(agentId);
+  if(!a || !a.quarters[q]) return;
+  a.quarters[q].months[parseInt(month)][field] = Number(input.value);
+}
+
+function updateField(input){
+  const {agent: agentId, q, field} = input.dataset;
+  const a = agentById(agentId);
+  if(!a || !a.quarters[q]) return;
+  if(field === 'points'){
+    a.quarters[q].points = input.value.split('\n').filter(l=>l.trim());
+  } else {
+    a.quarters[q][field] = input.value;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRINT
+══════════════════════════════════════════════════════════ */
+function printCurrent(){
+  document.querySelectorAll('.view').forEach(v=>{
+    v.classList.remove('print-active');
+    if(v.classList.contains('active')) v.classList.add('print-active');
+  });
+  window.print();
+}
+
+/* ══════════════════════════════════════════════════════════
+   SAVE HTML SNAPSHOT
+══════════════════════════════════════════════════════════ */
+function saveHTML(){
+  const agentsJSON = JSON.stringify(AGENTS.map(a=>({
+    id:a.id, name:a.name, prefix:a.prefix, color:a.color,
+    avatarBg:a.avatarBg, initials:a.initials, quarters:a.quarters
+  })));
+  const stateScript = `<script id="__snapshot_data__">
+    (function(){
+      const data = ${agentsJSON};
+      data.forEach(function(saved){
+        const live = AGENTS.find(function(a){return a.id===saved.id;});
+        if(live) live.quarters = saved.quarters;
+      });
+      currentQ = ${JSON.stringify(currentQ)};
+      currentYear = ${currentYear};
+      document.getElementById('yearInput').value = ${currentYear};
+      document.querySelectorAll('.q-pill').forEach(function(p){
+        p.classList.remove('active');
+        if(p.dataset.q === currentQ) p.classList.add('active');
+      });
+    })();
+  <\/script>`;
+  let html = document.documentElement.outerHTML;
+  // inject before closing body
+  html = html.replace('</body>', stateScript + '</body>');
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `EKEDC_CX_Appraisal_${currentQ}_${currentYear}_snapshot.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXPORT ALL
+══════════════════════════════════════════════════════════ */
+function exportAllHTML(){
+  saveHTML();
+}
+
+/* ══════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════ */
+function init(){
+  buildTabs();
+  renderSummary();
+  switchView('summary');
+}
+
+init();
+</script>
+</body>
+</html>
