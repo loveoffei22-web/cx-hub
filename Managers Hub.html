@@ -1417,22 +1417,30 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
   const[selected,setSelected]=useState([]); // checked ticket ids
   const[lastChecked,setLastChecked]=useState(null); // for shift+click
   const[cellEdit,setCellEdit]=useState(null); // {id,field,val}
-  const XLS_COLS_M=['category','status','resp']; // editable columns in order
+  const XLS_COLS_M=['category','resp','note']; // editable columns in order (status cycles on click)
   function commitCellM(t,noClose){
     if(!cellEdit||cellEdit.id!==t.id)return;
     const val=cellEdit.val;
     const upd=Object.assign({},t,{[cellEdit.field]:val});
+    if(cellEdit.field==='category'){upd.issue=val;const ar=EK_RESP.find(function(r){return r.cat.toLowerCase().split('/').some(function(k){return val.toLowerCase().includes(k.trim());});});if(ar)upd.resp=ar.name;}
     if(cellEdit.field==='status'&&val==='resolved'&&!upd.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
     onUpdate&&onUpdate(upd);
     if(!noClose)setCellEdit(null);
+  }
+  function cycleStatusM(t){
+    const order=['unresolved','progress','resolved'];
+    const next=order[(order.indexOf(t.status||'unresolved')+1)%3];
+    const upd=Object.assign({},t,{status:next,updatedAt:new Date().toISOString()});
+    if(next==='resolved'&&!upd.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
+    onUpdate&&onUpdate(upd);
   }
   function xlsNavM(ev,t,field,rows){
     const ci=XLS_COLS_M.indexOf(field);
     const ri=rows.findIndex(function(x){return x.id===t.id;});
     if(ev.key==='Escape'){ev.preventDefault();setCellEdit(null);return;}
-    if(ev.key==='Enter'){ev.preventDefault();commitCellM(t,true);if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field,val:rows[ri+1][field]||''});else setCellEdit(null);return;}
-    if(ev.key==='ArrowDown'&&!ev.shiftKey){ev.preventDefault();commitCellM(t,true);if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field,val:rows[ri+1][field]||''});return;}
-    if(ev.key==='ArrowUp'){ev.preventDefault();commitCellM(t,true);if(ri>0)setCellEdit({id:rows[ri-1].id,field,val:rows[ri-1][field]||''});return;}
+    if(ev.key==='Enter'&&field!=='note'){ev.preventDefault();commitCellM(t,true);if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field,val:rows[ri+1][field]||''});else setCellEdit(null);return;}
+    if(ev.key==='ArrowDown'&&!ev.shiftKey&&field!=='note'){ev.preventDefault();commitCellM(t,true);if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field,val:rows[ri+1][field]||''});return;}
+    if(ev.key==='ArrowUp'&&field!=='note'){ev.preventDefault();commitCellM(t,true);if(ri>0)setCellEdit({id:rows[ri-1].id,field,val:rows[ri-1][field]||''});return;}
     if(ev.key==='Tab'){ev.preventDefault();commitCellM(t,true);
       if(!ev.shiftKey){if(ci<XLS_COLS_M.length-1)setCellEdit({id:t.id,field:XLS_COLS_M[ci+1],val:t[XLS_COLS_M[ci+1]]||''});else if(ri<rows.length-1)setCellEdit({id:rows[ri+1].id,field:XLS_COLS_M[0],val:rows[ri+1][XLS_COLS_M[0]]||''});else setCellEdit(null);}
       else{if(ci>0)setCellEdit({id:t.id,field:XLS_COLS_M[ci-1],val:t[XLS_COLS_M[ci-1]]||''});else if(ri>0)setCellEdit({id:rows[ri-1].id,field:XLS_COLS_M[XLS_COLS_M.length-1],val:rows[ri-1][XLS_COLS_M[XLS_COLS_M.length-1]]||''});else setCellEdit(null);}
@@ -1711,7 +1719,7 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
 
         <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 14px',marginBottom:8,background:'rgba(255,198,44,.08)',border:'1px solid rgba(255,198,44,.2)',borderRadius:8,font:'600 11px Sora,sans-serif',color:'rgba(255,255,255,.7)'}}>
           <span style={{color:'#FFC72C',fontSize:13}}>⚡</span>
-          <span><b style={{color:'#FFC72C'}}>Excel mode:</b> Double-click Category, Status, or Responsible Party cells to edit inline · Tab to move right · Shift+Tab left · ↑↓ arrows move rows · Enter saves · Esc cancels</span>
+          <span><b style={{color:'#FFC72C'}}>Excel mode:</b> Click STATUS to cycle · Double-click Category, Responsible, or Note to edit inline · Tab moves right · Shift+Tab left · ↑↓ arrows move rows · Enter saves · Esc cancels</span>
         </div>
         <div className="card" style={{marginBottom:24}}>
           <div className="xls-scroll">
@@ -1721,7 +1729,7 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
                   <th style={{width:36,padding:'8px 6px'}}>
                     <input type="checkbox" checked={allPageSel} onChange={toggleAll} style={{cursor:'pointer',width:14,height:14,accentColor:'var(--ek-gold)'}}/>
                   </th>
-                  <th>Date</th><th>Ticket</th><th>Time</th><th>Customer</th><th>Phone</th><th>BU</th><th style={{minWidth:120}}>Category</th><th>Status</th><th>Responsible</th><th>Details</th>
+                  <th>Date</th><th>Ticket</th><th>Time</th><th>Customer</th><th>Phone</th><th>BU</th><th style={{minWidth:120}}>CATEGORY✏</th><th>STATUS ↻</th><th>RESPONSIBLE✏</th><th style={{minWidth:160}}>NOTE✏</th><th>Details</th>
                 </tr>
               </thead>
               <tbody>
@@ -1747,11 +1755,8 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
                             :<>{t.category&&t.category.split('/')[0].trim()}<span className="xls-hint">dbl-click</span></>
                           }
                         </td>
-                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'?' xls-editing':'')} style={{padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'?0:undefined,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'?'visible':'hidden'}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'status',val:t.status||'unresolved'});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
-                          {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='status'
-                            ?<select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'status',paged);}}><option value="unresolved">UNRESOLVED</option><option value="progress">IN PROGRESS</option><option value="resolved">RESOLVED</option></select>
-                            :<StatusBadge s={t.status}/>
-                          }
+                        <td style={{padding:'4px 6px'}} onClick={function(ev){ev.stopPropagation();cycleStatusM(t);}}>
+                          {(function(){const s=t.status||'unresolved';const cfg={resolved:{bg:'#14532d',color:'#4ade80',label:'✓ RESOLVED'},progress:{bg:'#78350f',color:'#FCD34D',label:'⟳ IN PROGRESS'},unresolved:{bg:'#450a0a',color:'#f87171',label:'✕ UNRESOLVED'}}[s]||{bg:'#1e1e2e',color:'#94a3b8',label:s.toUpperCase()};return <button onClick={function(ev){ev.stopPropagation();cycleStatusM(t);}} style={{padding:'3px 8px',borderRadius:5,background:cfg.bg,color:cfg.color,border:'1px solid '+cfg.color+'55',font:'800 9px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}} title="Click to cycle status">{cfg.label}</button>})()}
                         </td>
                         <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?' xls-editing':'')} style={{fontSize:11,color:'var(--muted)',maxWidth:130,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'resp',val:t.resp||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
                           {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'
@@ -1759,10 +1764,16 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
                             :<>{t.resp||'—'}<span className="xls-hint">dbl-click</span></>
                           }
                         </td>
+                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?' xls-editing':'')} style={{fontSize:11,color:'var(--muted)',maxWidth:200,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?'normal':'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'note',val:t.note||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
+                          {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'
+                            ?<textarea autoFocus className="xls-sel" value={cellEdit.val} rows={2} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'note',paged);}} style={{width:'100%',minWidth:180,resize:'vertical'}} placeholder="Action taken…"/>
+                            :<>{t.note||<span style={{opacity:.35,fontStyle:'italic'}}>—</span>}<span className="xls-hint">dbl-click</span></>
+                          }
+                        </td>
                         <td><span style={{font:'700 10px Sora,sans-serif',color:'var(--ek-gold)'}}>{isExp?'▲ close':'▼ details'}</span></td>
                       </tr>
                       {isExp&&(
-                        <tr><td colSpan={11} style={{padding:0,background:'rgba(99,102,241,.05)'}}>
+                        <tr><td colSpan={12} style={{padding:0,background:'rgba(99,102,241,.05)'}}>
                           <div style={{padding:'14px 18px',borderBottom:'2px solid rgba(99,102,241,.25)'}}>
                             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:12}}>
                               {[['Customer',t.name],['Phone',t.phone],['Meter/Acct',t.meter||'—'],['Address',t.addr||t.address||'—']].map(function(f){return(

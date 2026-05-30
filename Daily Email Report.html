@@ -297,25 +297,25 @@ function pctClass(p){return p>=80?'pct-hi':p>=60?'pct-mid':'pct-lo';}
 function num(n){return isNaN(parseInt(n))?0:parseInt(n);}
 
 // ── JSON LOADER ──────────────────────────────────────────────────────────────
-// Fuzzy match: normalize name → check exact, then first-word, then any-word overlap
-function normName(s){return (s||'').toLowerCase().trim().replace(/\s+/g,' ');}
+// Fuzzy match category string against GM_ROWS[].cat
+function normCat(s){return (s||'').toLowerCase().trim().replace(/\s+/g,' ');}
 
-function matchParty(jsonResp){
-  const jn = normName(jsonResp);
+function matchCat(catStr){
+  const jn = normCat(catStr);
   if(!jn) return null;
   // 1. Exact match
   for(const r of GM_ROWS){
-    if(normName(r.party)===jn) return r;
+    if(normCat(r.cat)===jn) return r;
   }
-  // 2. First word match
-  const jFirst = jn.split(' ')[0];
+  // 2. First significant word match (len >= 4)
+  const jFirst = jn.split(' ').find(w=>w.length>=4)||jn.split(' ')[0];
   for(const r of GM_ROWS){
-    if(normName(r.party).split(' ')[0]===jFirst) return r;
+    if(normCat(r.cat).split(' ').find(w=>w.length>=4)===jFirst) return r;
   }
-  // 3. Any significant word overlap (word len >= 4)
-  const jWords = jn.split(' ').filter(w=>w.length>=4);
+  // 3. Any significant word overlap (word len >= 5)
+  const jWords = jn.split(' ').filter(w=>w.length>=5);
   for(const r of GM_ROWS){
-    const rWords = normName(r.party).split(' ');
+    const rWords = normCat(r.cat).split(' ');
     if(jWords.some(w=>rWords.includes(w))) return r;
   }
   return null;
@@ -348,48 +348,35 @@ function processJSON(data){
   const exportedAt = data.exportedAt || '';
   const today = watToday();
 
-  // Tally per resp
-  const tally = {}; // key=normName → {res,prg,unr,today,origName}
+  // Tally per category (not per responsible party)
+  const tally = {}; // key=normCat(category) → {res,prg,unr,today,origCat}
   for(const t of tickets){
-    const rRaw = (t.resp||'').trim();
-    const key  = normName(rRaw)||'__unassigned__';
-    if(!tally[key]) tally[key]={res:0,prg:0,unr:0,today:0,origName:rRaw||'Unassigned'};
+    const catRaw = (t.category||'').trim();
+    const key    = normCat(catRaw)||'__uncategorised__';
+    if(!tally[key]) tally[key]={res:0,prg:0,unr:0,today:0,origCat:catRaw||'Uncategorised'};
     const s = (t.status||'').toLowerCase();
     if(s==='resolved') tally[key].res++;
     else if(s==='progress') tally[key].prg++;
     else tally[key].unr++;
-    // Received today — ticket created on today's date
-    const created = (t.created||'');
-    const createdDate = created.slice(0,10);
+    // Received today — ticket created on today's WAT date
+    const createdDate = (t.created||t.receivedAt||'').slice(0,10);
     if(createdDate===today) tally[key].today++;
   }
 
-  // Merge into GM_ROWS
-  // First zero out all existing today/res/prg/unr (JSON is source of truth)
+  // Zero out existing rows, then fill from tally by category match
   GM_ROWS.forEach(r=>{r.today=0;r.res=0;r.prg=0;r.unr=0;});
 
-  const unmapped = [];
-  for(const [key,counts] of Object.entries(tally)){
-    const matched = matchParty(counts.origName);
+  for(const [,counts] of Object.entries(tally)){
+    const matched = matchCat(counts.origCat);
     if(matched){
-      matched.today = counts.today;
-      matched.res   = counts.res;
-      matched.prg   = counts.prg;
-      matched.unr   = counts.unr;
-    } else {
-      unmapped.push(counts);
+      matched.today += counts.today;
+      matched.res   += counts.res;
+      matched.prg   += counts.prg;
+      matched.unr   += counts.unr;
     }
+    // Unmatched categories are silently skipped — no new rows added
   }
 
-  // Add unmatched parties as new rows
-  let nextSn = Math.max(...GM_ROWS.map(r=>r.sn||0))+1;
-  for(const u of unmapped){
-    if(u.origName==='Unassigned') continue; // skip blanks
-    GM_ROWS.push({sn:nextSn++,party:u.origName,cat:'—',today:u.today,res:u.res,prg:u.prg,unr:u.unr});
-  }
-
-  // Renumber
-  GM_ROWS.forEach((r,i)=>r.sn=i+1);
   saveRows();
 
   // Show agent banner
