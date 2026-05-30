@@ -586,8 +586,9 @@ function Mono({children,style}){return <span style={{fontFamily:"'JetBrains Mono
 function Toast({toast}){if(!toast)return null;return <div className={'toast'+(toast.type==='error'?' err':'')}><span style={{color:toast.type==='error'?'#F87171':'var(--ek-gold)'}}>⚡</span>{toast.msg}</div>;}
 
 function AgentPhoto({id,name,color,size=40}){
-  const photos=window.EK_AGENT_PHOTOS||{};
-  const src=photos[id];
+  // Prefer photos uploaded via Agents Hub Profile Photos screen (localStorage)
+  var lsPhotos={};try{var s=localStorage.getItem('ek_photos_v2');if(s)lsPhotos=JSON.parse(s);}catch(e){}
+  const src=lsPhotos[id]||(window.EK_AGENT_PHOTOS||{})[id];
   if(src)return <img src={src} alt={name} style={{width:size,height:size,borderRadius:'50%',objectFit:'cover',border:'2px solid '+color,flexShrink:0}}/>;
   const initials=(name||'').split(' ').map(function(w){return w[0];}).slice(0,2).join('');
   return <div style={{width:size,height:size,borderRadius:'50%',background:'rgba(255,255,255,.1)',border:'2px solid '+color,display:'flex',alignItems:'center',justifyContent:'center',font:'800 '+(size*0.35)+'px/1 Sora,sans-serif',color:color,flexShrink:0}}>{initials}</div>;
@@ -2972,20 +2973,25 @@ function Agents({tickets,shifts,onShift,showToast}){
     const reader=new FileReader();
     reader.onload=function(ev){
       try{
-        const lines=ev.target.result.split('\n').filter(Boolean);
+        // Strip BOM and normalise line endings
+        const raw=ev.target.result.replace(/^﻿/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+        const lines=raw.split('\n').filter(Boolean);
+        // Strip quotes from header row
         const headers=lines[0].replace(/"/g,'').split(',');
         const iDate=headers.indexOf('TitleDate');
         const iName=headers.indexOf('AgentName');
         const iShift=headers.indexOf('ShiftType');
-        const AGENT_MAP={'Matthew Akhigbe':'matthew','Racheal Ogunleke':'racheal','Tomina Egbokwu':'tomina','Esther Okafor':'esther','Loveth Okpara':'loveth'};
-        const SHIFT_MAP={'Day':'day','Night':'night','Off':'off','Leave':'leave'};
+        if(iDate<0||iName<0||iShift<0){showToast('CSV error: expected columns TitleDate, AgentName, ShiftType','error');return;}
+        const AGENT_MAP={'Matthew Akhigbe':'matthew','Racheal Ogunleke':'racheal','Tomina Egbokwu':'tomina','Esther Okafor':'esther','Loveth Okpara':'loveth','Okafor Esther Ifunnaya':'esther','Okpara Loveth Ifeoma':'loveth'};
+        const SHIFT_MAP={'Day':'day','Night':'shadow','Off':'off','Leave':'leave','Shadow':'shadow'};
         const newShifts=Object.assign({},shifts);
         let count=0;
         lines.slice(1).forEach(function(line){
+          // Parse quoted CSV properly: strip outer quotes then split on ","
           const cols=line.replace(/^"|"$/g,'').split(/","/);
-          const rawDate=(cols[iDate]||'').trim();
-          const rawName=(cols[iName]||'').trim();
-          const rawShift=(cols[iShift]||'').trim();
+          const rawDate=(cols[iDate]||'').trim().replace(/"/g,'');
+          const rawName=(cols[iName]||'').trim().replace(/"/g,'');
+          const rawShift=(cols[iShift]||'').trim().replace(/"/g,'');
           const agentId=AGENT_MAP[rawName];
           const shift=SHIFT_MAP[rawShift]||'off';
           if(!agentId||!rawDate)return;
