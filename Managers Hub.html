@@ -586,8 +586,9 @@ function Mono({children,style}){return <span style={{fontFamily:"'JetBrains Mono
 function Toast({toast}){if(!toast)return null;return <div className={'toast'+(toast.type==='error'?' err':'')}><span style={{color:toast.type==='error'?'#F87171':'var(--ek-gold)'}}>⚡</span>{toast.msg}</div>;}
 
 function AgentPhoto({id,name,color,size=40}){
-  const photos=window.EK_AGENT_PHOTOS||{};
-  const src=photos[id];
+  // Prefer photos uploaded via Agents Hub Profile Photos screen (localStorage)
+  var lsPhotos={};try{var s=localStorage.getItem('ek_photos_v2');if(s)lsPhotos=JSON.parse(s);}catch(e){}
+  const src=lsPhotos[id]||(window.EK_AGENT_PHOTOS||{})[id];
   if(src)return <img src={src} alt={name} style={{width:size,height:size,borderRadius:'50%',objectFit:'cover',border:'2px solid '+color,flexShrink:0}}/>;
   const initials=(name||'').split(' ').map(function(w){return w[0];}).slice(0,2).join('');
   return <div style={{width:size,height:size,borderRadius:'50%',background:'rgba(255,255,255,.1)',border:'2px solid '+color,display:'flex',alignItems:'center',justifyContent:'center',font:'800 '+(size*0.35)+'px/1 Sora,sans-serif',color:color,flexShrink:0}}>{initials}</div>;
