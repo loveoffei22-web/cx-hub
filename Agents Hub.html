@@ -346,7 +346,7 @@ const NAV=[
   {id:'data',     icon:'📁',label:'Export / Import'},
   {id:'sync',     icon:'☁',label:'Cloud Sync'},
 ];
-const SHIFT_LABELS={day:{emoji:'☀️',text:'Day Shift',sub:'08:00 – 17:00',color:'#FCD34D',bg:'rgba(252,211,77,.15)'},night:{emoji:'🌙',text:'Night Shift',sub:'17:00 – 08:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},off:{emoji:'🔴',text:'Day Off',sub:'',color:'#6B7280',bg:'rgba(107,114,128,.12)'},leave:{emoji:'⛱',text:'Leave',sub:'',color:'#34D399',bg:'rgba(52,211,153,.12)'}};
+const SHIFT_LABELS={day:{emoji:'☀️',text:'Day Shift',sub:'08:00 – 17:00',color:'#FCD34D',bg:'rgba(252,211,77,.15)'},shadow:{emoji:'🌒',text:'Shadow Shift',sub:'17:01 prev – 17:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},night:{emoji:'🌙',text:'Shadow Shift',sub:'17:01 prev – 17:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},off:{emoji:'🔴',text:'Day Off',sub:'',color:'#6B7280',bg:'rgba(107,114,128,.12)'},leave:{emoji:'⛱',text:'Leave',sub:'',color:'#34D399',bg:'rgba(52,211,153,.12)'}};
 
 // parse helpers
 const stripEmoji=function(s){return(s||'').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{200D}\u{20E3}]+/gu,'').replace(/\s{2,}/g,' ').trim();};
@@ -673,7 +673,7 @@ function Dashboard({agent,allTix,shifts}){
                       {/* Shift pill */}
                       <td style={{padding:'12px 12px'}}>
                         <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:7,background:sl.bg,border:'1px solid '+(sl.color)+'33',font:'700 11px/1 Sora,sans-serif',color:sl.color,whiteSpace:'nowrap'}}>
-                          {sl.emoji} {shift==='day'?'Day · 08:00–17:00':shift==='night'?'Night · 17:00–08:00':shift==='leave'?'Leave':'Day Off'}
+                          {sl.emoji} {shift==='day'?'Day · 08:00–17:00':(shift==='night'||shift==='shadow')?'Shadow · 17:01–17:00':shift==='leave'?'Leave':'Day Off'}
                         </div>
                       </td>
                       {/* MTD */}
@@ -778,47 +778,61 @@ function Dashboard({agent,allTix,shifts}){
 // Mon–Fri: prev day 17:01 → today 17:00
 // Saturday: prev Fri 17:01 → today 16:00
 // Sunday: prev Sat 16:01 → today 16:00
-function getDutyWindow(){
+// Shift-aware duty window rules:
+// Saturday   : Fri 17:01 → Sat 16:00
+// Sunday     : Sat 16:00 → Sun 16:00
+// Monday     : Sun 16:00 → Mon 17:00  (covers full weekend gap)
+// Tue–Fri day shift   : today 08:00 → today 17:00
+// Tue–Fri shadow/night: prev day 17:01 → today 17:00
+function getDutyWindow(agentShift){
   var now=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-  var dow=now.getDay(); // 0=Sun,1=Mon...6=Sat
+  var dow=now.getDay(); // 0=Sun,1=Mon…6=Sat
   var todayBase=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   var start,end;
-  if(dow===6){// Saturday
+  if(dow===6){// Saturday: Fri 17:01 → Sat 16:00
     var fri=new Date(todayBase);fri.setDate(fri.getDate()-1);
     start=new Date(fri.getFullYear(),fri.getMonth(),fri.getDate(),17,1,0);
     end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),16,0,0);
-  } else if(dow===0){// Sunday
+  } else if(dow===0){// Sunday: Sat 16:00 → Sun 16:00
     var sat=new Date(todayBase);sat.setDate(sat.getDate()-1);
-    start=new Date(sat.getFullYear(),sat.getMonth(),sat.getDate(),16,1,0);
+    start=new Date(sat.getFullYear(),sat.getMonth(),sat.getDate(),16,0,0);
     end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),16,0,0);
-  } else {// Mon–Fri
-    var prev=new Date(todayBase);
-    if(dow===1){prev.setDate(prev.getDate()-3);}// Mon → go back to Fri
-    else{prev.setDate(prev.getDate()-1);}
-    start=new Date(prev.getFullYear(),prev.getMonth(),prev.getDate(),17,1,0);
+  } else if(dow===1){// Monday: Sun 16:00 → Mon 17:00
+    var sun=new Date(todayBase);sun.setDate(sun.getDate()-1);
+    start=new Date(sun.getFullYear(),sun.getMonth(),sun.getDate(),16,0,0);
     end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
+  } else {// Tue–Fri: depends on shift
+    var isShadow=(agentShift==='shadow'||agentShift==='night');
+    if(isShadow){// shadow: prev day 17:01 → today 17:00
+      var prev=new Date(todayBase);prev.setDate(prev.getDate()-1);
+      start=new Date(prev.getFullYear(),prev.getMonth(),prev.getDate(),17,1,0);
+      end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
+    } else {// day: 08:00 → 17:00 today
+      start=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),8,0,0);
+      end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
+    }
   }
   return{start:start,end:end};
 }
-function inDutyWindow(t){
-  var w=getDutyWindow();
+function inDutyWindow(t,agentShift){
+  var w=getDutyWindow(agentShift);
   var d=new Date(t.created||t.receivedAt||'');
   if(isNaN(d.getTime()))return false;
   var watD=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   return watD>=w.start&&watD<=w.end;
 }
-function fmtDutyWindow(){
-  var w=getDutyWindow();
+function fmtDutyWindow(agentShift){
+  var w=getDutyWindow(agentShift);
   var opts={weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Africa/Lagos'};
   return w.start.toLocaleString('en-GB',opts)+' → '+w.end.toLocaleString('en-GB',opts);
 }
 
-function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast}){
+function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agentShift}){
   const[search,setSearch]=useState('');
   const[fSt,setFSt]=useState('all');
   const[expanded,setExpanded]=useState(null);
   const[editState,setEditState]=useState({});
-  const dutyTix=tickets.filter(function(t){return inDutyWindow(t);});
+  const dutyTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
   const filt=dutyTix.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(search){const q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+t.category+t.addr).toLowerCase().includes(q);}
@@ -858,7 +872,7 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast}){
       <div className="topbar" style={{padding:'10px 28px',minHeight:0}}>
         <div>
           <div style={{font:'700 10px Sora,sans-serif',color:'var(--muted)',letterSpacing:'.12em',textTransform:'uppercase'}}>My Tickets · {filt.length}</div>
-          <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:3,opacity:.7}}>⏱ {fmtDutyWindow()}</div>
+          <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:3,opacity:.7}}>⏱ {fmtDutyWindow(agentShift)}</div>
         </div>
         <LiveClock/>
       </div>
@@ -1439,7 +1453,7 @@ function AddTicket({agent,onCreate}){
 }
 
 // ── SLOT REPORT ──────────────────────────────────────────────
-function SlotReport({agent,tickets,showToast}){
+function SlotReport({agent,tickets,showToast,agentShift}){
   const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const isWeekend=watNow.getDay()===0||watNow.getDay()===6;
   const nowMin=watNow.getHours()*60+watNow.getMinutes();
@@ -1466,7 +1480,7 @@ function SlotReport({agent,tickets,showToast}){
   const[slot,setSlot]=useState(nowSlot);
   const s=SLOTS.find(function(x){return x.id===slot;})||SLOTS[0];
 
-  const todayTix=tickets.filter(function(t){return inDutyWindow(t);});
+  const todayTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
   const resTix=todayTix.filter(function(t){return t.status==='resolved';});
   const prgTix=todayTix.filter(function(t){return t.status==='progress';});
   const unrTix=todayTix.filter(function(t){return t.status==='unresolved';});
@@ -1740,10 +1754,10 @@ function ImportJSON({agent,tickets,setTickets,showToast}){
 }
 
 // ── EXPORT DAY ──────────────────────────────────────────────
-function ExportDay({agent,tickets,showToast}){
+function ExportDay({agent,tickets,showToast,agentShift}){
   const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const todayStr=watNow.toISOString().slice(0,10);
-  const todayTix=tickets.filter(function(t){return inDutyWindow(t);});
+  const todayTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
   function dl(){
     const data={exportedBy:{name:agent.name,id:agent.id,role:agent.role},exportedAt:new Date().toISOString(),period:{date:todayStr,dayLong:watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})},tickets:todayTix};
     const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));a.download='ekedp_agent_'+agent.id+'_'+todayStr+'.json';a.click();
@@ -1965,7 +1979,7 @@ function ProfilePhotos({showToast}){
   );
 }
 
-function CloudSync({agent,tickets,setTickets,showToast}){
+function CloudSync({agent,tickets,setTickets,showToast,agentShift}){
   // ── Power Automate URL keys (no GitHub / Gist anywhere) ──
   const PA_PULL_KEY='ek_pa_pull_url';
   const PA_PUSH_KEY='ek_pa_push_url';
@@ -2114,7 +2128,7 @@ function CloudSync({agent,tickets,setTickets,showToast}){
     try{
       const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
       const todayStr=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0')+'-'+String(watNow.getDate()).padStart(2,'0');
-      const todayTix=tickets.filter(function(t){return !t._baseline&&inDutyWindow(t);});
+      const todayTix=tickets.filter(function(t){return !t._baseline&&inDutyWindow(t,agentShift);});
       function toSpStatus(s){return s==='resolved'?'Closed':s==='progress'?'Assigned':'Pending';}
       const mappedTix=todayTix.map(function(t){return Object.assign({},t,{spStatus:toSpStatus(t.status)});});
       const payload={agentId:agent.id,agentName:agent.name,date:todayStr,tickets:mappedTix,pushedAt:new Date().toISOString()};
@@ -2237,10 +2251,10 @@ function EditModal({ticket,agent,onSave,onDelete,onClose}){
 }
 
 // ── DATA SCREEN ──────────────────────────────────────────────────────
-function DataScreen({agent,tickets,setTickets,showToast}){
+function DataScreen({agent,tickets,setTickets,showToast,agentShift}){
   const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const todayStr=watNow.toISOString().slice(0,10);
-  const todayTix=tickets.filter(function(t){return inDutyWindow(t);});
+  const todayTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
   const[dragging,setDragging]=useState(false);
   const[preview,setPreview]=useState(null);
   const[tab,setTab]=useState('export');
@@ -2434,15 +2448,16 @@ function App(){
 
   if(!agent)return <Signin onSignIn={onSignIn}/>;
 
+  const agentShift=shifts[agent.id]||'day';
   const screens={
     dashboard:<Dashboard agent={agent} allTix={allTix} shifts={shifts}/>,
     all:      <AllComplaints agent={agent} allTix={allTix} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast}/>,
-    tickets:  <div><GuideQuickRef agent={agent}/><AddTicket agent={agent} onCreate={onCreate}/><div style={{borderTop:'2px solid var(--bsoft)',margin:'0 28px',paddingTop:8}}/><MyTickets agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast}/></div>,
-    slot:     <SlotReport agent={agent} tickets={tickets} showToast={showToast}/>,
+    tickets:  <div><GuideQuickRef agent={agent}/><AddTicket agent={agent} onCreate={onCreate}/><div style={{borderTop:'2px solid var(--bsoft)',margin:'0 28px',paddingTop:8}}/><MyTickets agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast} agentShift={agentShift}/></div>,
+    slot:     <SlotReport agent={agent} tickets={tickets} showToast={showToast} agentShift={agentShift}/>,
     guide:    <SupportGuide agent={agent} showToast={showToast}/>,
     photos:   <ProfilePhotos showToast={showToast}/>,
-    data:     <DataScreen agent={agent} tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
-    sync:     <CloudSync agent={agent} tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
+    data:     <DataScreen agent={agent} tickets={tickets} setTickets={setTickets} showToast={showToast} agentShift={agentShift}/>,
+    sync:     <CloudSync agent={agent} tickets={tickets} setTickets={setTickets} showToast={showToast} agentShift={agentShift}/>,
   };
 
   return(
