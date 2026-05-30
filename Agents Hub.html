@@ -830,8 +830,27 @@ function fmtDutyWindow(agentShift){
 function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agentShift}){
   const[search,setSearch]=useState('');
   const[fSt,setFSt]=useState('all');
-  const[cellEdit,setCellEdit]=useState(null); // {id,field,val}
-  const XLS_COLS=['category','resp','status','note'];
+  const[expanded,setExpanded]=useState(null);
+  const[editState,setEditState]=useState({});
+
+  function getEdit(t){
+    const e=editState[t.id]||{};
+    return {category:e.category!==undefined?e.category:(t.category||t.issue||''),resp:e.resp!==undefined?e.resp:(t.resp||''),status:e.status!==undefined?e.status:(t.status||'unresolved'),note:e.note!==undefined?e.note:(t.note||'')};
+  }
+  function setEdit(id,k,v){setEditState(function(s){return Object.assign({},s,{[id]:Object.assign({},s[id]||{},{[k]:v})});});}
+  function toggleExpand(t){setExpanded(function(cur){return cur===t.id?null:t.id;});}
+  function saveUpdate(t){
+    const e=getEdit(t);
+    const updated=Object.assign({},t,{category:e.category,issue:e.category,resp:e.resp,status:e.status,note:e.note,updatedBy:agent.id,updatedAt:new Date().toISOString()});
+    if(e.status==='resolved'&&!updated.resolvedDate)updated.resolvedDate=new Date().toISOString().slice(0,10);
+    onUpdate&&onUpdate(updated);
+    setEditState(function(s){const n=Object.assign({},s);delete n[t.id];return n;});
+    setExpanded(null);
+    showToast&&showToast('Ticket #'+t.num+' updated.');
+  }
+  function handleDelete(t){
+    if(window.confirm('Delete ticket #'+t.num+'? This cannot be undone.')){onDelete&&onDelete(t.id);}
+  }
 
   const dutyTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
   const filt=dutyTix.filter(function(t){
