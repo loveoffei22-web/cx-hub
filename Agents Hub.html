@@ -859,44 +859,13 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
     return true;
   }).slice().reverse();
 
-  // ── Inline commit & keyboard nav ──
-  function commitCell(t,noClose){
-    if(!cellEdit||cellEdit.id!==t.id)return;
-    const upd=Object.assign({},t,{[cellEdit.field]:cellEdit.val,updatedBy:agent.id,updatedAt:new Date().toISOString()});
-    if(cellEdit.field==='category'){upd.issue=cellEdit.val;const auto=getResp(cellEdit.val);if(auto)upd.resp=auto;}
-    if(cellEdit.field==='status'&&cellEdit.val==='resolved'&&!upd.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
-    onUpdate&&onUpdate(upd);
-    if(!noClose)setCellEdit(null);
-  }
-  function xlsNav(ev,t,field){
-    const ci=XLS_COLS.indexOf(field);const ri=filt.findIndex(function(x){return x.id===t.id;});
-    if(ev.key==='Escape'){ev.preventDefault();setCellEdit(null);return;}
-    if(ev.key==='Enter'&&field!=='note'){ev.preventDefault();commitCell(t,true);if(ri<filt.length-1)setCellEdit({id:filt[ri+1].id,field,val:filt[ri+1][field]||''});else setCellEdit(null);return;}
-    if(ev.key==='ArrowDown'&&!ev.shiftKey){ev.preventDefault();commitCell(t,true);if(ri<filt.length-1)setCellEdit({id:filt[ri+1].id,field,val:filt[ri+1][field]||''});return;}
-    if(ev.key==='ArrowUp'){ev.preventDefault();commitCell(t,true);if(ri>0)setCellEdit({id:filt[ri-1].id,field,val:filt[ri-1][field]||''});return;}
-    if(ev.key==='Tab'){ev.preventDefault();commitCell(t,true);
-      if(!ev.shiftKey){if(ci<XLS_COLS.length-1)setCellEdit({id:t.id,field:XLS_COLS[ci+1],val:t[XLS_COLS[ci+1]]||''});else if(ri<filt.length-1)setCellEdit({id:filt[ri+1].id,field:XLS_COLS[0],val:filt[ri+1][XLS_COLS[0]]||''});else setCellEdit(null);}
-      else{if(ci>0)setCellEdit({id:t.id,field:XLS_COLS[ci-1],val:t[XLS_COLS[ci-1]]||''});else if(ri>0)setCellEdit({id:filt[ri-1].id,field:XLS_COLS[XLS_COLS.length-1],val:filt[ri-1][XLS_COLS[XLS_COLS.length-1]]||''});else setCellEdit(null);}
-    }
-  }
-  // Cycle status on single click
-  function cycleStatus(t){
-    const order=['unresolved','progress','resolved'];
-    const next=order[(order.indexOf(t.status||'unresolved')+1)%3];
-    const upd=Object.assign({},t,{status:next,updatedBy:agent.id,updatedAt:new Date().toISOString()});
-    if(next==='resolved'&&!upd.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
-    onUpdate&&onUpdate(upd);
-  }
-  function handleDelete(t){
-    if(window.confirm('Delete ticket #'+t.num+'? This cannot be undone.')){onDelete&&onDelete(t.id);}
-  }
   const res=filt.filter(function(t){return t.status==='resolved';}).length;
   const prg=filt.filter(function(t){return t.status==='progress';}).length;
   const unr=filt.filter(function(t){return t.status==='unresolved';}).length;
 
   function exportCSV(){
-    const rows=[['#','Ticket','Time','Customer','Phone','BU','Category','Status','Note']];
-    filt.forEach(function(t){rows.push([t.day,t.num,t.time,t.name,t.phone,t.bu,t.category,t.status,t.note||'']);});
+    const rows=[['#','Ticket','Time','Date','Customer','Phone','BU','Category','Status','Note']];
+    filt.forEach(function(t){rows.push([String(filt.indexOf(t)+1),t.num,t.time,fmtDay(t),t.name,t.phone,t.bu,t.category||t.issue||'',t.status,t.note||'']);});
     const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
     const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='EKEDP_'+agent.id+'_tickets.csv';a.click();
   }
@@ -928,107 +897,122 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
           </select>
           <button onClick={exportCSV} style={{padding:'0 14px',background:'rgba(255,255,255,.06)',border:'1px solid var(--bsoft)',borderRadius:8,color:'var(--muted)',font:'600 11px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}}>⬇ CSV</button>
         </div>
-        {/* Editing hint */}
-        <div style={{marginBottom:8,font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.7,display:'flex',gap:16,flexWrap:'wrap'}}>
-          <span>💡 Click <b style={{color:agent.color}}>Category</b>, <b style={{color:agent.color}}>Resp</b> or <b style={{color:agent.color}}>Note</b> to edit inline</span>
-          <span>· Click <b style={{color:agent.color}}>Status badge</b> to cycle</span>
-          <span>· Tab / ↑↓ to navigate · Enter to confirm</span>
+        {/* Hint */}
+        <div style={{marginBottom:8,font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.7}}>
+          💡 Click any row to expand and update
         </div>
-        {/* Excel table */}
+        {/* Table */}
         <div style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderRadius:10,overflow:'hidden'}}>
           <div className="xls-scroll">
             <table className="ctbl">
               <colgroup>
-                <col style={{width:38}}/><col style={{width:100}}/><col style={{width:68}}/><col style={{width:68}}/>
-                <col style={{width:155}}/><col style={{width:125}}/><col style={{width:60}}/><col style={{width:165}}/>
-                <col style={{width:150}}/><col style={{width:115}}/><col style={{minWidth:170}}/><col style={{width:44}}/>
+                <col style={{width:36}}/><col style={{width:100}}/><col style={{width:68}}/><col style={{width:68}}/>
+                <col style={{width:160}}/><col style={{width:130}}/><col style={{width:64}}/><col style={{width:160}}/>
+                <col style={{width:110}}/><col style={{width:32}}/>
               </colgroup>
               <thead><tr>
                 <th>#</th><th>TICKET</th><th>TIME</th><th>DATE</th>
-                <th>CUSTOMER</th><th>PHONE</th><th>BU</th>
-                <th style={{color:agent.color}}>CATEGORY ✏</th>
-                <th style={{color:agent.color}}>RESPONSIBLE ✏</th>
-                <th style={{color:agent.color}}>STATUS ✏</th>
-                <th style={{color:agent.color}}>ACTION / NOTE ✏</th>
-                <th></th>
+                <th>CUSTOMER</th><th>PHONE</th><th>BU</th><th>CATEGORY</th>
+                <th>STATUS</th><th>▼</th>
               </tr></thead>
               <tbody>
                 {filt.map(function(t,i){
-                  const isEditCat =cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category';
-                  const isEditResp=cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp';
-                  const isEditNote=cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note';
-                  const stClr=t.status==='resolved'?'#22C55E':t.status==='progress'?'#F59E0B':'#EF4444';
-                  const stLbl=t.status==='resolved'?'✅ Resolved':t.status==='progress'?'⏳ In Progress':'🔴 Unresolved';
+                  const isEx=expanded===t.id;
+                  const e=getEdit(t);
                   return(
-                    <tr key={t.id||i} style={{background:i%2===0?'transparent':'rgba(255,255,255,.01)'}}>
-                      <td style={{color:'var(--text2)',fontSize:12}}>{String(i+1).padStart(2,'0')}</td>
-                      <td><span style={{font:"800 13px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
-                      <td style={{color:'var(--text2)',fontSize:12}}>{t.time||'—'}</td>
-                      <td style={{color:'var(--text2)',fontSize:12,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
-                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:155}}>{t.name}</td>
-                      <td><span className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.phone}</span></td>
-                      <td><span className="bu-tag">{t.bu}</span></td>
-
-                      {/* CATEGORY — inline select */}
-                      <td style={{padding:'0 4px',cursor:'pointer'}} onClick={function(){if(!isEditCat)setCellEdit({id:t.id,field:'category',val:t.category||t.issue||''});}}>
-                        {isEditCat
-                          ? <select autoFocus className="sel" style={{width:'100%',fontSize:11,padding:'3px 4px'}}
-                              value={cellEdit.val}
-                              onChange={function(ev){setCellEdit({id:t.id,field:'category',val:ev.target.value});}}
-                              onBlur={function(){commitCell(t);}}
-                              onKeyDown={function(ev){xlsNav(ev,t,'category');}}>
-                              {CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}
-                            </select>
-                          : <div className="cat-main" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:11,cursor:'pointer'}}>{t.category||t.issue||<span style={{color:'var(--muted)',opacity:.5}}>click to set</span>}</div>
-                        }
-                      </td>
-
-                      {/* RESPONSIBLE — inline select */}
-                      <td style={{padding:'0 4px',cursor:'pointer'}} onClick={function(){if(!isEditResp)setCellEdit({id:t.id,field:'resp',val:t.resp||''});}}>
-                        {isEditResp
-                          ? <select autoFocus className="sel" style={{width:'100%',fontSize:11,padding:'3px 4px'}}
-                              value={cellEdit.val}
-                              onChange={function(ev){setCellEdit({id:t.id,field:'resp',val:ev.target.value});}}
-                              onBlur={function(){commitCell(t);}}
-                              onKeyDown={function(ev){xlsNav(ev,t,'resp');}}>
-                              <option value="">— Select —</option>
-                              {RESP_LIST.map(function(r){return <option key={r} value={r}>{r}</option>;})}
-                            </select>
-                          : <div style={{fontSize:11,color:t.resp?'var(--text)':'var(--muted)',opacity:t.resp?1:.5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',cursor:'pointer'}}>{t.resp||'click to set'}</div>
-                        }
-                      </td>
-
-                      {/* STATUS — click to cycle */}
-                      <td style={{padding:'0 4px'}}>
-                        <button onClick={function(){cycleStatus(t);}}
-                          style={{padding:'4px 8px',border:'1px solid '+stClr+'55',borderRadius:6,background:stClr+'18',color:stClr,font:'700 10px/1.2 Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap',width:'100%',textAlign:'center'}}>
-                          {stLbl}
-                        </button>
-                      </td>
-
-                      {/* NOTE — inline textarea */}
-                      <td style={{padding:'0 4px',cursor:'pointer'}} onClick={function(){if(!isEditNote)setCellEdit({id:t.id,field:'note',val:t.note||''});}}>
-                        {isEditNote
-                          ? <textarea autoFocus className="inp" rows={2}
-                              style={{width:'100%',fontSize:11,padding:'4px 6px',resize:'vertical',minHeight:38}}
-                              value={cellEdit.val}
-                              onChange={function(ev){setCellEdit({id:t.id,field:'note',val:ev.target.value});}}
-                              onBlur={function(){commitCell(t);}}
-                              onKeyDown={function(ev){xlsNav(ev,t,'note');}}/>
-                          : <div style={{fontSize:11,color:t.note?'var(--text)':'var(--muted)',opacity:t.note?1:.5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:170,cursor:'pointer'}}>{t.note||'click to add note'}</div>
-                        }
-                      </td>
-
-                      {/* DELETE */}
-                      <td style={{padding:'0 4px',textAlign:'center'}}>
-                        <button onClick={function(){handleDelete(t);}}
-                          style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',fontSize:14,opacity:.5,lineHeight:1}}
-                          title="Delete ticket">🗑</button>
-                      </td>
-                    </tr>
+                    <React.Fragment key={t.id||i}>
+                      <tr style={{cursor:'pointer',background:isEx?'rgba(255,199,44,.07)':i%2===0?'transparent':'rgba(255,255,255,.01)'}} onClick={function(){toggleExpand(t);}}>
+                        <td style={{color:'var(--text2)',fontSize:12}}>{String(i+1).padStart(2,'0')}</td>
+                        <td><span style={{font:"800 13px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
+                        <td style={{color:'var(--text2)',fontSize:12}}>{t.time||'—'}</td>
+                        <td style={{color:'var(--text2)',fontSize:12,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
+                        <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{t.name}</td>
+                        <td><span className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.phone}</span></td>
+                        <td><span className="bu-tag">{t.bu}</span></td>
+                        <td style={{fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{t.category||t.issue||'—'}</td>
+                        <td>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
+                        <td style={{textAlign:'center',color:'var(--ek-gold)',fontSize:10,fontWeight:700}}>{isEx?'▲':'▼'}</td>
+                      </tr>
+                      {isEx&&<tr className="exp-row"><td colSpan={10} style={{padding:0}}>
+                        <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
+                          {/* Header */}
+                          <div style={{background:'linear-gradient(135deg,#1E3A8A,#0F2461)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
+                            <div style={{display:'flex',alignItems:'center',gap:12}}>
+                              <div style={{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'5px 9px',font:'800 11px Sora,sans-serif',color:'#FFC72C',letterSpacing:'.05em'}}>EKEDP ⚡</div>
+                              <div>
+                                <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span>
+                                <span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginLeft:10}}>{t.name}</span>
+                              </div>
+                              <span style={{marginLeft:4}}>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</span>
+                            </div>
+                            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                              <button onClick={function(ev){ev.stopPropagation();handleDelete(t);}} style={{padding:'6px 12px',background:'rgba(239,68,68,.2)',color:'#F87171',border:'1px solid rgba(239,68,68,.4)',borderRadius:7,font:'800 11px Sora,sans-serif',cursor:'pointer'}}>🗑 Delete</button>
+                              <button onClick={function(ev){ev.stopPropagation();setExpanded(null);}} style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',font:'700 11px Sora,sans-serif'}}>✕ Close</button>
+                            </div>
+                          </div>
+                          {/* Info grid */}
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+                            {[
+                              ['📍 CUSTOMER ADDRESS',t.addr||'—'],
+                              ['⚡ METER / ACCOUNT NO.',t.meter||'—'],
+                              ['📞 TELEPHONE',t.phone],
+                              ['📧 EMAIL',t.email||'—'],
+                              ['🔗 CHANNEL',t.channel||'Mobile App'],
+                              ['📅 DATE/TIME RECEIVED',t.created?t.created.replace('T',' ').slice(0,19):'—'],
+                              ['✅ RESOLVED DATE',t.resolvedDate||'—'],
+                              ['📊 STATUS (RAW)',t.status?.toUpperCase()||'—'],
+                            ].map(function(f){return(
+                              <div key={f[0]} style={{padding:'10px 14px',borderRight:'1px solid rgba(255,255,255,.05)',borderBottom:'1px solid rgba(255,255,255,.05)'}}>
+                                <div style={{font:'700 8.5px Sora,sans-serif',color:'var(--ek-gold)',textTransform:'uppercase',letterSpacing:'.10em',marginBottom:4}}>{f[0]}</div>
+                                <div style={{font:'600 11px Sora,sans-serif',color:'var(--text)',wordBreak:'break-word'}}>{f[1]}</div>
+                              </div>);})}
+                          </div>
+                          {/* Complaint description */}
+                          {(t.issue||t.note)&&<div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+                            <div style={{font:'700 8.5px Sora,sans-serif',color:'var(--ek-gold)',textTransform:'uppercase',letterSpacing:'.10em',marginBottom:6}}>📝 COMPLAINT DESCRIPTION</div>
+                            <div style={{font:'500 11.5px/1.6 Sora,sans-serif',color:'var(--text)',background:'rgba(0,0,0,.2)',borderRadius:7,padding:'10px 12px'}}>{t.issue||t.note}</div>
+                          </div>}
+                          {/* Editable section */}
+                          <div style={{padding:'14px 16px',background:'rgba(0,0,0,.15)'}}>
+                            <div style={{font:'700 9px Sora,sans-serif',color:agent.color,textTransform:'uppercase',letterSpacing:'.12em',marginBottom:12}}>✏️ UPDATE THIS TICKET</div>
+                            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+                              <div>
+                                <label className="lbl">Category</label>
+                                <select className="sel" value={e.category} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'category',ev.target.value);const auto=getResp(ev.target.value);if(auto)setEdit(t.id,'resp',auto);}}>
+                                  {CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="lbl">Responsible Party</label>
+                                <select className="sel" value={e.resp} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'resp',ev.target.value);}}>
+                                  <option value="">— Select —</option>
+                                  {RESP_LIST.map(function(r){return <option key={r} value={r}>{r}</option>;})}
+                                </select>
+                              </div>
+                            </div>
+                            <div style={{marginBottom:10}}>
+                              <label className="lbl">Status</label>
+                              <div style={{display:'flex',gap:8}}>
+                                {[{v:'progress',l:'⏳ In Progress',c:'#F59E0B'},{v:'resolved',l:'✅ Resolved',c:'#22C55E'},{v:'unresolved',l:'🔴 Unresolved',c:'#EF4444'}].map(function(s){return(
+                                  <button key={s.v} onClick={function(ev){ev.stopPropagation();setEdit(t.id,'status',s.v);}} style={{flex:1,padding:'7px',border:'1px solid '+(e.status===s.v?s.c:'var(--bsoft)'),borderRadius:7,background:e.status===s.v?s.c+'22':'transparent',color:e.status===s.v?s.c:'var(--muted)',font:'700 11px Sora,sans-serif',cursor:'pointer'}}>{s.l}</button>
+                                );})}
+                              </div>
+                            </div>
+                            <div style={{marginBottom:12}}>
+                              <label className="lbl">Action Taken / Resolution Note</label>
+                              <textarea className="inp" rows={2} value={e.note} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'note',ev.target.value);}} placeholder="Add action taken or resolution note…" style={{resize:'vertical',fontSize:11}}/>
+                            </div>
+                            <div style={{display:'flex',gap:8}}>
+                              <button onClick={function(ev){ev.stopPropagation();saveUpdate(t);}} style={{flex:1,padding:'10px',background:agent.color,color:'#0A1A4F',border:'none',borderRadius:8,font:'800 13px Sora,sans-serif',cursor:'pointer'}}>💾 Save Update</button>
+                              <button onClick={function(ev){ev.stopPropagation();handleDelete(t);}} style={{padding:'10px 18px',background:'rgba(239,68,68,.15)',color:'#F87171',border:'1px solid rgba(239,68,68,.35)',borderRadius:8,font:'800 12px Sora,sans-serif',cursor:'pointer'}}>🗑 Delete</button>
+                            </div>
+                          </div>
+                        </div>
+                      </td></tr>}
+                    </React.Fragment>
                   );
                 })}
-                {!filt.length&&<tr><td colSpan={12} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets yet for this shift window. Use Add Ticket to log one.</td></tr>}
+                {!filt.length&&<tr><td colSpan={10} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets yet for this shift window. Use Add Ticket to log one.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -2383,6 +2367,20 @@ function getAutoTheme(){
   if(h>=17&&h<22)return'green';   // evening
   return'night';                   // late night
 }
+function TicketsScreen({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agentShift,onCreate}){
+  const[showAdd,setShowAdd]=useState(false);
+  return(
+    <div>
+      <MyTickets agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdate} onDelete={onDelete} showToast={showToast} agentShift={agentShift}/>
+      <div style={{padding:'0 28px 28px'}}>
+        <button onClick={function(){setShowAdd(function(v){return !v;});}} style={{width:'100%',padding:'10px',background:'rgba(255,255,255,.04)',border:'2px dashed var(--bsoft)',borderRadius:10,color:'var(--muted)',font:'700 12px Sora,sans-serif',cursor:'pointer',marginBottom:showAdd?12:0}}>
+          {showAdd?'▲ Hide Emergency Add Form':'⚡ Emergency: Add Ticket Manually ▼'}
+        </button>
+        {showAdd&&<AddTicket agent={agent} onCreate={function(t){onCreate(t);setShowAdd(false);}}/>}
+      </div>
+    </div>
+  );
+}
 function App(){
   const[agent,setAgent]=useState(null);
   const[screen,setScreen]=useState('dashboard');
@@ -2503,7 +2501,7 @@ function App(){
   const screens={
     dashboard:<Dashboard agent={agent} allTix={allTix} shifts={shifts}/>,
     all:      <AllComplaints agent={agent} allTix={allTix} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast}/>,
-    tickets:  <div><GuideQuickRef agent={agent}/><AddTicket agent={agent} onCreate={onCreate}/><div style={{borderTop:'2px solid var(--bsoft)',margin:'0 28px',paddingTop:8}}/><MyTickets agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast} agentShift={agentShift}/></div>,
+    tickets:  <TicketsScreen agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast} agentShift={agentShift} onCreate={onCreate}/>,
     slot:     <SlotReport agent={agent} tickets={tickets} showToast={showToast} agentShift={agentShift}/>,
     guide:    <SupportGuide agent={agent} showToast={showToast}/>,
     photos:   <ProfilePhotos showToast={showToast}/>,
