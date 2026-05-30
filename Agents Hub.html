@@ -415,11 +415,25 @@ function loadTix(id){
     try{
       var legacy=JSON.parse(localStorage.getItem('ek_tix_'+id)||'[]');
       if(legacy.length>0){
+        var byAgentNums=new Set(byAgent.map(function(t){return String(t.num||'').trim();}));
         var byAgentIds=new Set(byAgent.map(function(t){return t.id||t.num;}));
-        legacy.forEach(function(t){if(!byAgentIds.has(t.id||t.num))byAgent.push(Object.assign({},t,{agent:id}));});
+        legacy.forEach(function(t){
+          var n=String(t.num||'').trim();
+          if(n&&byAgentNums.has(n))return; // same ticket # already in global
+          if(byAgentIds.has(t.id||t.num))return;
+          byAgent.push(Object.assign({},t,{agent:id}));
+          if(n)byAgentNums.add(n);
+        });
       }
     }catch(e){}
-    return byAgent;
+    // Final dedup by ticket number (safety net)
+    var seenNums={};
+    return byAgent.filter(function(t){
+      var n=String(t.num||'').trim().toLowerCase();
+      if(!n)return true;
+      if(seenNums[n])return false;
+      seenNums[n]=true;return true;
+    });
   }catch(e){return[];}
 }
 
@@ -852,7 +866,10 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
     if(window.confirm('Delete ticket #'+t.num+'? This cannot be undone.')){onDelete&&onDelete(t.id);}
   }
 
-  const dutyTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
+  // Deduplicate by ticket number before any filtering
+  const seenNums={};
+  const uniqueTix=tickets.filter(function(t){var n=String(t.num||'').trim().toLowerCase();if(!n)return true;if(seenNums[n])return false;seenNums[n]=true;return true;});
+  const dutyTix=uniqueTix.filter(function(t){return inDutyWindow(t,agentShift);});
   const filt=dutyTix.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(search){const q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+(t.category||t.issue||'')+t.addr).toLowerCase().includes(q);}
