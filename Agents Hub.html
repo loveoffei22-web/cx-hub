@@ -1458,7 +1458,14 @@ function SlotReport({agent,tickets,showToast,agentShift}){
   const isWeekend=watNow.getDay()===0||watNow.getDay()===6;
   const nowMin=watNow.getHours()*60+watNow.getMinutes();
   const todayStr=watNow.toISOString().slice(0,10);
-  const dateStr=watNow.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Custom day pick: '' = use today/duty window, 'YYYY-MM-DD' = filter that calendar day
+  const[pickedDate,setPickedDate]=useState('');
+  const useCustom=pickedDate!=='';
+
+  // Resolved date string for display
+  const reportDate=useCustom?new Date(pickedDate+'T12:00:00'):watNow;
+  const dateStr=reportDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
   // 4 fixed slots — weekend and weekday are always shown; NOW badge marks the active one
   const SLOTS=[
@@ -1480,7 +1487,10 @@ function SlotReport({agent,tickets,showToast,agentShift}){
   const[slot,setSlot]=useState(nowSlot);
   const s=SLOTS.find(function(x){return x.id===slot;})||SLOTS[0];
 
-  const todayTix=tickets.filter(function(t){return inDutyWindow(t,agentShift);});
+  // Filter tickets: custom day = any ticket whose created date matches pickedDate; today = duty window
+  const todayTix=useCustom
+    ? tickets.filter(function(t){return (t.created||t.receivedAt||'').slice(0,10)===pickedDate;})
+    : tickets.filter(function(t){return inDutyWindow(t,agentShift);});
   const resTix=todayTix.filter(function(t){return t.status==='resolved';});
   const prgTix=todayTix.filter(function(t){return t.status==='progress';});
   const unrTix=todayTix.filter(function(t){return t.status==='unresolved';});
@@ -1593,6 +1603,17 @@ function SlotReport({agent,tickets,showToast,agentShift}){
         <LiveClock/>
       </div>
       <div className="pad">
+        {/* ── Custom day picker ── */}
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16,padding:'12px 16px',background:'rgba(255,255,255,.04)',border:'1px solid var(--bsoft)',borderRadius:12,flexWrap:'wrap'}}>
+          <span style={{font:'700 11px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em'}}>📅 Report Date</span>
+          <input type="date" value={pickedDate} max={todayStr}
+            onChange={function(e){setPickedDate(e.target.value);}}
+            style={{padding:'7px 12px',borderRadius:8,border:'1.5px solid '+(useCustom?'var(--agent)':'var(--bsoft)'),background:'var(--bg2)',color:'var(--text)',font:'600 13px Sora,sans-serif',cursor:'pointer'}}/>
+          {useCustom&&<button onClick={function(){setPickedDate('');}} style={{padding:'6px 14px',borderRadius:8,border:'1px solid var(--bsoft)',background:'transparent',color:'var(--muted)',font:'600 11px Sora,sans-serif',cursor:'pointer'}}>✕ Today</button>}
+          <span style={{font:'500 11px Sora,sans-serif',color:useCustom?'var(--agent)':'var(--muted)',marginLeft:'auto'}}>
+            {useCustom?'Showing: '+dateStr:'Showing today\'s duty window'}
+          </span>
+        </div>
         {/* ── Slot tabs ── */}
         <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap'}}>
           {SLOTS.map(function(sv){
