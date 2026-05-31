@@ -1,0 +1,17 @@
+# EKEDP Reports — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# HTTP requests for SharePoint REST API (Feature 3+)
+requests>=2.31.0
+
+# Email sending (Feature 6)
+# Uses stdlib smtplib — no extra package needed
+
+# Optional: faster CSV parsing (stdlib csv is used by default)
+# pandas>=2.0.0   # uncomment if you prefer pandas for large CSVs
+
+# Optional: scheduled execution (Feature 5)
+# schedule>=1.2.0  # uncomment for local cron-style scheduling
+
+# Dev / testing
+pytest>=7.4.0
