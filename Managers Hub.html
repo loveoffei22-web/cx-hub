@@ -2173,20 +2173,64 @@ function ReportVerify({tickets,showToast}){
   const FIELDS=['status','category','resp'];
   function parseCSV(txt){
     const lines=txt.trim().split('\n');if(lines.length<2)return[];
-    const hdr=lines[0].split(',').map(function(h){return h.trim().toLowerCase();});
+    // Auto-detect delimiter: tab (SP export) or comma
+    const delim=lines[0].includes('\t')?'\t':',';
+    // Smart split that respects quoted fields
+    function splitLine(line){
+      var result=[];var cur='';var inQ=false;
+      for(var i=0;i<line.length;i++){
+        var ch=line[i];
+        if(ch==='"'){inQ=!inQ;}
+        else if(ch===delim&&!inQ){result.push(cur.trim());cur='';}
+        else{cur+=ch;}
+      }
+      result.push(cur.trim());
+      return result;
+    }
+    const hdr=splitLine(lines[0]).map(function(h){return h.replace(/^"|"$/g,'').trim().toLowerCase();});
+    // Normalize SP status to app status values
+    function normStatus(s){
+      s=(s||'').toLowerCase().trim();
+      if(s==='closed'||s==='resolved')return 'resolved';
+      if(s==='assigned'||s==='processing'||s==='in progress')return 'progress';
+      return 'unresolved'; // pending, blank, etc
+    }
     return lines.slice(1).filter(Boolean).map(function(l){
-      const cols=l.split(',').map(function(c){return c.trim();});
-      const o={};hdr.forEach(function(h,i){o[h]=cols[i]||'';});
-      return{num:o.num||o['ticket no']||o['ticket_no']||o.id||'',status:(o.status||'').toLowerCase(),category:o.category||o.cat||'',resp:o.resp||o['responsible party']||o.responsible||''};
-    });
+      var cols=splitLine(l);
+      var o={};hdr.forEach(function(h,i){o[h]=cols[i]?cols[i].replace(/^"|"$/g,'').trim():'';});
+      // ID column = actual ticket number (not S/N which is sequential)
+      var num=o['id']||o.num||o['ticket no']||o['ticket_no']||'';
+      // Strip .0 from numeric
+      if(num.endsWith('.0'))num=num.slice(0,-2);
+      return{
+        num:num,
+        status:normStatus(o.status),
+        spStatusRaw:o.status||'',
+        category:(o.category||o.cat||'').toUpperCase().trim(),
+        resp:o['responsible party']||o.resp||o.responsible||'',
+        bu:o['business unit']||o.bu||'',
+        name:o['customer name']||o.name||'',
+        created:o.created||'',
+      };
+    }).filter(function(r){return r.num;});
   }
   function doParse(){const r=parseCSV(spText);setSpTickets(r);setParsed(true);}
   const appMap={};tickets.forEach(function(t){if(t.num)appMap[String(t.num)]=t;});
   const mismatches=spTickets.map(function(sp){
     const app=appMap[String(sp.num)];
     if(!app)return{num:sp.num,issue:'Not found in app',sp:sp,app:null};
-    const diffs=FIELDS.filter(function(f){return sp[f]&&app[f]&&sp[f].toLowerCase()!==String(app[f]).toLowerCase();});
-    if(diffs.length)return{num:sp.num,issue:'Field mismatch: '+diffs.join(', '),sp:sp,app:app,diffs:diffs};
+    // Compare normalized status + category (case-insensitive, trim)
+    const spStatus=sp.status||'';
+    const appStatus=(app.status||'').toLowerCase().trim();
+    const spCat=(sp.category||'').toUpperCase().trim();
+    const appCat=(app.category||app.issue||'').toUpperCase().trim();
+    const spResp=(sp.resp||'').toLowerCase().trim();
+    const appResp=(app.resp||'').toLowerCase().trim();
+    const diffs=[];
+    if(spStatus&&appStatus&&spStatus!==appStatus)diffs.push('status');
+    if(spCat&&appCat&&spCat!==appCat&&!spCat.includes(appCat)&&!appCat.includes(spCat))diffs.push('category');
+    if(spResp&&appResp&&spResp!==appResp)diffs.push('resp');
+    if(diffs.length)return{num:sp.num,issue:'Mismatch: '+diffs.join(', '),sp:sp,app:app,diffs:diffs};
     return null;
   }).filter(Boolean);
   const matched=spTickets.length-mismatches.length;
@@ -2222,13 +2266,13 @@ function ReportVerify({tickets,showToast}){
                     {mismatches.map(function(m){return(
                       <tr key={m.num} style={{borderBottom:'1px solid var(--bdark)'}}>
                         <td style={{padding:'10px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{m.num}</td>
-                        <td style={{padding:'10px 12px',color:'#EF4444',fontSize:11}}>{m.issue}</td>
-                        <td style={{padding:'10px 12px'}}>{m.sp&&statusBadgeHtml(m.sp.status)&&<span dangerouslySetInnerHTML={{__html:statusBadgeHtml(m.sp.status)}}/>}</td>
+                        <td style={{padding:'10px 12px',color:m.issue==='Not found in app'?'#F59E0B':'#EF4444',fontSize:11}}>{m.issue}</td>
+                        <td style={{padding:'10px 12px'}}>{m.sp&&<span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'rgba(255,255,255,.1)',fontWeight:600}}>{m.sp.spStatusRaw||m.sp.status}</span>}</td>
                         <td style={{padding:'10px 12px'}}>{m.app&&<span dangerouslySetInnerHTML={{__html:statusBadgeHtml(m.app.status)}}/>}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.sp&&m.sp.category}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.app&&m.app.category}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.sp&&m.sp.resp}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.app&&m.app.resp}</td>
+                        <td style={{padding:'10px 12px',color:'var(--fg)',fontSize:11}}>{m.sp&&m.sp.category}</td>
+                        <td style={{padding:'10px 12px',color:'var(--fg)',fontSize:11}}>{m.app&&(m.app.category||m.app.issue)}</td>
+                        <td style={{padding:'10px 12px',color:'var(--fg)',fontSize:11}}>{m.sp&&m.sp.resp}</td>
+                        <td style={{padding:'10px 12px',color:'var(--fg)',fontSize:11}}>{m.app&&m.app.resp}</td>
                       </tr>
                     );})}
                   </tbody>
@@ -2728,35 +2772,61 @@ function DataPage({tickets,setTickets,showToast}){
         if(!rows.length)throw new Error('No rows found in sheet: '+sheetName);
         // Map columns — handles both standard SP export and app export
         const COL_MAP={
-          num:['Title','Ticket','TicketNo','ticket_no','ID','id'],
+          num:['Title','Ticket','TicketNo','ticket_no','ID','id','S/N'],
           name:['CustomerName','Customer Name','Name','name'],
-          phone:['PhoneNumber','Phone','phone','Mobile'],
-          meter:['MeterAccountNo','Meter','meter','Account'],
-          addr:['Address','address','addr','CustomerAddress'],
-          bu:['BusinessUnit','BU','bu','District'],
+          phone:['PhoneNumber','Telephone Number','Phone','phone','Mobile'],
+          meter:['MeterAccountNo','Meter No./Account No.','Meter','meter','Account'],
+          addr:['Customer Address','Address','address','addr','CustomerAddress'],
+          bu:['Business Unit','BusinessUnit','BU','bu','District'],
           category:['Category','category','IssueType'],
-          issue:['Description','Issue','issue','Complaint','complaint'],
-          resp:['AssignedTo','Responsible','resp','responsible','Assignee'],
+          issue:['Complaint Description','Description','Issue','issue','Complaint','complaint'],
+          resp:['Responsible Party','AssignedTo','Responsible','resp','responsible','Assignee'],
           status:['Status','status','TicketStatus'],
-          note:['Resolution','Note','note','ActionTaken','Action Taken'],
+          note:['Action Taken ','Action Taken','Resolution','Note','note','ActionTaken'],
+          email:['Email Address','Email','email'],
+          created:['Created','created','CreatedDate','Date'],
+          resolvedBy:['RESOLVED By','Resolved by','ResolvedBy','resolvedBy'],
         };
-        function getCol(row,keys){for(const k of keys){if(row[k]!==undefined&&row[k]!=='')return String(row[k]);}return '';}
-        function mapStatus(s){s=(s||'').toLowerCase().replace(/\s+/g,'');if(s==='closed'||s==='resolved')return 'resolved';if(s==='assigned'||s==='inprogress')return 'progress';return 'unresolved';}
+        function getCol(row,keys){for(const k of keys){if(row[k]!==undefined&&row[k]!==''&&row[k]!==null)return String(row[k]);}return '';}
+        function mapStatus(s){s=(s||'').toLowerCase().replace(/\s+/g,'');if(s==='closed'||s==='resolved')return 'resolved';if(s==='assigned'||s==='inprogress'||s==='processing')return 'progress';return 'unresolved';}
+        function parseCreated(raw){
+          if(!raw||raw==='')return '';
+          try{
+            if(!isNaN(raw)&&Number(raw)>40000){var d=new Date(Math.round((Number(raw)-25569)*86400*1000));return d.toISOString();}
+            var d=new Date(raw);return isNaN(d.getTime())?'':d.toISOString();
+          }catch(e){return '';}
+        }
+        const existingAgentByNum={};
+        tickets.forEach(function(t){if(t.num&&t.agent&&t.agent!=='manager')existingAgentByNum[String(t.num)]=t.agent;});
         const imported=rows.map(function(row,i){
+          var idRaw=row['ID']!==undefined&&row['ID']!==''?String(row['ID']):'';
+          var numRaw=getCol(row,COL_MAP.num);
+          var num=idRaw||numRaw||String(i);
+          if(num.endsWith('.0'))num=num.slice(0,-2);
+          var createdRaw=getCol(row,COL_MAP.created);
+          var createdIso=parseCreated(createdRaw);
+          var dayNum=0;if(createdIso){try{dayNum=new Date(createdIso).getDate();}catch(e){}}
+          var timeStr='';if(createdIso){try{var dt=new Date(createdIso);timeStr=dt.toLocaleTimeString('en-NG',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Africa/Lagos'});}catch(e){}}
           return{
-            id:'tk_xl_'+(getCol(row,COL_MAP.num)||i),
-            num:getCol(row,COL_MAP.num),
+            id:'tk_xl_'+num,
+            num:num,
             name:getCol(row,COL_MAP.name),
             phone:getCol(row,COL_MAP.phone),
             meter:getCol(row,COL_MAP.meter),
             addr:getCol(row,COL_MAP.addr),
             bu:getCol(row,COL_MAP.bu),
             category:getCol(row,COL_MAP.category),
-            issue:getCol(row,COL_MAP.issue),
+            issue:getCol(row,COL_MAP.issue)||getCol(row,COL_MAP.category),
             resp:getCol(row,COL_MAP.resp),
             status:mapStatus(getCol(row,COL_MAP.status)),
             note:getCol(row,COL_MAP.note),
-            agent:'manager',
+            email:getCol(row,COL_MAP.email),
+            created:createdIso,
+            time:timeStr,
+            day:dayNum,
+            resolvedBy:getCol(row,COL_MAP.resolvedBy),
+            source:'Mobile App',
+            agent:existingAgentByNum[num]||'manager',
           };
         }).filter(function(t){return t.num||t.name;});
         if(!imported.length)throw new Error('Could not map any rows — check column headers');
