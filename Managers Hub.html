@@ -2730,35 +2730,62 @@ function DataPage({tickets,setTickets,showToast}){
         if(!rows.length)throw new Error('No rows found in sheet: '+sheetName);
         // Map columns — handles both standard SP export and app export
         const COL_MAP={
-          num:['Title','Ticket','TicketNo','ticket_no','ID','id'],
+          num:['Title','Ticket','TicketNo','ticket_no','ID','id','S/N'],
           name:['CustomerName','Customer Name','Name','name'],
-          phone:['PhoneNumber','Phone','phone','Mobile'],
-          meter:['MeterAccountNo','Meter','meter','Account'],
-          addr:['Address','address','addr','CustomerAddress'],
-          bu:['BusinessUnit','BU','bu','District'],
+          phone:['PhoneNumber','Telephone Number','Phone','phone','Mobile'],
+          meter:['MeterAccountNo','Meter No./Account No.','Meter','meter','Account'],
+          addr:['Customer Address','Address','address','addr','CustomerAddress'],
+          bu:['Business Unit','BusinessUnit','BU','bu','District'],
           category:['Category','category','IssueType'],
           issue:['Complaint Description','Description','Issue','issue','Complaint','complaint'],
-          resp:['AssignedTo','Responsible','resp','responsible','Assignee'],
+          resp:['Responsible Party','AssignedTo','Responsible','resp','responsible','Assignee'],
           status:['Status','status','TicketStatus'],
-          note:['Resolution','Note','note','ActionTaken','Action Taken'],
+          note:['Action Taken ','Action Taken','Resolution','Note','note','ActionTaken'],
+          email:['Email Address','Email','email'],
+          created:['Created','created','CreatedDate','Date'],
+          resolvedBy:['RESOLVED By','Resolved by','ResolvedBy','resolvedBy'],
         };
-        function getCol(row,keys){for(const k of keys){if(row[k]!==undefined&&row[k]!=='')return String(row[k]);}return '';}
-        function mapStatus(s){s=(s||'').toLowerCase().replace(/\s+/g,'');if(s==='closed'||s==='resolved')return 'resolved';if(s==='assigned'||s==='inprogress')return 'progress';return 'unresolved';}
+        function getCol(row,keys){for(const k of keys){if(row[k]!==undefined&&row[k]!==''&&row[k]!==null)return String(row[k]);}return '';}
+        function mapStatus(s){s=(s||'').toLowerCase().replace(/\s+/g,'');if(s==='closed'||s==='resolved')return 'resolved';if(s==='assigned'||s==='inprogress'||s==='in progress')return 'progress';return 'unresolved';}
+        function parseCreated(raw){
+          if(!raw||raw==='')return '';
+          try{
+            if(!isNaN(raw)&&Number(raw)>40000){var d=new Date(Math.round((Number(raw)-25569)*86400*1000));return d.toISOString();}
+            var d=new Date(raw);return isNaN(d.getTime())?'':d.toISOString();
+          }catch(e){return '';}
+        }
+        // Preserve existing agent assignments so Excel import doesn't overwrite them
+        const existingAgentByNum={};
+        tickets.forEach(function(t){if(t.num&&t.agent&&t.agent!=='manager')existingAgentByNum[String(t.num)]=t.agent;});
         const imported=rows.map(function(row,i){
+          var idRaw=row['ID']!==undefined&&row['ID']!==''?String(row['ID']):'';
+          var numRaw=getCol(row,COL_MAP.num);
+          var num=idRaw||numRaw||String(i);
+          if(num.endsWith('.0'))num=num.slice(0,-2);
+          var createdRaw=getCol(row,COL_MAP.created);
+          var createdIso=parseCreated(createdRaw);
+          var dayNum=0;if(createdIso){try{dayNum=new Date(createdIso).getDate();}catch(e){}}
+          var timeStr='';if(createdIso){try{var dt=new Date(createdIso);timeStr=dt.toLocaleTimeString('en-NG',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Africa/Lagos'});}catch(e){}}
           return{
-            id:'tk_xl_'+(getCol(row,COL_MAP.num)||i),
-            num:getCol(row,COL_MAP.num),
+            id:'tk_xl_'+num,
+            num:num,
             name:getCol(row,COL_MAP.name),
             phone:getCol(row,COL_MAP.phone),
             meter:getCol(row,COL_MAP.meter),
             addr:getCol(row,COL_MAP.addr),
             bu:getCol(row,COL_MAP.bu),
             category:getCol(row,COL_MAP.category),
-            issue:getCol(row,COL_MAP.issue),
+            issue:getCol(row,COL_MAP.issue)||getCol(row,COL_MAP.category),
             resp:getCol(row,COL_MAP.resp),
             status:mapStatus(getCol(row,COL_MAP.status)),
             note:getCol(row,COL_MAP.note),
-            agent:'manager',
+            email:getCol(row,COL_MAP.email),
+            created:createdIso,
+            time:timeStr,
+            day:dayNum,
+            resolvedBy:getCol(row,COL_MAP.resolvedBy),
+            source:'Mobile App',
+            agent:existingAgentByNum[num]||'manager',
           };
         }).filter(function(t){return t.num||t.name;});
         if(!imported.length)throw new Error('Could not map any rows — check column headers');

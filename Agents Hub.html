@@ -1783,11 +1783,35 @@ function ImportJSON({agent,tickets,setTickets,showToast}){
   }
   function confirmImport(){
     if(!preview)return;
-    const existing=tickets.map(function(t){return t.id||t.num;});
-    const newTix=preview.tickets.filter(function(t){return!existing.includes(t.id||t.num);});
-    const merged=[...tickets,...newTix];
+    // Dedup strictly by ticket number — IDs differ between exports so num is the only reliable key
+    const existingNums=new Set(tickets.map(function(t){return String(t.num||'');}));
+    // For existing tickets, update status/note/resp/category if incoming has newer data
+    const incomingByNum={};
+    preview.tickets.forEach(function(t){if(t.num)incomingByNum[String(t.num)]=t;});
+    const updated=[];
+    const updatedNums=new Set();
+    tickets.forEach(function(t){
+      const inc=incomingByNum[String(t.num||'')];
+      if(inc){
+        updatedNums.add(String(t.num));
+        updated.push(Object.assign({},t,{
+          status:inc.status||t.status,
+          note:inc.note||t.note,
+          resp:inc.resp||t.resp,
+          category:inc.category||t.category,
+          issue:inc.issue||t.issue,
+          agent:inc.agent||t.agent,
+          day:inc.day||t.day,
+          updatedAt:inc.updatedAt||t.updatedAt
+        }));
+      } else {
+        updated.push(t);
+      }
+    });
+    const brandNew=preview.tickets.filter(function(t){return!existingNums.has(String(t.num||''));});
+    const merged=[...updated,...brandNew];
     setTickets(merged);
-    showToast('✓ Imported '+newTix.length+' new tickets.');
+    showToast('✓ '+brandNew.length+' new · '+updatedNums.size+' updated · '+(preview.tickets.length-brandNew.length-updatedNums.size)+' skipped.');
     setPreview(null);
   }
   return(
