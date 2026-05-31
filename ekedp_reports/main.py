@@ -71,6 +71,55 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 1 if summary.mismatched > 0 else 0
 
 
+def _load_sp_app(args: argparse.Namespace):
+    """Shared loader used by verify and anomaly commands."""
+    from ekedp_reports.loaders.sharepoint import load_sharepoint_csv, load_sharepoint_json
+    from ekedp_reports.loaders.app_json import load_app_json
+    from pathlib import Path as _Path
+
+    sp_path  = _Path(args.sp)
+    app_path = _Path(args.app)
+
+    print(f"  Loading SharePoint data from: {sp_path}")
+    suffix = sp_path.suffix.lower()
+    if suffix == ".csv":
+        sp_tickets = load_sharepoint_csv(sp_path)
+    elif suffix in (".json", ".js"):
+        sp_tickets = load_sharepoint_json(sp_path)
+    else:
+        print(f"  ERROR: Unknown SharePoint file format '{suffix}'.")
+        return None, None
+    print(f"  → {len(sp_tickets)} SharePoint tickets loaded")
+
+    print(f"  Loading App JSON from: {app_path}")
+    app_tickets = load_app_json(app_path)
+    print(f"  → {len(app_tickets)} App tickets loaded")
+
+    return sp_tickets, app_tickets
+
+
+def cmd_anomaly(args: argparse.Namespace) -> int:
+    from ekedp_reports.features.f2_anomaly import run_anomaly_detection
+    from ekedp_reports.reporters.anomaly_report import print_anomaly_report, build_anomaly_html
+    from ekedp_reports.reporters.html_report import write_html_file
+
+    sp_tickets, app_tickets = _load_sp_app(args)
+    if sp_tickets is None:
+        return 1
+
+    print("  Running anomaly detection…")
+    anomalies, summary = run_anomaly_detection(sp_tickets, app_tickets)
+
+    print_anomaly_report(anomalies, summary, verbose=args.verbose)
+
+    if args.html:
+        html = build_anomaly_html(anomalies, summary)
+        out_path = write_html_file(html, args.html)
+        print(f"  HTML report saved → {out_path}")
+
+    return 1 if summary.total_anomalies > 0 else 0
+
+
 def cmd_sample(args: argparse.Namespace) -> int:
     """Generate sample CSV + JSON files for testing."""
     from ekedp_reports.tests.sample_data import write_sample_files
@@ -108,6 +157,17 @@ def main() -> None:
     p_verify.add_argument("--show-clean", action="store_true",
                           help="Also list clean-match tickets")
 
+    # ── anomaly subcommand ────────────────────────────────────────────────────
+    p_anomaly = sub.add_parser("anomaly", help="Feature 2: Anomaly detection")
+    p_anomaly.add_argument("--sp",  required=True,
+                           help="SharePoint CSV or JSON file path")
+    p_anomaly.add_argument("--app", required=True,
+                           help="App JSON export file path")
+    p_anomaly.add_argument("--html", default=None,
+                           help="Write HTML report to this file path")
+    p_anomaly.add_argument("--verbose", action="store_true",
+                           help="Print full ticket details for each anomaly")
+
     # ── sample subcommand ─────────────────────────────────────────────────────
     p_sample = sub.add_parser("sample", help="Generate sample test data")
     p_sample.add_argument("--out-dir",   default="sample_data",
@@ -128,7 +188,7 @@ def main() -> None:
     if str(root) not in sys.path:
         sys.path.insert(0, str(root.parent))
 
-    dispatch = {"verify": cmd_verify, "sample": cmd_sample}
+    dispatch = {"verify": cmd_verify, "anomaly": cmd_anomaly, "sample": cmd_sample}
     handler = dispatch.get(args.command)
     if not handler:
         parser.print_help()
