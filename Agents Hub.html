@@ -870,6 +870,13 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
   const seenNums={};
   const uniqueTix=tickets.filter(function(t){var n=String(t.num||'').trim().toLowerCase();if(!n)return true;if(seenNums[n])return false;seenNums[n]=true;return true;});
   const dutyTix=uniqueTix.filter(function(t){return inDutyWindow(t,agentShift);});
+
+  // ── Repeat complainant detection ──
+  const phoneFreq={};const meterFreq={};
+  uniqueTix.forEach(function(t){const p=String(t.phone||'').trim();const m=String(t.meter||'').trim();if(p)phoneFreq[p]=(phoneFreq[p]||0)+1;if(m&&m!=='0')meterFreq[m]=(meterFreq[m]||0)+1;});
+  function repeatCount(t){const p=String(t.phone||'').trim();const m=String(t.meter||'').trim();const pc=phoneFreq[p]||0;const mc=(meterFreq[m]&&m!=='0')?meterFreq[m]:0;return Math.max(pc,mc);}
+  function isRepeat(t){return repeatCount(t)>1;}
+  const repeatTotal=dutyTix.filter(isRepeat).length;
   const filt=dutyTix.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(search){const q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+(t.category||t.issue||'')+t.addr).toLowerCase().includes(q);}
@@ -897,7 +904,7 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
       </div>
       <div className="pad">
         <div className="stat-bar" style={{marginBottom:14}}>
-          {[{l:'Total',v:filt.length,c:'var(--text)'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#F59E0B'},{l:'Unresolved',v:unr,c:'#EF4444'}].map(function(k){return(
+          {[{l:'Total',v:filt.length,c:'var(--text)'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#F59E0B'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Repeat 🔁',v:repeatTotal,c:'#A78BFA'}].map(function(k){return(
             <div key={k.l} className="sbar-item">
               <span className="sbar-lbl">{k.l}</span>
               <span className="sbar-val" style={{color:k.c}}>{k.v}</span>
@@ -943,7 +950,10 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
                         <td><span style={{font:"800 13px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
                         <td style={{color:'var(--text2)',fontSize:12}}>{t.time||'—'}</td>
                         <td style={{color:'var(--text2)',fontSize:12,whiteSpace:'nowrap'}}>{fmtDay(t)}</td>
-                        <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{t.name}</td>
+                        <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>
+                          {t.name}
+                          {isRepeat(t)&&<span title={'Repeat complainant — '+repeatCount(t)+' tickets'} style={{marginLeft:5,background:'rgba(167,139,250,.2)',color:'#A78BFA',border:'1px solid rgba(167,139,250,.4)',borderRadius:4,fontSize:9,fontWeight:700,padding:'1px 4px',verticalAlign:'middle'}}>🔁 x{repeatCount(t)}</span>}
+                        </td>
                         <td><span className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.phone}</span></td>
                         <td><span className="bu-tag">{t.bu}</span></td>
                         <td style={{fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{t.category||t.issue||'—'}</td>
@@ -967,6 +977,14 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
                               <button onClick={function(ev){ev.stopPropagation();setExpanded(null);}} style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',font:'700 11px Sora,sans-serif'}}>✕ Close</button>
                             </div>
                           </div>
+                          {/* Repeat complainant warning */}
+                          {isRepeat(t)&&<div style={{background:'rgba(167,139,250,.12)',border:'1px solid rgba(167,139,250,.4)',borderRadius:8,padding:'8px 14px',margin:'10px 16px 0',display:'flex',alignItems:'center',gap:8}}>
+                            <span style={{fontSize:16}}>🔁</span>
+                            <div>
+                              <div style={{font:'700 11px Sora,sans-serif',color:'#A78BFA'}}>REPEAT COMPLAINANT</div>
+                              <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:1}}>This customer has {repeatCount(t)} tickets on record. Check previous complaints before responding.</div>
+                            </div>
+                          </div>}
                           {/* Info grid */}
                           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,borderBottom:'1px solid rgba(255,255,255,.06)'}}>
                             {[
