@@ -120,6 +120,112 @@ def cmd_anomaly(args: argparse.Namespace) -> int:
     return 1 if summary.total_anomalies > 0 else 0
 
 
+def cmd_executive(args: argparse.Namespace) -> int:
+    from ekedp_reports.features.f1_verification import run_verification
+    from ekedp_reports.features.f2_anomaly import run_anomaly_detection
+    from ekedp_reports.features.f3_executive import run_executive_report
+    from ekedp_reports.reporters.console import print_executive_report
+    from ekedp_reports.reporters.email_report import build_email_html
+    from ekedp_reports.reporters.html_report import write_html_file
+
+    sp_tickets, app_tickets = _load_sp_app(args)
+    if sp_tickets is None:
+        return 1
+
+    print("  Running verification…")
+    _, ver_summary = run_verification(sp_tickets, app_tickets)
+    print("  Running anomaly detection…")
+    _, anomaly_summary = run_anomaly_detection(sp_tickets, app_tickets)
+    print("  Building executive report…")
+    report = run_executive_report(sp_tickets, app_tickets,
+                                  verification_results=ver_summary,
+                                  anomaly_results=anomaly_summary)
+    print_executive_report(report)
+
+    if args.html:
+        html = build_email_html(report, anomaly_summary=anomaly_summary)
+        out_path = write_html_file(html, args.html)
+        print(f"  HTML report saved → {out_path}")
+    return 0
+
+
+def cmd_responsible(args: argparse.Namespace) -> int:
+    from ekedp_reports.features.f4_responsible import run_responsible_summary_full
+    from ekedp_reports.reporters.console import print_responsible_report
+    from ekedp_reports.reporters.email_report import build_responsible_html
+    from ekedp_reports.reporters.html_report import write_html_file
+
+    sp_tickets, app_tickets = _load_sp_app(args)
+    if sp_tickets is None:
+        return 1
+
+    print("  Building responsible party summary…")
+    resp_stats, _ = run_responsible_summary_full(sp_tickets, app_tickets)
+    print_responsible_report(resp_stats)
+
+    if args.html:
+        html = build_responsible_html(resp_stats)
+        out_path = write_html_file(html, args.html)
+        print(f"  HTML report saved → {out_path}")
+    return 0
+
+
+def cmd_weekly(args: argparse.Namespace) -> int:
+    from datetime import date as _date
+    from ekedp_reports.features.f3_executive import run_executive_report
+    from ekedp_reports.features.f5_summary import run_weekly_summary
+    from ekedp_reports.reporters.console import print_period_summary
+    from ekedp_reports.reporters.email_report import build_email_html
+    from ekedp_reports.reporters.html_report import write_html_file
+
+    sp_tickets, app_tickets = _load_sp_app(args)
+    if sp_tickets is None:
+        return 1
+
+    week_start = None
+    if args.week_start:
+        week_start = _date.fromisoformat(args.week_start)
+
+    print("  Building weekly summary…")
+    period = run_weekly_summary(sp_tickets, app_tickets, week_start=week_start)
+    print_period_summary(period)
+
+    if args.html:
+        exec_report = run_executive_report(sp_tickets, app_tickets)
+        html = build_email_html(exec_report, period_summary=period)
+        out_path = write_html_file(html, args.html)
+        print(f"  HTML report saved → {out_path}")
+    return 0
+
+
+def cmd_monthly(args: argparse.Namespace) -> int:
+    from datetime import date as _date
+    from ekedp_reports.features.f3_executive import run_executive_report
+    from ekedp_reports.features.f5_summary import run_monthly_summary
+    from ekedp_reports.reporters.console import print_period_summary
+    from ekedp_reports.reporters.email_report import build_email_html
+    from ekedp_reports.reporters.html_report import write_html_file
+
+    sp_tickets, app_tickets = _load_sp_app(args)
+    if sp_tickets is None:
+        return 1
+
+    today = _date.today()
+    year  = args.year  if args.year  else today.year
+    month = args.month if args.month else today.month
+
+    print("  Building monthly summary…")
+    period = run_monthly_summary(sp_tickets, app_tickets, year=year, month=month)
+    print_period_summary(period)
+
+    if args.html:
+        exec_report = run_executive_report(sp_tickets, app_tickets)
+        html = build_email_html(exec_report, period_summary=period)
+        out_path = write_html_file(html, args.html)
+        print(f"  HTML report saved → {out_path}")
+    return 0
+
+
 def cmd_sample(args: argparse.Namespace) -> int:
     """Generate sample CSV + JSON files for testing."""
     from ekedp_reports.tests.sample_data import write_sample_files
@@ -168,6 +274,34 @@ def main() -> None:
     p_anomaly.add_argument("--verbose", action="store_true",
                            help="Print full ticket details for each anomaly")
 
+    # ── executive subcommand ──────────────────────────────────────────────────
+    p_exec = sub.add_parser("executive", help="Feature 3: Executive report")
+    p_exec.add_argument("--sp",  required=True)
+    p_exec.add_argument("--app", required=True)
+    p_exec.add_argument("--html", default=None)
+
+    # ── responsible subcommand ────────────────────────────────────────────────
+    p_resp = sub.add_parser("responsible", help="Feature 4: Responsible party summary")
+    p_resp.add_argument("--sp",  required=True)
+    p_resp.add_argument("--app", required=True)
+    p_resp.add_argument("--html", default=None)
+
+    # ── weekly subcommand ─────────────────────────────────────────────────────
+    p_weekly = sub.add_parser("weekly", help="Feature 5: Weekly summary")
+    p_weekly.add_argument("--sp",  required=True)
+    p_weekly.add_argument("--app", required=True)
+    p_weekly.add_argument("--html", default=None)
+    p_weekly.add_argument("--week-start", default=None,
+                          help="Week start date YYYY-MM-DD (default: most recent Monday)")
+
+    # ── monthly subcommand ────────────────────────────────────────────────────
+    p_monthly = sub.add_parser("monthly", help="Feature 5: Monthly summary")
+    p_monthly.add_argument("--sp",  required=True)
+    p_monthly.add_argument("--app", required=True)
+    p_monthly.add_argument("--html", default=None)
+    p_monthly.add_argument("--year",  type=int, default=None)
+    p_monthly.add_argument("--month", type=int, default=None)
+
     # ── sample subcommand ─────────────────────────────────────────────────────
     p_sample = sub.add_parser("sample", help="Generate sample test data")
     p_sample.add_argument("--out-dir",   default="sample_data",
@@ -188,7 +322,15 @@ def main() -> None:
     if str(root) not in sys.path:
         sys.path.insert(0, str(root.parent))
 
-    dispatch = {"verify": cmd_verify, "anomaly": cmd_anomaly, "sample": cmd_sample}
+    dispatch = {
+        "verify":      cmd_verify,
+        "anomaly":     cmd_anomaly,
+        "sample":      cmd_sample,
+        "executive":   cmd_executive,
+        "responsible": cmd_responsible,
+        "weekly":      cmd_weekly,
+        "monthly":     cmd_monthly,
+    }
     handler = dispatch.get(args.command)
     if not handler:
         parser.print_help()

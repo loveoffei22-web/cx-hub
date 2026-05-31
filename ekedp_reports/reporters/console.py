@@ -115,3 +115,74 @@ def format_summary_line(summary: VerificationSummary) -> str:
         f"Matched:{summary.matched} | ✗:{summary.mismatched} | "
         f"OnlySP:{summary.only_in_sp} | OnlyApp:{summary.only_in_app}"
     )
+
+
+def print_executive_report(report) -> None:
+    print()
+    print("═" * 65)
+    print("  EKEDP EXECUTIVE REPORT")
+    print("═" * 65)
+    print(f"  Period          : {report.period_label}")
+    print(f"  Generated       : {report.generated_at.strftime('%A %d %B %Y %H:%M')}")
+    print(f"  SharePoint      : {report.total_sp} tickets")
+    print(f"  App             : {report.total_app} tickets")
+    print(f"  Total (merged)  : {report.total_tickets}")
+    print()
+    print(f"  Resolved        : {report.resolved}")
+    print(f"  In Progress     : {report.in_progress}")
+    print(f"  Unresolved      : {report.unresolved}")
+    print(f"  Resolution Rate : {report.resolution_rate:.1%}")
+    print(f"  SLA Breaches    : {report.sla_breach_count}")
+    print(f"  Anomalies       : {report.anomaly_count}")
+    print()
+    if report.by_category:
+        print(f"  {'Category':<40} {'Total':>5}  {'Resolved':>8}  {'Rate':>6}")
+        print("  " + "-" * 65)
+        for cs in sorted(report.by_category.values(), key=lambda c: -c.total):
+            print(f"  {cs.category:<40} {cs.total:>5}  {cs.resolved:>8}  {cs.resolution_rate:>5.1%}")
+    print()
+    if report.top_unresolved:
+        print(f"  Top {len(report.top_unresolved)} Oldest Unresolved:")
+        for t in report.top_unresolved:
+            age = f"{t.age_hours():.0f}h" if t.age_hours() else "?"
+            print(f"    #{t.ticket_id:<10} {(t.customer_name or '')[:25]:<25} {age}")
+    print()
+    print("═" * 65)
+
+
+def print_responsible_report(resp_stats: dict) -> None:
+    print()
+    print("═" * 65)
+    print("  EKEDP RESPONSIBLE PARTY REPORT")
+    print("═" * 65)
+    print(f"  {'Party':<30} {'Total':>5}  {'Resolved':>8}  {'Rate':>6}  Grade")
+    print("  " + "-" * 65)
+    for rs in sorted(resp_stats.values(), key=lambda r: r.resolution_rate):
+        print(f"  {rs.party:<30} {rs.total:>5}  {rs.resolved:>8}  "
+              f"{rs.resolution_rate:>5.1%}  {rs.grade}")
+    print()
+    print("═" * 65)
+
+
+def print_period_summary(ps) -> None:
+    print()
+    print("═" * 65)
+    print(f"  EKEDP {ps.period_type.upper()} SUMMARY — {ps.period_label}")
+    print("═" * 65)
+    print(f"  Total tickets   : {ps.total}")
+    print(f"  Resolved        : {ps.resolved}")
+    print(f"  In Progress     : {ps.in_progress}")
+    print(f"  Unresolved      : {ps.unresolved}")
+    print(f"  Resolution Rate : {ps.resolution_rate:.1%}")
+    print(f"  SLA Breaches    : {ps.sla_breach_count}")
+    print(f"  Anomalies       : {ps.anomaly_count}")
+    print(f"  Top Category    : {ps.top_category}")
+    print(f"  Worst Performer : {ps.worst_resp_party}")
+    print()
+    if ps.by_category:
+        print(f"  {'Category':<40} {'Total':>5}  {'Rate':>6}")
+        print("  " + "-" * 55)
+        for cs in sorted(ps.by_category.values(), key=lambda c: -c.total):
+            print(f"  {cs.category:<40} {cs.total:>5}  {cs.resolution_rate:>5.1%}")
+    print()
+    print("═" * 65)
