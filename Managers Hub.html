@@ -1133,8 +1133,176 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
   );
 }
 
+
+// ── DAILY TICKETS TABLE — Agents Hub style ──────────────────────────
+function DailyTicketsTable({dayTix,activeDay,onUpdate,showToast}){
+  const[expanded,setExpanded]=useState(null);
+  const[editState,setEditState]=useState({});
+  const[search,setSearch]=useState('');
+  const[fSt,setFSt]=useState('all');
+
+  // Repeat detection
+  const phoneFreq={};
+  dayTix.forEach(function(t){const p=String(t.phone||'').trim();if(p)phoneFreq[p]=(phoneFreq[p]||0)+1;});
+  function repeatCount(t){return phoneFreq[String(t.phone||'').trim()]||0;}
+  function isRepeat(t){return repeatCount(t)>1;}
+
+  const filt=dayTix.filter(function(t){
+    if(fSt!=='all'&&t.status!==fSt)return false;
+    if(search){const q=search.toLowerCase();const num=String(t.num||'').toLowerCase();if(num.startsWith(q))return true;return(t.name+t.phone+t.bu+(t.category||t.issue||'')).toLowerCase().includes(q);}
+    return true;
+  });
+
+  const res=filt.filter(function(t){return t.status==='resolved';}).length;
+  const prg=filt.filter(function(t){return t.status==='progress';}).length;
+  const unr=filt.filter(function(t){return t.status==='unresolved';}).length;
+  const rep=filt.filter(isRepeat).length;
+
+  function getEdit(t){const e=editState[t.id]||{};return{category:e.category!==undefined?e.category:(t.category||''),resp:e.resp!==undefined?e.resp:(t.resp||''),status:e.status!==undefined?e.status:(t.status||'unresolved'),note:e.note!==undefined?e.note:(t.note||'')};}
+  function setEdit(id,k,v){setEditState(function(s){return Object.assign({},s,{[id]:Object.assign({},s[id]||{},{[k]:v})});});}
+  function saveUpdate(t){
+    const e=getEdit(t);
+    const updated=Object.assign({},t,{category:e.category,issue:e.category,resp:e.resp,status:e.status,note:e.note,updatedAt:new Date().toISOString()});
+    if(e.status==='resolved'&&!updated.resolvedDate)updated.resolvedDate=new Date().toISOString().slice(0,10);
+    onUpdate&&onUpdate(updated);
+    setEditState(function(s){const n=Object.assign({},s);delete n[t.id];return n;});
+    setExpanded(null);
+  }
+
+  return(
+    <div style={{padding:'0 28px 20px'}}>
+      {/* Stat bar */}
+      <div className="stat-bar" style={{marginBottom:14}}>
+        {[{l:'Total',v:filt.length,c:'var(--text)'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#F59E0B'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Repeat 🔁',v:rep,c:'#A78BFA'}].map(function(k){return(
+          <div key={k.l} className="sbar-item">
+            <span className="sbar-lbl">{k.l}</span>
+            <span className="sbar-val" style={{color:k.c}}>{k.v}</span>
+          </div>);})}
+      </div>
+      {/* Filter bar */}
+      <div style={{display:'flex',gap:8,marginBottom:12}}>
+        <div style={{position:'relative',flex:1}}>
+          <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'var(--sub)',fontSize:12}}>🔍</span>
+          <input className="inp" style={{paddingLeft:30}} value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search ticket · customer · phone · category…"/>
+        </div>
+        <select className="sel" style={{width:140}} value={fSt} onChange={function(e){setFSt(e.target.value);}}>
+          <option value="all">All statuses</option><option value="resolved">Resolved</option><option value="progress">In Progress</option><option value="unresolved">Unresolved</option>
+        </select>
+      </div>
+      <div style={{marginBottom:8,font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.7}}>💡 Click any row to expand and update</div>
+      {/* Table */}
+      <div style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderRadius:10,overflow:'hidden'}}>
+        <div className="xls-scroll">
+          <table className="ctbl">
+            <colgroup>
+              <col style={{width:36}}/><col style={{width:100}}/><col style={{width:68}}/><col style={{width:68}}/>
+              <col style={{width:160}}/><col style={{width:130}}/><col style={{width:64}}/><col style={{width:160}}/>
+              <col style={{width:110}}/><col style={{width:32}}/>
+            </colgroup>
+            <thead><tr>
+              <th>#</th><th>TICKET</th><th>TIME</th><th>DATE</th>
+              <th>CUSTOMER</th><th>PHONE</th><th>BU</th><th>CATEGORY</th>
+              <th>STATUS</th><th>▼</th>
+            </tr></thead>
+            <tbody>
+              {filt.map(function(t,i){
+                const isEx=expanded===t.id;
+                const e=getEdit(t);
+                return(
+                  <React.Fragment key={t.id||i}>
+                    <tr style={{cursor:'pointer',background:isEx?'rgba(255,199,44,.07)':i%2===0?'transparent':'rgba(255,255,255,.01)'}} onClick={function(){setExpanded(isEx?null:t.id);}}>
+                      <td style={{color:'var(--text2)',fontSize:12}}>{String(i+1).padStart(2,'0')}</td>
+                      <td><span style={{font:"800 13px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
+                      <td style={{color:'var(--text2)',fontSize:12}}>{t.time||'—'}</td>
+                      <td style={{color:'var(--text2)',fontSize:12,whiteSpace:'nowrap'}}>{t.created?new Date(t.created).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Africa/Lagos'}):(t.day?'Day '+t.day:'—')}</td>
+                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>
+                        {t.name}
+                        {isRepeat(t)&&<span title={'Repeat — '+repeatCount(t)+' tickets'} style={{marginLeft:5,background:'rgba(167,139,250,.2)',color:'#A78BFA',border:'1px solid rgba(167,139,250,.4)',borderRadius:4,fontSize:9,fontWeight:700,padding:'1px 4px',verticalAlign:'middle'}}>🔁 x{repeatCount(t)}</span>}
+                      </td>
+                      <td><span className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.phone}</span></td>
+                      <td><span className="bu-tag">{t.bu}</span></td>
+                      <td style={{fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{t.category||t.issue||'—'}</td>
+                      <td>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
+                      <td style={{textAlign:'center',color:'var(--ek-gold)',fontSize:10,fontWeight:700}}>{isEx?'▲':'▼'}</td>
+                    </tr>
+                    {isEx&&<tr className="exp-row"><td colSpan={10} style={{padding:0}}>
+                      <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
+                        <div style={{background:'linear-gradient(135deg,#1E3A8A,#0F2461)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:12}}>
+                            <div style={{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'5px 9px',font:'800 11px Sora,sans-serif',color:'#FFC72C',letterSpacing:'.05em'}}>EKEDP ⚡</div>
+                            <div>
+                              <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span>
+                              <span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginLeft:10}}>{t.name}</span>
+                            </div>
+                            <span>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</span>
+                          </div>
+                          <button onClick={function(ev){ev.stopPropagation();setExpanded(null);}} style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',font:'700 11px Sora,sans-serif'}}>✕ Close</button>
+                        </div>
+                        {isRepeat(t)&&<div style={{background:'rgba(167,139,250,.12)',border:'1px solid rgba(167,139,250,.4)',borderRadius:8,padding:'8px 14px',margin:'10px 16px 0',display:'flex',alignItems:'center',gap:8}}>
+                          <span style={{fontSize:16}}>🔁</span>
+                          <div>
+                            <div style={{font:'700 11px Sora,sans-serif',color:'#A78BFA'}}>REPEAT COMPLAINANT</div>
+                            <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:1}}>This customer has {repeatCount(t)} tickets today.</div>
+                          </div>
+                        </div>}
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+                          {[['📍 ADDRESS',t.addr||t.address||'—'],['⚡ METER',t.meter||'—'],['📞 PHONE',t.phone],['📅 CREATED',t.created?t.created.replace('T',' ').slice(0,16):'—'],['🏢 BU',t.bu],['🔗 CHANNEL',t.channel||'Mobile App'],['📊 STATUS',t.status?.toUpperCase()||'—'],['✅ RESOLVED',t.resolvedDate||'—']].map(function(f){return(
+                            <div key={f[0]} style={{padding:'10px 14px',borderRight:'1px solid rgba(255,255,255,.05)',borderBottom:'1px solid rgba(255,255,255,.05)'}}>
+                              <div style={{font:'700 8.5px Sora,sans-serif',color:'var(--ek-gold)',textTransform:'uppercase',letterSpacing:'.10em',marginBottom:4}}>{f[0]}</div>
+                              <div style={{font:'600 11px Sora,sans-serif',color:'var(--text)',wordBreak:'break-word'}}>{f[1]}</div>
+                            </div>);})}
+                        </div>
+                        {(t.issue||t.note)&&<div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+                          <div style={{font:'700 8.5px Sora,sans-serif',color:'var(--ek-gold)',textTransform:'uppercase',letterSpacing:'.10em',marginBottom:6}}>📝 COMPLAINT</div>
+                          <div style={{font:'500 11.5px/1.6 Sora,sans-serif',color:'var(--text)',background:'rgba(0,0,0,.2)',borderRadius:7,padding:'10px 12px'}}>{t.issue||t.note}</div>
+                        </div>}
+                        <div style={{padding:'14px 16px',background:'rgba(0,0,0,.15)'}}>
+                          <div style={{font:'700 9px Sora,sans-serif',color:'#818CF8',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:12}}>✏️ UPDATE THIS TICKET</div>
+                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+                            <div>
+                              <label className="lbl">Category</label>
+                              <select className="sel" value={e.category} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'category',ev.target.value);}}>
+                                {EK_CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="lbl">Responsible Party</label>
+                              <select className="sel" value={e.resp} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'resp',ev.target.value);}}>
+                                <option value="">— Select —</option>
+                                {EK_RESP.map(function(r){return <option key={r.name} value={r.name}>{r.name}</option>;})}
+                              </select>
+                            </div>
+                          </div>
+                          <div style={{marginBottom:10}}>
+                            <label className="lbl">Status</label>
+                            <div style={{display:'flex',gap:8}}>
+                              {[{v:'progress',l:'⏳ In Progress',c:'#F59E0B'},{v:'resolved',l:'✅ Resolved',c:'#22C55E'},{v:'unresolved',l:'🔴 Unresolved',c:'#EF4444'}].map(function(s){return(
+                                <button key={s.v} onClick={function(ev){ev.stopPropagation();setEdit(t.id,'status',s.v);}} style={{flex:1,padding:'7px',border:'1px solid '+(e.status===s.v?s.c:'var(--bsoft)'),borderRadius:7,background:e.status===s.v?s.c+'22':'transparent',color:e.status===s.v?s.c:'var(--muted)',font:'700 11px Sora,sans-serif',cursor:'pointer'}}>{s.l}</button>
+                              );})}
+                            </div>
+                          </div>
+                          <div style={{marginBottom:12}}>
+                            <label className="lbl">Action Taken / Note</label>
+                            <textarea className="inp" rows={2} value={e.note} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'note',ev.target.value);}} placeholder="Add action taken or resolution note…" style={{resize:'vertical',fontSize:11}}/>
+                          </div>
+                          <button onClick={function(ev){ev.stopPropagation();saveUpdate(t);}} style={{width:'100%',padding:'10px',background:'#818CF8',color:'#fff',border:'none',borderRadius:8,font:'800 13px Sora,sans-serif',cursor:'pointer'}}>💾 Save Update</button>
+                        </div>
+                      </div>
+                    </td></tr>}
+                  </React.Fragment>
+                );
+              })}
+              {!filt.length&&<tr><td colSpan={10} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets for this day.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── DAILY REPORT ───────────────────────────────────────────────────
-function DailyReport({tickets,onSettings}){
+function DailyReport({tickets,onSettings,onUpdate,showToast}){
   // Build unique date strings YYYY-MM-DD from tickets
   function tktDateStr(t){if(t.created){var d=new Date(t.created);if(!isNaN(d.getTime())){var w=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));return w.getFullYear()+'-'+String(w.getMonth()+1).padStart(2,'0')+'-'+String(w.getDate()).padStart(2,'0');}}return null;}
   const days=[...new Set(tickets.map(tktDateStr).filter(Boolean))].sort();
@@ -1217,31 +1385,8 @@ function DailyReport({tickets,onSettings}){
       </div>
 
       {viewMode==='table'?(
-        // ── TABLE VIEW ───────────────────────────────────────────────
-        <div style={{padding:'18px 28px'}}>
-          <div style={{overflowX:'auto',background:'#fff',borderRadius:12,border:'1px solid #E0E0F8',boxShadow:'0 2px 12px rgba(99,102,241,.07)'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-              <thead><tr style={{background:'#1E1B4B'}}>
-                {['#','Ticket','Time','Customer','Phone','BU','Category','Status','Note'].map(function(h){return <th key={h} style={{padding:'10px 12px',textAlign:'left',font:'700 10px/1 Sora,sans-serif',color:'rgba(255,255,255,.8)',textTransform:'uppercase',letterSpacing:'.08em'}}>{h}</th>;})}
-              </tr></thead>
-              <tbody>
-                {dayTix.map(function(t,i){return(
-                  <tr key={t.id} style={{borderBottom:'1px solid #F1F5FF',background:i%2===0?'#fff':'#FAFBFF'}}>
-                    <td style={{padding:'9px 12px',color:'#94A3B8',fontSize:10}}>{i+1}</td>
-                    <td style={{padding:'9px 12px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'#3730A3'}}>#{t.num}</td>
-                    <td style={{padding:'9px 12px',color:'#94A3B8',fontSize:10}}>{t.time}</td>
-                    <td style={{padding:'9px 12px',fontWeight:600,color:'#1E1B4B'}}>{t.name}</td>
-                    <td style={{padding:'9px 12px',fontFamily:'JetBrains Mono,monospace',color:'#94A3B8',fontSize:10}}>{t.phone}</td>
-                    <td style={{padding:'9px 12px'}}><span style={{display:'inline-flex',padding:'2px 7px',borderRadius:4,font:'700 9px/1 JetBrains Mono,monospace',background:'#EFF6FF',color:'#1E3A8A',border:'1px solid #BFDBFE'}}>{t.bu}</span></td>
-                    <td style={{padding:'9px 12px',fontSize:11,color:'#1E1B4B',maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(t.category||'').split('/')[0].trim()}</td>
-                    <td style={{padding:'9px 12px'}}>{t.status==='resolved'?<span style={{color:'#16A34A',font:'800 10px Sora,sans-serif'}}>RESOLVED</span>:t.status==='progress'?<span style={{color:'#D97706',font:'800 10px Sora,sans-serif'}}>IN PROGRESS</span>:<span style={{color:'#DC2626',font:'800 10px Sora,sans-serif'}}>UNRESOLVED</span>}</td>
-                    <td style={{padding:'9px 12px',fontSize:10,color:'#64748B',maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||'—'}</td>
-                  </tr>);})}
-                {!dayTix.length&&<tr><td colSpan={9} style={{padding:'32px',textAlign:'center',color:'#94A3B8',font:'500 12px Sora,sans-serif'}}>No tickets for {activeDay}</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        // ── TABLE VIEW — Agents Hub style ────────────────────────────
+        <DailyTicketsTable dayTix={dayTix} activeDay={activeDay} onUpdate={onUpdate} showToast={showToast||onSettings}/>
       ):(
         // ── REPORT VIEW (image 1 style) ───────────────────────────────
         <div style={{padding:'18px 28px',display:'flex',flexDirection:'column',gap:14}}>
@@ -3167,8 +3312,8 @@ function DataPage({tickets,setTickets,showToast}){
     a.download='EKEDP-'+statusKey+'-'+todayStr+'.json';a.click();showToast('Exported '+filt.length+' tickets ✓');
   }
   function exportCSV(){
-    const rows=[['#','Ticket','Time','Customer','Phone','BU','Category','Responsible','Status','Note']];
-    tickets.slice().forEach(function(t,i){rows.push([i+1,t.num,t.time||'',t.name,t.phone,t.bu,t.category,t.resp||t.responsible||'',t.status,t.note||'']);});
+    const headers=['ID','Customer Name','Customer Address','Meter No./Account No.','Meter No','Account No','Metered','Action Taken','Telephone Number','Email Address','Business Unit','Complaint Description','Assigned to','Status','Complaint Category','Complaint Sub-category','Channel of Complaint','Customer House No','Customer Street Name','Customer State of Resident','Customer Local Govt Area','Disco Code','Forum Name','Complaint House No','Complaint Street Name','Complaint Local Govt Area','Complaint Area','Resolved Date','Closed By','Disco REF No','Customer Service Name','Conversation ID','Created','Created By'];
+    const rows=[headers,...tickets.slice().map(function(t,i){return[t.num,t.name,t.addr||t.address||'',t.meter||'',t.meter||'',t.account||'',t.metered||'',t.note||'',t.phone,t.email||'',t.bu,t.issue||t.complaint||'',t.resp||t.responsible||'',t.status,t.category||'','',t.channel||'Mobile App','','','','','','','','','','',t.resolvedDate||'','','',' ',t.conversationId||'',t.created||'','PowerPlatform'];})];
     const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
     const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);
     a.download='EKEDP-All-'+todayStr+'.csv';a.click();showToast('CSV exported ✓');
@@ -4163,7 +4308,7 @@ function App(){
   const W=collapsed?64:220;
   const screens={
     dashboard: <Dashboard tickets={tickets} shifts={shifts} onShift={onShift} onSettings={()=>setShowSettings(true)} onNav={setScreen} signedInName={signedInName}/>,
-    daily:     <DailyReport tickets={tickets} onSettings={()=>setShowSettings(true)}/>,
+    daily:     <DailyReport tickets={tickets} onSettings={()=>setShowSettings(true)} onUpdate={onUpdate} showToast={showToast}/>,
     all:       <AllComplaints tickets={tickets} readOnly={readOnly} onUpdate={readOnly?null:onUpdate} onBulkUpdate={readOnly?null:function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});showToast('Updated '+ids.length+' ticket'+(ids.length>1?'s':'')+' ✅');}} onBatchUpdate={readOnly?null:function(updates){setTickets(function(prev){const next=prev.map(function(t){const u=updates.find(function(x){return x.id===t.id;});return u?Object.assign({},t,u):t;});persistTickets(next);return next;});showToast('✅ Batch-updated '+updates.length+' tickets');}} onDelete={readOnly?null:function(ids){setTickets(function(prev){const next=prev.filter(function(t){return !ids.includes(t.id);});persistTickets(next);return next;});showToast('🗑 Deleted '+ids.length+' ticket'+(ids.length>1?'s':'')+' permanently.');}} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
     log:       <LogTicket tickets={tickets} onAdd={onAdd} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
     cumulative:<Cumulative tickets={tickets} showToast={showToast}/>,
