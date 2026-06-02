@@ -217,6 +217,7 @@ table.t tfoot td.r{font-family:'JetBrains Mono',monospace;}
           <th style="width:32px">S/N</th>
           <th>Responsible Party</th>
           <th>Category</th>
+          <th class="r col-maypend" style="background:#6D28D9;color:#fff;">Cumulative<br>May Pending</th>
           <th class="r col-today" id="th-today" style="background:#166534;color:#fff;">Rcvd<br>Today</th>
           <th class="r">Cumulative<br>Resolved</th>
           <th class="r">Cumulative<br>In Progress</th>
@@ -230,6 +231,7 @@ table.t tfoot td.r{font-family:'JetBrains Mono',monospace;}
       <tfoot>
         <tr>
           <td id="ft-colspan" colspan="3" style="text-align:right;letter-spacing:.08em;font-size:11px">TOTAL</td>
+          <td class="r col-maypend" id="ft-maypend" style="background:#5B21B6;color:#fff;">0</td>
           <td class="r col-today" id="ft-today">0</td>
           <td class="r" id="ft-res">0</td>
           <td class="r" id="ft-prg">0</td>
@@ -258,16 +260,16 @@ document.getElementById('ft-lockup').src   = LOCKUP_B64;
 
 // ── DEFAULT DATA ─────────────────────────────────────────────────────────────
 const DEFAULT_ROWS = [
-  {sn:1,  party:'Nonye Angelina Nnadozie', cat:'Band Reclassification',             today:1,  res:11,  prg:0, unr:0},
-  {sn:2,  party:'Mojibola Adefuwa',        cat:'Billing',                           today:0,  res:35,  prg:1, unr:2},
-  {sn:3,  party:'Ogheneyoreme Agbroko',    cat:'Interruption / Voltage / Safety / Disconnection',   today:4,  res:74,  prg:5, unr:9},
-  {sn:4,  party:'Holyland Umude',          cat:'Metering',                          today:4,  res:6,   prg:0, unr:0},
-  {sn:5,  party:'Adetoun Adebayo',         cat:'PPM Support',                       today:0,  res:33,  prg:4, unr:1},
-  {sn:6,  party:'Olusegun Owokade',        cat:'PPM Maintenance',                   today:13, res:51,  prg:0, unr:0},
-  {sn:7,  party:'Clara Olutola',           cat:'Onboarding',                        today:7,  res:102, prg:5, unr:16},
-  {sn:8,  party:'Glory Chinyere',          cat:'Mycron',                            today:0,  res:3,   prg:0, unr:0},
-  {sn:9,  party:'Customer Experience',     cat:'General First Contact Resolution',  today:0,  res:5,   prg:0, unr:0},
-  {sn:10, party:'Festus Moko',             cat:'AMISA',                             today:0,  res:2,   prg:0, unr:1},
+  {sn:1,  party:'Nonye Angelina Nnadozie', cat:'Band Reclassification',             mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:2,  party:'Mojibola Adefuwa',        cat:'Billing',                           mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:3,  party:'Ogheneyoreme Agbroko',    cat:'Interruption / Voltage / Safety / Disconnection', mayPending:0, today:0, res:0, prg:0, unr:0},
+  {sn:4,  party:'Holyland Umude',          cat:'Metering',                          mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:5,  party:'Adetoun Adebayo',         cat:'PPM Support',                       mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:6,  party:'Olusegun Owokade',        cat:'PPM Maintenance',                   mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:7,  party:'Clara Olutola',           cat:'Onboarding',                        mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:8,  party:'Glory Chinyere',          cat:'Mycron',                            mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:9,  party:'Customer Experience',     cat:'General First Contact Resolution',  mayPending:0, today:0,  res:0,  prg:0, unr:0},
+  {sn:10, party:'Festus Moko',             cat:'AMISA',                             mayPending:0, today:0,  res:0,  prg:0, unr:0},
 ];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
@@ -299,6 +301,18 @@ function todayLong(){
 }
 function watToday(){
   return new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,10);
+}
+// Shift-aware YM: tickets before 17:00 WAT belong to previous day's shift month
+function shiftWatYM(t){
+  const raw=t.created||t.receivedAt||t.received||'';
+  if(!raw) return null;
+  try{
+    const d=new Date(raw);
+    if(isNaN(d.getTime())) return null;
+    const wat=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+    if(wat.getHours()<17) wat.setDate(wat.getDate()-1);
+    return wat.getFullYear()+'-'+String(wat.getMonth()+1).padStart(2,'0');
+  }catch(e){return null;}
 }
 function pctClass(p){return p>=80?'pct-hi':p>=60?'pct-mid':'pct-lo';}
 function num(n){return isNaN(parseInt(n))?0:parseInt(n);}
@@ -370,8 +384,34 @@ function processJSON(data){
     if(createdDate===today) tally[key].today++;
   }
 
+  // Tally May pending per category (shift-aware: May = shiftWatYM === current year -05)
+  // Determine the "previous month" = one month before the earliest current-month ticket
+  // Simple approach: any ticket with shiftWatYM ending in previous calendar month
+  const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  const curYM=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0');
+  const prevDate=new Date(watNow.getFullYear(),watNow.getMonth()-1,1);
+  const prevYM=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+
+  const mayTally={}; // key=normCat → pending count from previous month
+  for(const t of tickets){
+    const ym=shiftWatYM(t);
+    if(ym!==prevYM) continue;
+    const s=(t.status||'').toLowerCase();
+    if(s==='resolved') continue; // only pending (prg + unresolved)
+    const catRaw=(t.category||'').trim();
+    const key=normCat(catRaw)||'__uncategorised__';
+    if(!mayTally[key]) mayTally[key]={count:0,origCat:catRaw||'Uncategorised'};
+    mayTally[key].count++;
+  }
+
   // Zero out existing rows, then fill from tally by category match
-  GM_ROWS.forEach(r=>{r.today=0;r.res=0;r.prg=0;r.unr=0;});
+  GM_ROWS.forEach(r=>{r.mayPending=0;r.today=0;r.res=0;r.prg=0;r.unr=0;});
+
+  // Fill May pending
+  for(const [,mp] of Object.entries(mayTally)){
+    const matched=matchCat(mp.origCat);
+    if(matched) matched.mayPending+=mp.count;
+  }
 
   for(const [,counts] of Object.entries(tally)){
     const matched = matchCat(counts.origCat);
@@ -416,14 +456,15 @@ function render(slotId){
   });
   const tbody=document.getElementById('tbody');
   tbody.innerHTML='';
-  let totToday=0,totRes=0,totPrg=0,totUnr=0;
+  let totMayPend=0,totToday=0,totRes=0,totPrg=0,totUnr=0;
 
   GM_ROWS.forEach((r,i)=>{
+    const mayPend=num(r.mayPending);
     const today = CURRENT_SLOT==='9am'?0:num(r.today);
     const res=num(r.res),prg=num(r.prg),unr=num(r.unr);
     const grand=res+prg+unr;
     const pct=grand?Math.round(res/grand*100):0;
-    totToday+=today;totRes+=res;totPrg+=prg;totUnr+=unr;
+    totMayPend+=mayPend;totToday+=today;totRes+=res;totPrg+=prg;totUnr+=unr;
 
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -434,7 +475,9 @@ function render(slotId){
       <td class="r">
         <div class="cat-name edit-cell" data-row="${i}" data-field="cat" contenteditable="false" style="text-align:left">${r.cat}</div>
       </td>
-
+      <td class="r col-maypend" style="color:#6D28D9;font-weight:800;background:#F5F3FF;">
+        <span class="edit-cell" data-row="${i}" data-field="mayPending" contenteditable="false">${mayPend}</span>
+      </td>
       <td class="r col-today" style="color:#166534;font-weight:800;background:#F0FDF4;">
         <span class="edit-cell" data-row="${i}" data-field="today" contenteditable="false">${CURRENT_SLOT==='9am'?'—':today}</span>
       </td>
@@ -456,6 +499,7 @@ function render(slotId){
 
   const totGrand=totRes+totPrg+totUnr;
   const totPct=totGrand?Math.round(totRes/totGrand*100):0;
+  document.getElementById('ft-maypend').textContent=totMayPend;
   document.getElementById('ft-res').textContent=totRes;
   document.getElementById('ft-prg').textContent=totPrg;
   document.getElementById('ft-unr').textContent=totUnr;
@@ -516,19 +560,21 @@ function applyEditMode(){
 }
 
 function recalcTotals(){
-  let totToday=0,totRes=0,totPrg=0,totUnr=0;
+  let totMayPend=0,totToday=0,totRes=0,totPrg=0,totUnr=0;
   const rows=document.getElementById('tbody').rows;
   GM_ROWS.forEach((r,i)=>{
+    const mayPend=num(r.mayPending);
     const today=CURRENT_SLOT==='9am'?0:num(r.today);
     const res=num(r.res),prg=num(r.prg),unr=num(r.unr);
     const grand=res+prg+unr;
     const pct=grand?Math.round(res/grand*100):0;
-    totToday+=today;totRes+=res;totPrg+=prg;totUnr+=unr;
+    totMayPend+=mayPend;totToday+=today;totRes+=res;totPrg+=prg;totUnr+=unr;
     if(rows[i]){
-      rows[i].cells[7].textContent=grand;
-      rows[i].cells[8].innerHTML=`<span class="pct-pill ${pctClass(pct)}">${pct}%</span>`;
+      rows[i].cells[8].textContent=grand;
+      rows[i].cells[9].innerHTML=`<span class="pct-pill ${pctClass(pct)}">${pct}%</span>`;
     }
   });
+  document.getElementById('ft-maypend').textContent=totMayPend;
   const totGrand=totRes+totPrg+totUnr;
   const totPct=totGrand?Math.round(totRes/totGrand*100):0;
   document.getElementById('ft-res').textContent=totRes;
@@ -546,7 +592,7 @@ function recalcTotals(){
 
 function addRow(){
   const maxSn=GM_ROWS.reduce((m,r)=>Math.max(m,r.sn||0),0);
-  GM_ROWS.push({sn:maxSn+1,party:'New Party',cat:'New Category',today:0,res:0,prg:0,unr:0});
+  GM_ROWS.push({sn:maxSn+1,party:'New Party',cat:'New Category',mayPending:0,today:0,res:0,prg:0,unr:0});
   saveRows(); render();
 }
 function deleteRow(i){
@@ -580,133 +626,279 @@ function buildOutlookHTML(){
   const slot = SLOTS[CURRENT_SLOT];
   const is5pm = CURRENT_SLOT==='5pm';
 
-  // KPI values
+  // KPI values from DOM
   const tot = document.getElementById('k-tot').textContent;
   const res = document.getElementById('k-res').textContent;
   const prg = document.getElementById('k-prg').textContent;
   const unr = document.getElementById('k-unr').textContent;
   const pct = document.getElementById('k-pct').textContent;
-
-  // Build KPI row as table
-  const kpiCells = [
-    {label:'GRAND TOTAL',  val:tot, col:'#1E3A8A'},
-    {label:'RESOLVED',     val:res, col:'#065F46'},
-    {label:'IN PROGRESS',  val:prg, col:'#92400E'},
-    {label:'UNRESOLVED',   val:unr, col:'#991B1B'},
-  ];
-  if(!is5pm) kpiCells.push({label:'% RESOLVED', val:pct, col:'#92591E'});
-
-  const kpiTDs = kpiCells.map(k=>`
-    <td width="${is5pm?'25%':'20%'}" style="padding:8px 12px;border:1.5px solid #CBD5E1;border-radius:7px;background:#ffffff;vertical-align:top;">
-      <div style="font:700 9px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.10em;color:#64748B;">${k.label}</div>
-      <div style="font:900 22px/1 'Courier New',monospace;margin-top:5px;color:${k.col};">${k.val}</div>
-    </td>`).join('<td width="6" style="padding:0;border:none;background:#F1F5F9;"></td>');
-
-  // Build data rows
-  let rowsHTML = '';
-  GM_ROWS.forEach((r,i)=>{
-    const res2=num(r.res),prg2=num(r.prg),unr2=num(r.unr),grand=res2+prg2+unr2;
-    const pct2=grand?Math.round(res2/grand*100):0;
-    const bg = i%2===0?'#ffffff':'#F8FAFC';
-    const pctCol = pct2>=80?'#065F46':pct2>=60?'#92400E':'#991B1B';
-    const pctBg  = pct2>=80?'#ECFDF5':pct2>=60?'#FFFBEB':'#FEF2F2';
-    rowsHTML += `<tr style="background:${bg};">
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;font:700 11px 'Courier New',monospace;color:#1D4ED8;">${r.sn}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;font:700 12px Arial,sans-serif;color:#001F5C;">${r.party}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;font:400 11px Arial,sans-serif;color:#64748B;">${r.cat}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#166534;background:#F0FDF4;">${CURRENT_SLOT==='9am'?'—':num(r.today)}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#065F46;">${res2}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#92400E;">${prg2}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#991B1B;">${unr2}</td>
-      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:800 12px 'Courier New',monospace;color:#1D4ED8;">${grand}</td>
-      ${!is5pm?`<td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;"><span style="padding:2px 8px;border-radius:20px;font:900 11px 'Courier New',monospace;background:${pctBg};color:${pctCol};">${pct2}%</span></td>`:''}
-    </tr>`;
-  });
-
-  // Totals row
   const tRes=num(document.getElementById('ft-res').textContent);
   const tPrg=num(document.getElementById('ft-prg').textContent);
   const tUnr=num(document.getElementById('ft-unr').textContent);
   const tGrand=num(document.getElementById('ft-grand').textContent);
   const tPct=document.getElementById('ft-pct').textContent;
-
   const navy='#001F5C';
-  const footerHTML = `<tr>
+
+  // ── 5PM END-OF-MONTH LAYOUT ──────────────────────────────────────────────
+  if(is5pm){
+    // May pending = tickets with prg or unr status (carried over)
+    let mayPending=0;
+    GM_ROWS.forEach(r=>{ mayPending+=num(r.prg)+num(r.unr); });
+    const mayTotal = num(tot);
+    const mayRes   = num(res);
+    const mayPrg   = num(prg);
+    const mayUnr   = num(unr);
+    const mayPct   = mayTotal?Math.round(mayRes/mayTotal*100):0;
+
+    // June today = r.today per row
+    let junTotal=0;
+    GM_ROWS.forEach(r=>{ junTotal+=num(r.today); });
+    // June resolved/prg/unr today — we don't track per-status for today
+    // so derive: junRes from tRes context not available per-today
+    // Use stored ek_v2_tickets to get today's breakdown
+    const today = watToday();
+    let junRes=0,junPrg=0,junUnr=0;
+    try{
+      const raw=localStorage.getItem('ek_v2_tickets');
+      if(raw){
+        const tix=JSON.parse(raw);
+        tix.forEach(t=>{
+          const d=(t.created||t.receivedAt||'').slice(0,10);
+          if(d===today){
+            const s=(t.status||'').toLowerCase();
+            if(s==='resolved') junRes++;
+            else if(s==='progress') junPrg++;
+            else junUnr++;
+          }
+        });
+      }
+    }catch(e){}
+    const junPct = junTotal?Math.round(junRes/junTotal*100):0;
+
+    // Build May KPI row
+    const mayKpiRow = `
+    <tr><td colspan="8" style="padding:6px 14px 3px;background:#F1F5F9;">
+      <div style="font:800 9px Arial,sans-serif;text-transform:uppercase;letter-spacing:.10em;color:#64748B;margin-bottom:5px;">&#128197; MAY 2026 &mdash; MONTH CLOSE</div>
+      <table width="100%" cellpadding="4" cellspacing="4"><tr>
+        <td style="background:#fff;border:1.5px solid #CBD5E1;border-top:3px solid #1D4ED8;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#64748B;">Total Received</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#1E3A8A;">${mayTotal}</div>
+        </td>
+        <td style="background:#fff;border:1.5px solid #CBD5E1;border-top:3px solid #16A34A;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#64748B;">Resolved</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#065F46;">${mayRes}</div>
+        </td>
+        <td style="background:#fff;border:1.5px solid #CBD5E1;border-top:3px solid #DC2626;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#64748B;">Pending (carried over)</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#991B1B;">${mayPending}</div>
+        </td>
+        <td style="background:#fff;border:1.5px solid #CBD5E1;border-top:3px solid #D97706;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#64748B;">In Progress</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#92400E;">${mayPrg}</div>
+        </td>
+        <td style="background:#fff;border:1.5px solid #CBD5E1;border-top:3px solid #7C3AED;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#64748B;">Unresolved</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#6D28D9;">${mayUnr}</div>
+        </td>
+        <td style="background:#fff;border:1.5px solid #CBD5E1;border-top:3px solid #FFC72C;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#64748B;">% Resolved</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#92591E;">${mayPct}%</div>
+        </td>
+      </tr></table>
+    </td></tr>`;
+
+    // Build June KPI row
+    const junKpiRow = `
+    <tr><td colspan="8" style="padding:3px 14px 8px;background:#F1F5F9;border-bottom:1.5px solid #CBD5E1;">
+      <div style="font:800 9px Arial,sans-serif;text-transform:uppercase;letter-spacing:.10em;color:#064E3B;margin-bottom:5px;margin-top:4px;">&#127381; JUNE 2026 &mdash; TODAY ONLY</div>
+      <table width="100%" cellpadding="4" cellspacing="4"><tr>
+        <td style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-top:3px solid #059669;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#064E3B;">Rcvd Today</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#065F46;">${junTotal}</div>
+        </td>
+        <td style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-top:3px solid #16A34A;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#064E3B;">Resolved</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#065F46;">${junRes}</div>
+        </td>
+        <td style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-top:3px solid #D97706;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#064E3B;">In Progress</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#92400E;">${junPrg}</div>
+        </td>
+        <td style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-top:3px solid #DC2626;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#064E3B;">Unresolved</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#991B1B;">${junUnr}</div>
+        </td>
+        <td style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-top:3px solid #FFC72C;text-align:center;padding:7px 8px;">
+          <div style="font:700 7px Arial;text-transform:uppercase;color:#064E3B;">% Resolved</div>
+          <div style="font:900 20px 'Courier New',monospace;color:#92591E;">${junPct}%</div>
+        </td>
+      </tr></table>
+    </td></tr>`;
+
+    // Build 5pm data rows: May Pending | June Rcvd | Resolved Today | In Progress Today | Unresolved Today
+    let rowsHTML5='';
+    GM_ROWS.forEach((r,i)=>{
+      const pending=num(r.prg)+num(r.unr);
+      const rcvdToday=num(r.today);
+      const bg=i%2===0?'#ffffff':'#F8FAFC';
+      // per-row today breakdown not tracked — show rcvd only, dash for res/prg/unr today
+      rowsHTML5+=`<tr style="background:${bg};">
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;font:700 11px 'Courier New',monospace;color:#1D4ED8;">${r.sn}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;font:700 12px Arial,sans-serif;color:#001F5C;">${r.party}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;font:400 11px Arial,sans-serif;color:#64748B;">${r.cat}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#9A3412;background:#FFF7ED;">${pending||'0'}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#166534;background:#F0FDF4;">${rcvdToday}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#065F46;">${num(r.res)}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#92400E;">${num(r.prg)}</td>
+        <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#991B1B;">${num(r.unr)}</td>
+      </tr>`;
+    });
+
+    const footer5=`<tr>
+      <td colspan="3" style="padding:8px;background:${navy};color:#fff;font:900 11px Arial,sans-serif;text-align:right;border:1px solid ${navy};letter-spacing:.06em;">TOTAL</td>
+      <td style="padding:8px;background:#7C2D12;color:#fff;font:900 14px 'Courier New',monospace;text-align:right;border:1px solid #7C2D12;">${mayPending}</td>
+      <td style="padding:8px;background:#14532D;color:#fff;font:900 14px 'Courier New',monospace;text-align:right;border:1px solid #14532D;">${junTotal}</td>
+      <td style="padding:8px;background:#065F46;color:#fff;font:900 14px 'Courier New',monospace;text-align:right;border:1px solid #065F46;">${tRes}</td>
+      <td style="padding:8px;background:#92400E;color:#fff;font:900 14px 'Courier New',monospace;text-align:right;border:1px solid #92400E;">${tPrg}</td>
+      <td style="padding:8px;background:#991B1B;color:#fff;font:900 14px 'Courier New',monospace;text-align:right;border:1px solid #991B1B;">${tUnr}</td>
+    </tr>`;
+
+    const perfNote = mayPct>=80
+      ? `May 2026 closed at <b>${mayPct}% resolution rate</b> &mdash; above the 80% target. <b>${mayPending} tickets pending</b> carried into June. Today opens with <b>${junTotal} new tickets</b>; ${junUnr||tUnr} currently unresolved requiring prompt attention.`
+      : `May 2026 closed at <b>${mayPct}% resolution rate</b> &mdash; below the 80% target. <b>${mayPending} tickets pending</b> carried into June. Today opens with <b>${junTotal} new tickets</b>.`;
+
+    return `
+    <table width="780" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;background:#ffffff;border:1.5px solid #CBD5E1;">
+      <tr><td colspan="8" style="padding:12px 16px;background:#001F5C;">
+        <table width="100%" cellpadding="0" cellspacing="0"><tr>
+          <td>
+            <div style="font:800 8px Arial,sans-serif;letter-spacing:.12em;color:#FFC72C;text-transform:uppercase;">EKEDP POWER APP &middot; END OF MONTH REPORT</div>
+            <div style="font:900 15px Arial,sans-serif;color:#fff;margin-top:3px;">EKEDP Mobile APP Complaints Report</div>
+            <div style="font:500 10px Arial,sans-serif;color:rgba(255,255,255,.75);margin-top:2px;">${todayLong()} &nbsp;&middot;&nbsp; ${slot.stamp} &nbsp;&middot;&nbsp; Customer Experience Department</div>
+          </td>
+          <td style="text-align:right;white-space:nowrap;">
+            <div style="font:900 18px 'Courier New',monospace;color:#FFC72C;">${slot.emoji} ${slot.label}</div>
+            <div style="font:600 10px Arial,sans-serif;color:rgba(255,255,255,.75);">End of Month &middot; May / June Transition</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      ${mayKpiRow}
+      ${junKpiRow}
+      <tr style="background:#001F5C;">
+        <td style="padding:8px 6px;color:rgba(255,255,255,.92);font:800 8px Arial,sans-serif;text-transform:uppercase;border-right:1px solid rgba(255,255,255,.15);">S/N</td>
+        <td style="padding:8px;color:rgba(255,255,255,.92);font:800 8px Arial,sans-serif;text-transform:uppercase;border-right:1px solid rgba(255,255,255,.15);">Responsible Party</td>
+        <td style="padding:8px;color:rgba(255,255,255,.92);font:800 8px Arial,sans-serif;text-transform:uppercase;border-right:1px solid rgba(255,255,255,.15);">Category</td>
+        <td style="padding:8px;background:#7C2D12;color:#fff;font:800 8px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">May<br>Pending</td>
+        <td style="padding:8px;background:#166534;color:#fff;font:800 8px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">June<br>Rcvd Today</td>
+        <td style="padding:8px;color:rgba(255,255,255,.92);font:800 8px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Cumulative<br>Resolved</td>
+        <td style="padding:8px;color:rgba(255,255,255,.92);font:800 8px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Cumulative<br>In Progress</td>
+        <td style="padding:8px;color:rgba(255,255,255,.92);font:800 8px Arial,sans-serif;text-transform:uppercase;text-align:right;">Cumulative<br>Unresolved</td>
+      </tr>
+      ${rowsHTML5}
+      ${footer5}
+      <tr><td colspan="8" style="padding:14px 16px;background:#F0F9FF;border-top:8px solid #fff;">
+        <div style="font:800 10px Arial,sans-serif;text-transform:uppercase;letter-spacing:.10em;color:#0369A1;margin-bottom:10px;">&#128202; EXECUTIVE SUMMARY &mdash; MAY/JUNE TRANSITION</div>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:3px 0;">&#128197; <b>May 2026 Total:</b> ${mayTotal} received &nbsp;|&nbsp; ${mayRes} resolved (${mayPct}%)</td>
+            <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:3px 0;">&#9888;&#65039; <b>May Pending (carried over):</b> ${mayPending} tickets</td>
+          </tr>
+          <tr>
+            <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:3px 0;">&#127381; <b>June 1 (Today):</b> ${junTotal} new tickets received</td>
+            <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:3px 0;">&#9989; <b>June Resolved Today:</b> ${junRes} of ${junTotal} (${junPct}%)</td>
+          </tr>
+        </table>
+        <div style="margin-top:12px;padding:10px 14px;background:#fff;border-left:4px solid #0EA5E9;font:600 12px Arial,sans-serif;color:#0F172A;">${perfNote}</div>
+      </td></tr>
+      <tr><td colspan="8" style="padding:9px 16px;background:#F8FAFC;border-top:1.5px solid #CBD5E1;font:600 11px Arial,sans-serif;color:#64748B;">
+        Generated by the <b style="color:#001F5C;">EKEDP Power App</b> &nbsp;&middot;&nbsp; Customer Experience Department &nbsp;&middot;&nbsp; ${slot.stamp} &nbsp;&middot;&nbsp; ${todayLong()}
+      </td></tr>
+    </table>`;
+  }
+
+  // ── ALL OTHER SLOTS (9am, 12pm, 4pm) ─────────────────────────────────────
+  const kpiCells = [
+    {label:'GRAND TOTAL',  val:tot, col:'#1E3A8A'},
+    {label:'RESOLVED',     val:res, col:'#065F46'},
+    {label:'IN PROGRESS',  val:prg, col:'#92400E'},
+    {label:'UNRESOLVED',   val:unr, col:'#991B1B'},
+    {label:'% RESOLVED',   val:pct, col:'#92591E'},
+  ];
+  const kpiTDs = kpiCells.map(k=>`
+    <td width="20%" style="padding:8px 12px;border:1.5px solid #CBD5E1;border-radius:7px;background:#ffffff;vertical-align:top;">
+      <div style="font:700 9px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.10em;color:#64748B;">${k.label}</div>
+      <div style="font:900 22px/1 'Courier New',monospace;margin-top:5px;color:${k.col};">${k.val}</div>
+    </td>`).join('<td width="6" style="padding:0;border:none;background:#F1F5F9;"></td>');
+
+  let totMayPendEmail=0;
+  let rowsHTML='';
+  GM_ROWS.forEach((r,i)=>{
+    const mayPend2=num(r.mayPending);
+    const res2=num(r.res),prg2=num(r.prg),unr2=num(r.unr),grand=res2+prg2+unr2;
+    const pct2=grand?Math.round(res2/grand*100):0;
+    const bg=i%2===0?'#ffffff':'#F8FAFC';
+    const pctCol=pct2>=80?'#065F46':pct2>=60?'#92400E':'#991B1B';
+    const pctBg =pct2>=80?'#ECFDF5':pct2>=60?'#FFFBEB':'#FEF2F2';
+    totMayPendEmail+=mayPend2;
+    rowsHTML+=`<tr style="background:${bg};">
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;font:700 11px 'Courier New',monospace;color:#1D4ED8;">${r.sn}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;font:700 12px Arial,sans-serif;color:#001F5C;">${r.party}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;font:400 11px Arial,sans-serif;color:#64748B;">${r.cat}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:800 12px 'Courier New',monospace;color:#6D28D9;background:#F5F3FF;">${mayPend2}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#166534;background:#F0FDF4;">${CURRENT_SLOT==='9am'?'&mdash;':num(r.today)}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#065F46;">${res2}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#92400E;">${prg2}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:700 12px 'Courier New',monospace;color:#991B1B;">${unr2}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;font:800 12px 'Courier New',monospace;color:#1D4ED8;">${grand}</td>
+      <td style="padding:6px 8px;border:1px solid #CBD5E1;text-align:right;"><span style="padding:2px 8px;border-radius:20px;font:900 11px 'Courier New',monospace;background:${pctBg};color:${pctCol};">${pct2}%</span></td>
+    </tr>`;
+  });
+
+  const footerHTML=`<tr>
     <td colspan="3" style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 11px Arial,sans-serif;text-align:right;letter-spacing:.08em;">TOTAL</td>
+    <td style="padding:7px 8px;border:1px solid #001F5C;background:#5B21B6;color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${totMayPendEmail}</td>
+    <td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${num(document.getElementById('ft-today').textContent)||'&mdash;'}</td>
     <td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${tRes}</td>
     <td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${tPrg}</td>
     <td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${tUnr}</td>
     <td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${tGrand}</td>
-    ${!is5pm?`<td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${tPct}</td>`:''}
+    <td style="padding:7px 8px;border:1px solid #001F5C;background:${navy};color:#fff;font:900 12px 'Courier New',monospace;text-align:right;">${tPct}</td>
   </tr>`;
-
-  const pctHeader = !is5pm ? '<th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">%<br>Res.</th>' : '';
-
-  // Executive summary for 5pm
-  let execSummary = '';
-  if(is5pm){
-    const totGrand2=tGrand, totPct2=tGrand?Math.round(tRes/tGrand*100):0;
-    const perfNote = totPct2>=80 ? `Strong day — resolution rate at ${totPct2}%, above the 80% target.`
-      : totPct2>=60 ? `Moderate performance — resolution rate at ${totPct2}%, below the 80% target.`
-      : `Below target — resolution rate at ${totPct2}%. Immediate attention required.`;
-    execSummary = `
-    <tr><td colspan="7" style="padding:0;"><br></td></tr>
-    <tr><td colspan="7" style="padding:12px 16px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:8px;">
-      <div style="font:800 10px Arial,sans-serif;text-transform:uppercase;letter-spacing:.10em;color:#0369A1;margin-bottom:8px;">EXECUTIVE SUMMARY</div>
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:2px 0;">📋 <b>Total:</b> ${tGrand}</td>
-        <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:2px 0;">✅ <b>Resolved:</b> ${tRes} (${totPct2}%)</td>
-      </tr><tr>
-        <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:2px 0;">🔄 <b>In Progress:</b> ${tPrg}</td>
-        <td style="font:600 12px Arial,sans-serif;color:#0F172A;padding:2px 0;">⚠️ <b>Unresolved:</b> ${tUnr}</td>
-      </tr></table>
-      <div style="margin-top:10px;padding:8px 12px;background:#fff;border-left:4px solid #0EA5E9;font:600 12px Arial,sans-serif;color:#0F172A;">${perfNote}</div>
-    </td></tr>`;
-  }
 
   return `
   <table width="680" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;background:#ffffff;border:1.5px solid #CBD5E1;border-radius:8px;overflow:hidden;">
-    <!-- HEADER -->
-    <tr style="background:linear-gradient(135deg,#0A1A4F,#001F5C);">
-      <td colspan="${is5pm?7:8}" style="padding:10px 14px;background:#001F5C;">
-        <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;">
-            <div style="font:800 8px Arial,sans-serif;letter-spacing:.12em;color:#FFC72C;text-transform:uppercase;">EKEDP POWER APP · DAILY REPORT</div>
-            <div style="font:900 14px Arial,sans-serif;color:#ffffff;margin-top:2px;">EKEDP Mobile APP Complaints Report</div>
-            <div style="font:500 10px Arial,sans-serif;color:rgba(255,255,255,.7);margin-top:2px;">${todayLong()} · ${slot.stamp} · Customer Experience Department</div>
-          </td>
-          <td style="text-align:right;vertical-align:middle;white-space:nowrap;">
-            <div style="font:900 16px 'Courier New',monospace;color:#FFC72C;">${slot.emoji} ${slot.label}</div>
-            <div style="font:600 10px Arial,sans-serif;color:rgba(255,255,255,.75);">${slot.window}</div>
-          </td>
-        </tr></table>
-      </td>
-    </tr>
-    <!-- KPI ROW -->
-    <tr><td colspan="${is5pm?7:8}" style="padding:8px 14px;background:#F1F5F9;border-bottom:1.5px solid #CBD5E1;">
+    <tr><td colspan="9" style="padding:10px 14px;background:#001F5C;">
+      <table width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td style="vertical-align:middle;">
+          <div style="font:800 8px Arial,sans-serif;letter-spacing:.12em;color:#FFC72C;text-transform:uppercase;">EKEDP POWER APP &middot; DAILY REPORT</div>
+          <div style="font:900 14px Arial,sans-serif;color:#ffffff;margin-top:2px;">EKEDP Mobile APP Complaints Report</div>
+          <div style="font:500 10px Arial,sans-serif;color:rgba(255,255,255,.7);margin-top:2px;">${todayLong()} &middot; ${slot.stamp} &middot; Customer Experience Department</div>
+        </td>
+        <td style="text-align:right;vertical-align:middle;white-space:nowrap;">
+          <div style="font:900 16px 'Courier New',monospace;color:#FFC72C;">${slot.emoji} ${slot.label}</div>
+          <div style="font:600 10px Arial,sans-serif;color:rgba(255,255,255,.75);">${slot.window}</div>
+        </td>
+      </tr></table>
+    </td></tr>
+    <tr><td colspan="9" style="padding:8px 14px;background:#F1F5F9;border-bottom:1.5px solid #CBD5E1;">
       <table width="100%" cellpadding="0" cellspacing="0"><tr>${kpiTDs}</tr></table>
     </td></tr>
-    <!-- TABLE HEADER -->
     <tr>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:left;border-right:1px solid rgba(255,255,255,.15);">S/N</th>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:left;border-right:1px solid rgba(255,255,255,.15);">Responsible Party</th>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:left;border-right:1px solid rgba(255,255,255,.15);">Category</th>
+      <th style="padding:7px 8px;background:#6D28D9;color:#fff;font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Cumulative<br>May Pending</th>
       <th style="padding:7px 8px;background:#166534;color:#fff;font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Rcvd<br>Today</th>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Cumulative<br>Resolved</th>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Cumulative<br>In Progress</th>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Cumulative<br>Unresolved</th>
       <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">Grand<br>Total</th>
-      ${pctHeader}
+      <th style="padding:7px 8px;background:#001F5C;color:rgba(255,255,255,.92);font:800 9px Arial,sans-serif;text-transform:uppercase;text-align:right;border-right:1px solid rgba(255,255,255,.15);">%<br>Res.</th>
     </tr>
-    <!-- DATA ROWS -->
     ${rowsHTML}
-    <!-- FOOTER ROW -->
     ${footerHTML}
-    <!-- EXEC SUMMARY -->
-    ${execSummary}
-    <!-- BOTTOM FOOTER -->
-    <tr><td colspan="${is5pm?7:8}" style="padding:8px 14px;background:#F8FAFC;border-top:1.5px solid #CBD5E1;font:600 11px Arial,sans-serif;color:#64748B;">
-      Generated by the <b>EKEDP Power App</b> · Customer Experience Department &nbsp;·&nbsp; ${slot.stamp} · ${todayLong()}
+    <tr><td colspan="10" style="padding:8px 14px;background:#F8FAFC;border-top:1.5px solid #CBD5E1;font:600 11px Arial,sans-serif;color:#64748B;">
+      Generated by the <b>EKEDP Power App</b> &middot; Customer Experience Department &nbsp;&middot;&nbsp; ${slot.stamp} &middot; ${todayLong()}
     </td></tr>
   </table>`;
 }
@@ -745,20 +937,21 @@ function downloadExcel(){
     ['EKEDP Mobile APP Complaints Report'],
     [todayLong()+' · '+slot.stamp+' · Customer Experience Department'],
     [],
-    ['S/N','Responsible Party','Category','Received Today','Cumulative Resolved','Cumulative In Progress','Cumulative Unresolved','Grand Total','% Resolution'],
+    ['S/N','Responsible Party','Category','Cumulative May Pending','Received Today','Cumulative Resolved','Cumulative In Progress','Cumulative Unresolved','Grand Total','% Resolution'],
   ];
-  let tT=0,tR=0,tP=0,tU=0;
+  let tM=0,tT=0,tR=0,tP=0,tU=0;
   GM_ROWS.forEach(r=>{
+    const mayPend=num(r.mayPending);
     const today=CURRENT_SLOT==='9am'?0:num(r.today);
     const res=num(r.res),prg=num(r.prg),unr=num(r.unr),grand=res+prg+unr;
-    tT+=today;tR+=res;tP+=prg;tU+=unr;
-    aoa.push([r.sn,r.party,r.cat,today,res,prg,unr,grand,grand?res/grand:0]);
+    tM+=mayPend;tT+=today;tR+=res;tP+=prg;tU+=unr;
+    aoa.push([r.sn,r.party,r.cat,mayPend,today,res,prg,unr,grand,grand?res/grand:0]);
   });
   const tG=tR+tP+tU;
-  aoa.push(['','','TOTAL',tT,tR,tP,tU,tG,tG?tR/tG:0]);
+  aoa.push(['','','TOTAL',tM,tT,tR,tP,tU,tG,tG?tR/tG:0]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:4},{wch:26},{wch:36},{wch:12},{wch:12},{wch:14},{wch:14},{wch:11},{wch:11}];
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
+  ws['!cols']=[{wch:4},{wch:26},{wch:36},{wch:16},{wch:12},{wch:12},{wch:14},{wch:14},{wch:11},{wch:11}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Report');
   XLSX.writeFile(wb,'EKEDP_Report_'+slot.label.replace(' ','')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
