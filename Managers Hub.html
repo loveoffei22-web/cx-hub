@@ -509,15 +509,14 @@ function persistTickets(tix){window.EK_TICKETS=tix;localStorage.setItem('ek_v2_t
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
 function ticketSig(t){return _norm(t.num)+'|'+_norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
 function dedupTickets(existing,incoming){
-  // Dedup by ticket number only — same complaint can appear multiple times legitimately
-  const byNum={};
-  existing.forEach(function(t){if(t.num)byNum[_norm(t.num)]=true;});
-  const out=[]; let dropped=0;
+  // Unique key is the ticket number (t.num) — the app's canonical identifier
+  const seen=new Set();
+  existing.forEach(function(t){var n=_norm(t.num||'');if(n)seen.add(n);});
+  const out=[];let dropped=0;
   incoming.forEach(function(t){
-    const n=_norm(t.num);
-    if(n&&byNum[n]){dropped++;return;}
-    out.push(t);
-    if(n)byNum[n]=true;
+    var n=_norm(t.num||'');
+    if(n&&seen.has(n)){dropped++;return;}
+    out.push(t);if(n)seen.add(n);
   });
   return{kept:out,dropped:dropped};
 }
@@ -2017,24 +2016,30 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
                         </td>
                         <td><Mono style={{color:'var(--muted)',fontSize:11}}>{t.phone}</Mono></td>
                         <td><BuPill bu={t.bu}/></td>
-                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?' xls-editing':'')} style={{fontSize:11,maxWidth:130,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'category',val:t.category||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
+                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'?' xls-editing':'')} style={{fontSize:11,maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',position:'relative'}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'category',val:t.category||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
                           {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='category'
-                            ?<select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'category',paged);}}>{EK_CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}</select>
+                            ?<div style={{position:'absolute',top:0,left:0,zIndex:200,background:'var(--surface)',border:'1.5px solid var(--ek-gold)',borderRadius:6,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:180}}>
+                                <select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'category',paged);}} style={{width:'100%',border:'none',background:'transparent',padding:'6px 8px',font:'600 11px Sora,sans-serif',color:'var(--fg)',outline:'none'}}>{EK_CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}</select>
+                              </div>
                             :<>{t.category&&t.category.split('/')[0].trim()}{!readOnly&&<span className="xls-hint">dbl-click</span>}</>
                           }
                         </td>
                         <td style={{padding:'4px 6px'}} onClick={function(ev){ev.stopPropagation();cycleStatusM(t);}}>
                           {(function(){const s=t.status||'unresolved';const cfg={resolved:{bg:'#14532d',color:'#4ade80',label:'✓ RESOLVED'},progress:{bg:'#78350f',color:'#FCD34D',label:'⟳ IN PROGRESS'},unresolved:{bg:'#450a0a',color:'#f87171',label:'✕ UNRESOLVED'}}[s]||{bg:'#1e1e2e',color:'#94a3b8',label:s.toUpperCase()};return <button onClick={function(ev){ev.stopPropagation();cycleStatusM(t);}} style={{padding:'3px 8px',borderRadius:5,background:cfg.bg,color:cfg.color,border:'1px solid '+cfg.color+'55',font:'800 9px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}} title="Click to cycle status">{cfg.label}</button>})()}
                         </td>
-                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?' xls-editing':'')} style={{fontSize:11,color:'var(--muted)',maxWidth:130,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'resp',val:t.resp||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
+                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'?' xls-editing':'')} style={{fontSize:11,color:'var(--muted)',maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',position:'relative'}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'resp',val:t.resp||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
                           {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='resp'
-                            ?<select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'resp',paged);}}>{EK_RESP.map(function(r){return <option key={r.name} value={r.name}>{r.name}</option>;})}</select>
+                            ?<div style={{position:'absolute',top:0,left:0,zIndex:200,background:'var(--surface)',border:'1.5px solid var(--ek-gold)',borderRadius:6,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:180}}>
+                                <select className="xls-sel" autoFocus value={cellEdit.val} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'resp',paged);}} style={{width:'100%',border:'none',background:'transparent',padding:'6px 8px',font:'600 11px Sora,sans-serif',color:'var(--fg)',outline:'none'}}>{EK_RESP.map(function(r){return <option key={r.name} value={r.name}>{r.name}</option>;})}</select>
+                              </div>
                             :<>{t.resp||'—'}{!readOnly&&<span className="xls-hint">dbl-click</span>}</>
                           }
                         </td>
-                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?' xls-editing':'')} style={{fontSize:11,color:'var(--muted)',maxWidth:200,overflow:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?'visible':'hidden',textOverflow:'ellipsis',whiteSpace:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?'normal':'nowrap',padding:cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?0:undefined}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'note',val:t.note||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
+                        <td className={'xls-cell'+(cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'?' xls-editing':'')} style={{fontSize:11,color:'var(--muted)',maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',position:'relative'}} onDoubleClick={function(ev){ev.stopPropagation();setCellEdit({id:t.id,field:'note',val:t.note||''});}} onClick={function(ev){if(cellEdit&&cellEdit.id===t.id)ev.stopPropagation();else setExpanded(isExp?null:t.id);}}>
                           {cellEdit&&cellEdit.id===t.id&&cellEdit.field==='note'
-                            ?<textarea autoFocus className="xls-sel" value={cellEdit.val} rows={2} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'note',paged);}} style={{width:'100%',minWidth:180,resize:'vertical'}} placeholder="Action taken…"/>
+                            ?<div style={{position:'absolute',top:0,left:0,zIndex:200,background:'var(--surface)',border:'1.5px solid var(--ek-gold)',borderRadius:6,boxShadow:'0 4px 16px rgba(0,0,0,.4)',minWidth:220}}>
+                                <textarea autoFocus value={cellEdit.val} rows={3} onChange={function(ev){setCellEdit(Object.assign({},cellEdit,{val:ev.target.value}));}} onBlur={function(){commitCellM(t);}} onKeyDown={function(ev){xlsNavM(ev,t,'note',paged);}} style={{width:'100%',border:'none',background:'transparent',padding:'6px 8px',font:'500 11px Sora,sans-serif',color:'var(--fg)',outline:'none',resize:'vertical',display:'block'}} placeholder="Action taken…"/>
+                              </div>
                             :<>{t.note||<span style={{opacity:.35,fontStyle:'italic'}}>—</span>}{!readOnly&&<span className="xls-hint">dbl-click</span>}</>
                           }
                         </td>
@@ -4821,7 +4826,20 @@ function App(){
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
   function onPurge(){if(!confirm('Delete ALL tickets received before May 1 2026 (test data)? This cannot be undone.'))return;const kept=tickets.filter(function(t){var d=shiftWatDate(t);return d?d>='2026-05-01':true;});const removed=tickets.length-kept.length;persistTickets(kept);setTickets(kept);setShowSettings(false);showToast('🗑 Purged '+removed+' pre-May test ticket'+(removed!==1?'s':'')+' ✅');}
-  function onDedup(){const seen=new Set();const deduped=tickets.filter(function(t){if(seen.has(t.id))return false;seen.add(t.id);return true;});const removed=tickets.length-deduped.length;if(removed===0){showToast('No duplicates found ✓');return;}persistTickets(deduped);setTickets(deduped);setShowSettings(false);showToast('Removed '+removed+' duplicate ticket'+(removed>1?'s':'')+' ✅');}
+  function onDedup(){
+    // Unique key is the ticket number (t.num) — the app's canonical identifier
+    const seen=new Set();
+    const deduped=tickets.filter(function(t){
+      var n=_norm(t.num||'');
+      if(!n)return true; // no num — keep, cannot dedup
+      if(seen.has(n))return false;
+      seen.add(n);return true;
+    });
+    const removed=tickets.length-deduped.length;
+    if(removed===0){showToast('No duplicates found ✓');return;}
+    persistTickets(deduped);setTickets(deduped);setShowSettings(false);
+    showToast('Removed '+removed+' duplicate ticket'+(removed!==1?'s':'')+' ✅');
+  }
   function onResetMonth(){const label=new Date(activeMonth+'-15').toLocaleDateString('en-GB',{month:'long',year:'numeric'});if(!confirm('Delete ALL tickets from '+label+'? This cannot be undone.'))return;const kept=tickets.filter(function(t){return shiftWatYM(t)!==activeMonth;});persistTickets(kept);setTickets(kept);setShowSettings(false);showToast('🗑 Cleared '+label+' tickets.');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;    // Clear all agent tickets
     ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){localStorage.removeItem('ek_tix_'+id);});

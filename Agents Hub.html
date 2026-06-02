@@ -491,23 +491,14 @@ function loadShifts(){try{return JSON.parse(localStorage.getItem('ek_v2_shifts')
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
 function ticketSig(t){return _norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
 function dedupTickets(existing,incoming){
-  const byNum={};const bySig={};
-  existing.forEach(function(t){
-    const n=_norm(t.num);
-    if(n)byNum[n]=t;
-    else bySig[ticketSig(t)]=t;
-  });
+  // Unique key is the ticket number (t.num) — the app's canonical identifier
+  const seen=new Set();
+  existing.forEach(function(t){var n=_norm(t.num||'');if(n)seen.add(n);});
   const out=[];let dropped=0;
   incoming.forEach(function(t){
-    const n=_norm(t.num);
-    if(n){
-      if(byNum[n]){dropped++;return;}
-      out.push(t);byNum[n]=t;
-    } else {
-      const sig=ticketSig(t);
-      if(bySig[sig]){dropped++;return;}
-      out.push(t);bySig[sig]=t;
-    }
+    var n=_norm(t.num||'');
+    if(n&&seen.has(n)){dropped++;return;}
+    out.push(t);if(n)seen.add(n);
   });
   return{kept:out,dropped:dropped};
 }
