@@ -1240,9 +1240,12 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
 function DailyReport({tickets,onUpdate,onSettings}){
   const[activeMonth,setActiveMonth]=React.useState('june');
   const[cfFilter,setCfFilter]=React.useState('all');
+  const[cfSearch,setCfSearch]=React.useState('');
+  const[cfCat,setCfCat]=React.useState('all');
+  const[cfResp,setCfResp]=React.useState('all');
 
-  // ── May data ──────────────────────────────────────────────────────
-  const mayTix=tickets.filter(function(t){return t.created&&t.created.startsWith('2026-05');});
+  // ── Month data via shift-aware date ───────────────────────────────
+  const mayTix=tickets.filter(function(t){return shiftWatYM(t)==='2026-05';});
   const mayRes=mayTix.filter(function(t){return t.status==='resolved';}).length;
   const mayPrg=mayTix.filter(function(t){return t.status==='progress';}).length;
   const mayUnr=mayTix.filter(function(t){return t.status==='unresolved';}).length;
@@ -1250,10 +1253,19 @@ function DailyReport({tickets,onUpdate,onSettings}){
 
   // ── Carry-forward (pending from May) ──────────────────────────────
   const carryAll=mayTix.filter(function(t){return t.status!=='resolved';});
-  const carryFiltered=cfFilter==='all'?carryAll:carryAll.filter(function(t){return t.status===cfFilter;});
+  const carryFiltered=(function(){
+    var r=carryAll;
+    if(cfFilter!=='all')r=r.filter(function(t){return t.status===cfFilter;});
+    if(cfCat!=='all')r=r.filter(function(t){return (t.category||'').split('/')[0].trim()===cfCat;});
+    if(cfResp!=='all')r=r.filter(function(t){return (t.resp||t.responsible||'')===cfResp;});
+    if(cfSearch){var q=cfSearch.toLowerCase();r=r.filter(function(t){return (t.num||'').toLowerCase().includes(q)||(t.name||'').toLowerCase().includes(q)||(t.account||'').toLowerCase().includes(q)||(t.phone||'').includes(q);});}
+    return r;
+  })();
+  const carryCats=[...new Set(carryAll.map(function(t){return (t.category||'Uncategorised').split('/')[0].trim();}))].sort();
+  const carryResps=[...new Set(carryAll.map(function(t){return t.resp||t.responsible||'';}).filter(Boolean))].sort();
 
   // ── June data ─────────────────────────────────────────────────────
-  const juneTix=tickets.filter(function(t){return t.created&&t.created.startsWith('2026-06');});
+  const juneTix=tickets.filter(function(t){return shiftWatYM(t)==='2026-06';});
   const juneRes=juneTix.filter(function(t){return t.status==='resolved';}).length;
   const junePrg=juneTix.filter(function(t){return t.status==='progress';}).length;
   const juneUnr=juneTix.filter(function(t){return t.status==='unresolved';}).length;
@@ -1421,18 +1433,29 @@ function DailyReport({tickets,onUpdate,onSettings}){
     );
   }
 
-  // ── Filter pills ──────────────────────────────────────────────────
-  function filterPills(){
-    var opts=[
-      {k:'all',   label:'All ('+carryAll.length+')'},
-      {k:'unresolved',label:'Unresolved ('+mayUnr+')'},
-      {k:'progress',  label:'In Progress ('+mayPrg+')'},
-    ];
-    return React.createElement('div',{style:{display:'flex',gap:6}},
-      opts.map(function(o){
-        var on=cfFilter===o.k;
-        return React.createElement('button',{key:o.k,onClick:function(){setCfFilter(o.k);},style:{padding:'5px 11px',borderRadius:6,border:'1px solid '+(on?'rgba(245,158,11,.5)':'rgba(255,255,255,.1)'),background:on?'rgba(245,158,11,.15)':'transparent',color:on?'#FCD34D':'var(--muted)',font:'600 10px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}},o.label);
-      })
+  // ── Search + filter bar ───────────────────────────────────────────
+  function filterBar(){
+    var INPUT={background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.15)',color:'var(--fg)',borderRadius:7,padding:'6px 10px',font:'500 11px Sora,sans-serif',height:32,outline:'none'};
+    var SEL=Object.assign({},INPUT,{cursor:'pointer'});
+    return React.createElement('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}},
+      React.createElement('input',{value:cfSearch,onChange:function(e){setCfSearch(e.target.value);},placeholder:'🔍 Search ticket # · customer · phone',style:Object.assign({},INPUT,{minWidth:200,flex:'1 1 200px'})}),
+      React.createElement('select',{value:cfFilter,onChange:function(e){setCfFilter(e.target.value);},style:SEL},
+        React.createElement('option',{value:'all'},'All statuses ('+carryAll.length+')'),
+        React.createElement('option',{value:'unresolved'},'Unresolved ('+mayUnr+')'),
+        React.createElement('option',{value:'progress'},'In Progress ('+mayPrg+')')
+      ),
+      React.createElement('select',{value:cfCat,onChange:function(e){setCfCat(e.target.value);},style:SEL},
+        React.createElement('option',{value:'all'},'All categories'),
+        carryCats.map(function(c){return React.createElement('option',{key:c,value:c},c);})
+      ),
+      React.createElement('select',{value:cfResp,onChange:function(e){setCfResp(e.target.value);},style:SEL},
+        React.createElement('option',{value:'all'},'All parties'),
+        carryResps.map(function(r){return React.createElement('option',{key:r,value:r},r.split(' ').slice(0,2).join(' '));})
+      ),
+      (cfSearch||cfFilter!=='all'||cfCat!=='all'||cfResp!=='all')&&React.createElement('button',{
+        onClick:function(){setCfSearch('');setCfFilter('all');setCfCat('all');setCfResp('all');},
+        style:{padding:'5px 10px',borderRadius:6,border:'1px solid rgba(239,68,68,.4)',background:'rgba(239,68,68,.1)',color:'#FCA5A5',font:'600 10px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}
+      },'✕ Clear')
     );
   }
 
@@ -1553,7 +1576,7 @@ function DailyReport({tickets,onUpdate,onSettings}){
                 <div style={{font:'700 9px/1 Sora,sans-serif',color:'#FCD34D',textTransform:'uppercase',letterSpacing:'.14em',marginBottom:4}}>CARRIED FORWARD TO JUNE 2026</div>
                 <div style={{font:'600 13px/1 Sora,sans-serif',color:'#fff'}}>{carryAll.length} tickets still pending · Update in June view when support resolves</div>
               </div>
-              {filterPills()}
+              {filterBar()}
             </div>
             {carryTable(carryFiltered)}
           </div>
@@ -1611,7 +1634,7 @@ function DailyReport({tickets,onUpdate,onSettings}){
                   </div>
                 </div>
               </div>
-              <div style={{marginTop:12,display:'flex',justifyContent:'flex-end'}}>{filterPills()}</div>
+              <div style={{marginTop:12,display:'flex',justifyContent:'flex-end'}}>{filterBar()}</div>
             </div>
             {carryTable(carryFiltered)}
           </div>
