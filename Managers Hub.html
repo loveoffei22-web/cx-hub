@@ -1023,25 +1023,19 @@ function Dashboard({tickets,carryTix,shifts,onShift,onSettings,onNav,signedInNam
 
       {/* BACKLOG PROGRESS + RESPONSIBLE PARTY LEADERBOARD */}
       {(function(){
-        var TODAY=new Date('2026-06-01T00:00:00');
-        // Carry-forward: pending from any closed month
-        var allPending=tickets.filter(function(t){
-          var ym=t.created?t.created.slice(0,7):'';
-          var watNowYM=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,7);
-          return ym&&ym<watNowYM&&t.status!=='resolved';
-        });
-        var allCarry=tickets.filter(function(t){
-          var ym=t.created?t.created.slice(0,7):'';
-          var watNowYM=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,7);
-          return ym&&ym<watNowYM;
-        });
+        var TODAY=new Date();
+        // Carry-forward: use carryTix (unresolved from prev month) passed from App
+        // allCarry = all tickets from prior months (any status), allPending = unresolved subset
+        var watNowYM=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,7);
+        var allCarry=tickets.filter(function(t){var ym=shiftWatYM(t);return ym&&ym<watNowYM;});
+        var allPending=allCarry.filter(function(t){return t.status!=='resolved';});
         var cfTotal=allCarry.length;
         var cfResolved=allCarry.filter(function(t){return t.status==='resolved';}).length;
         var cfPending=cfTotal-cfResolved;
         var cfPct=cfTotal?Math.round(cfResolved/cfTotal*100):0;
         var cfCrit=allPending.filter(function(t){
-          if(!t.created)return false;
-          return Math.floor((TODAY-new Date(t.created+'T00:00:00'))/86400000)>=14;
+          var d=shiftWatDate(t);if(!d)return false;
+          return Math.floor((TODAY-new Date(d+'T00:00:00'))/86400000)>=14;
         }).length;
 
         // Responsible party leaderboard from ALL tickets
@@ -4453,7 +4447,7 @@ function CloudSync({tickets,setTickets,showToast}){
         norm1={manager:flatTickets};
       }
       const cloudNorm=Object.assign({},norm1);
-      let count=0;const merged=[...tickets];
+      let count=0;let merged=[...tickets];
       Object.keys(cloudNorm).forEach(function(agentId){
         if(agentId==='_shifts'&&cloudNorm._shifts&&typeof cloudNorm._shifts==='object'){try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloudNorm._shifts));}catch(e){}return;}
         if(agentId==='_guide'&&Array.isArray(cloudNorm._guide)&&cloudNorm._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloudNorm._guide));}catch(e){}return;}
