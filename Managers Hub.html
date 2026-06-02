@@ -851,7 +851,7 @@ function ShiftPill({shift}){const m={day:{c:'#FCD34D',bg:'rgba(252,211,77,.15)',
 // ── DASHBOARD ──────────────────────────────────────────────────────
 const SLOTS=[{id:'9am',label:'9AM Handover',start:9,end:10},{id:'12pm',label:'12PM Update',start:12,end:13},{id:'cob',label:'4PM COB',start:16,end:17}];
 
-function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
+function Dashboard({tickets,carryTix,shifts,onShift,onSettings,onNav,signedInName}){
   const[now,setNow]=useState(()=>new Date());
   useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
   const wat=new Date(now.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
@@ -862,10 +862,13 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
   const greetE=h<12?'☀️':h<17?'🌤️':'🌙';
   const dayProg=Math.min(Math.round(((h*60+m)/(17*60))*100),100);
 
+  const carry=Array.isArray(carryTix)?carryTix:[];
+  const carryPrg=carry.filter(function(t){return t.status==='progress';}).length;
+  const carryUnr=carry.filter(function(t){return t.status==='unresolved';}).length;
   const all=tickets.length;
   const res=tickets.filter(function(t){return t.status==='resolved';}).length;
-  const prg=tickets.filter(function(t){return t.status==='progress';}).length;
-  const unr=tickets.filter(function(t){return t.status==='unresolved';}).length;
+  const prg=tickets.filter(function(t){return t.status==='progress';}).length+carryPrg;
+  const unr=tickets.filter(function(t){return t.status==='unresolved';}).length+carryUnr;
   const watTodayFull=watTodayStr();const today=tickets.filter(function(t){if(t.created){var d=new Date(t.created);if(!isNaN(d.getTime())){var w=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));var ds=w.getFullYear()+'-'+String(w.getMonth()+1).padStart(2,'0')+'-'+String(w.getDate()).padStart(2,'0');return ds===watTodayFull;}}if(t.day&&t.day>0){return t.day===watDayNow()&&String(t.created||'').startsWith(watTodayFull.slice(0,7));}return false;});
   const rate=all>0?Math.round(res/all*100):0;
 
@@ -1167,16 +1170,16 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
             <div style={{padding:'16px',display:'flex',alignItems:'center',gap:16}}>
               <DonutChart resolved={res} progress={prg} unresolved={unr}/>
               <div style={{flex:1}}>
-                {[{label:'Resolved',v:res,c:'#22C55E'},{label:'In Progress',v:prg,c:'#F59E0B'},{label:'Unresolved',v:unr,c:'#EF4444'}].map(function(s){return(
+                {[{label:'Resolved',v:res,c:'#22C55E'},{label:'In Progress',v:prg,c:'#F59E0B',sub:carryPrg>0?'+'+carryPrg+' carried':null},{label:'Unresolved',v:unr,c:'#EF4444',sub:carryUnr>0?'+'+carryUnr+' carried':null}].map(function(s){var total=res+prg+unr||1;return(
                   <div key={s.label} style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
                     <div style={{width:9,height:9,borderRadius:'50%',background:s.c,flexShrink:0,boxShadow:'0 0 6px '+s.c}}/>
                     <div style={{flex:1}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
-                        <span style={{font:'600 11px/1 Sora,sans-serif',color:'var(--text)'}}>{s.label}</span>
+                        <span style={{font:'600 11px/1 Sora,sans-serif',color:'var(--text)'}}>{s.label}{s.sub&&<span style={{font:'500 9px Sora,sans-serif',color:'#F59E0B',marginLeft:4}}>{s.sub}</span>}</span>
                         <span style={{font:"700 11px/1 'JetBrains Mono',monospace",color:s.c}}>{s.v}</span>
                       </div>
                       <div style={{height:3,background:'rgba(255,255,255,.06)',borderRadius:3}}>
-                        <div style={{height:3,width:(all?Math.round(s.v/all*100):0)+'%',background:s.c,borderRadius:3,transition:'width .6s'}}/>
+                        <div style={{height:3,width:(Math.round(s.v/total*100))+'%',background:s.c,borderRadius:3,transition:'width .6s'}}/>
                       </div>
                     </div>
                   </div>);})}
@@ -1184,6 +1187,7 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
                   <span style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Resolution rate</span>
                   <span style={{font:"800 15px/1 'JetBrains Mono',monospace",color:'#4ADE80'}}>{rate}%</span>
                 </div>
+                {carry.length>0&&<div style={{marginTop:6,font:'500 9px Sora,sans-serif',color:'var(--sub)',borderTop:'1px solid var(--bsoft)',paddingTop:6}}>Includes {carry.length} pending ticket{carry.length!==1?'s':''} carried from prior month</div>}
               </div>
             </div>
           </div>
@@ -2867,10 +2871,16 @@ function SlotReport({tickets,showToast}){
 
 // ── REPORTS SHARED HELPERS ────────────────────────────────────────
 function shiftWatDate(t){
-  var raw=t.created||t.received||t.receivedAt;
-  if(!raw)return null;
+  var raw=t.created||t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||t.Timestamp||'';
+  if(!raw||typeof raw==='number')return null;
+  raw=String(raw).trim();if(!raw)return null;
   try{
-    var d=new Date(raw);if(isNaN(d.getTime()))return null;
+    var d=new Date(raw);
+    if(isNaN(d.getTime())){
+      var dm=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(dm)d=new Date(dm[3]+'-'+dm[2].padStart(2,'0')+'-'+dm[1].padStart(2,'0'));
+      if(isNaN(d.getTime()))return null;
+    }
     var wat=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
     if(wat.getHours()<17)wat.setDate(wat.getDate()-1);
     return wat.getFullYear()+'-'+String(wat.getMonth()+1).padStart(2,'0')+'-'+String(wat.getDate()).padStart(2,'0');
@@ -4412,7 +4422,7 @@ function CloudSync({tickets,setTickets,showToast}){
               issue:t.note||t.title||'',resp:t.assignee||'',
               status:STATUS_MAP_N[(t.status||'').toLowerCase()]||'unresolved',
               note:t.resolutionNote||'',day:day.dayNum||new Date().getDate(),
-              agent:t.agent||'manager',created:t.created||'',
+              agent:t.agent||'manager',created:t.created||t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||'',
             });
           });
         });
@@ -4425,7 +4435,13 @@ function CloudSync({tickets,setTickets,showToast}){
         if(agentId==='_guide'&&Array.isArray(cloudNorm._guide)&&cloudNorm._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloudNorm._guide));}catch(e){}return;}
         if(agentId.charAt(0)==='_')return;
         if(!Array.isArray(cloudNorm[agentId]))return;
-        const r=dedupTickets(merged,cloudNorm[agentId]);
+        // Ensure every pulled ticket has a 'created' field for month-grouping
+        const normalised=cloudNorm[agentId].map(function(t){
+          if(t.created)return t;
+          var d=t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||'';
+          return d?Object.assign({},t,{created:d}):t;
+        });
+        const r=dedupTickets(merged,normalised);
         r.kept.forEach(function(t){merged.push(t);count++;});
       });
       persistTickets(merged);setTickets(merged);
@@ -4645,7 +4661,7 @@ function CloudSync({tickets,setTickets,showToast}){
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────
-function Settings({theme,onTheme,onClose,onReset,onResetMonth,onDedup,activeMonth}){
+function Settings({theme,onTheme,onClose,onReset,onResetMonth,onDedup,onPurge,activeMonth}){
   const themes=[
     {id:'auto',  label:'Auto ✨',   sw:'linear-gradient(135deg,#F97316 0%,#2563EB 40%,#030712 100%)', desc:'Switches with the time of day'},
     {id:'bright',label:'Bright ☀️', sw:'linear-gradient(135deg,#F6F8FF 0%,#D8DFFF 100%)',            desc:'Clean white — morning default'},
@@ -4689,7 +4705,8 @@ function Settings({theme,onTheme,onClose,onReset,onResetMonth,onDedup,activeMont
         <div style={{borderTop:'1px solid var(--bsoft)',paddingTop:16}}>
           <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(59,130,246,.12)',borderColor:'rgba(59,130,246,.3)',color:'#93C5FD'}} onClick={onDedup}>🧹 Remove Duplicate Tickets</button>
           <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(245,158,11,.12)',borderColor:'rgba(245,158,11,.3)',color:'#FCD34D'}} onClick={onResetMonth}>📅 Reset Current Month ({activeMonth})</button>
-          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset Entire App (all months)</button>
+          <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(239,68,68,.1)',borderColor:'rgba(239,68,68,.3)',color:'#FCA5A5'}} onClick={onPurge}>🗑 Purge Pre-May 2026 Test Data</button>
+          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>⚠️ Reset Entire App (all months)</button>
           <div style={{font:'500 10px Sora,sans-serif',color:'var(--sub)',textAlign:'center',marginTop:8}}>Reset clears all tickets from localStorage</div>
         </div>
       </div>
@@ -4725,8 +4742,10 @@ function App(){
   const _wnow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const currentYM=_wnow.getFullYear()+'-'+String(_wnow.getMonth()+1).padStart(2,'0');
   const[activeMonth,setActiveMonth]=useState(function(){
-    var saved=localStorage.getItem('ek_active_month');
-    return saved||currentYM;
+    // Boot: pick latest month from stored tickets, fall back to currentYM
+    var stored=[];try{stored=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');}catch(e){}
+    var max='';stored.forEach(function(t){var ym=shiftWatYM(t);if(ym&&ym>max)max=ym;});
+    return max||currentYM;
   });
   const availMonths=React.useMemo(function(){
     var s=new Set();
@@ -4734,6 +4753,19 @@ function App(){
     s.add(currentYM);
     return Array.from(s).sort();
   },[tickets,currentYM]);
+  // Carry-forward: unresolved tickets from the month immediately before activeMonth
+  const prevYM=React.useMemo(function(){var d=new Date(activeMonth+'-15');d.setMonth(d.getMonth()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');},[activeMonth]);
+  const carryTix=React.useMemo(function(){return tickets.filter(function(t){return shiftWatYM(t)===prevYM&&t.status!=='resolved';});},[tickets,prevYM]);
+
+  // Auto-snap to latest month whenever new ticket data arrives
+  const latestYM=React.useMemo(function(){
+    var max='';tickets.forEach(function(t){var ym=shiftWatYM(t);if(ym&&ym>max)max=ym;});
+    return max||currentYM;
+  },[tickets,currentYM]);
+  React.useEffect(function(){
+    setActiveMonth(latestYM);
+    localStorage.setItem('ek_active_month',latestYM);
+  },[latestYM]);
   const viewTickets=React.useMemo(function(){
     return tickets.filter(function(t){return shiftWatYM(t)===activeMonth;});
   },[tickets,activeMonth]);
@@ -4788,6 +4820,7 @@ function App(){
 
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
+  function onPurge(){if(!confirm('Delete ALL tickets received before May 1 2026 (test data)? This cannot be undone.'))return;const kept=tickets.filter(function(t){var d=shiftWatDate(t);return d?d>='2026-05-01':true;});const removed=tickets.length-kept.length;persistTickets(kept);setTickets(kept);setShowSettings(false);showToast('🗑 Purged '+removed+' pre-May test ticket'+(removed!==1?'s':'')+' ✅');}
   function onDedup(){const seen=new Set();const deduped=tickets.filter(function(t){if(seen.has(t.id))return false;seen.add(t.id);return true;});const removed=tickets.length-deduped.length;if(removed===0){showToast('No duplicates found ✓');return;}persistTickets(deduped);setTickets(deduped);setShowSettings(false);showToast('Removed '+removed+' duplicate ticket'+(removed>1?'s':'')+' ✅');}
   function onResetMonth(){const label=new Date(activeMonth+'-15').toLocaleDateString('en-GB',{month:'long',year:'numeric'});if(!confirm('Delete ALL tickets from '+label+'? This cannot be undone.'))return;const kept=tickets.filter(function(t){return shiftWatYM(t)!==activeMonth;});persistTickets(kept);setTickets(kept);setShowSettings(false);showToast('🗑 Cleared '+label+' tickets.');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;    // Clear all agent tickets
@@ -4803,7 +4836,7 @@ function App(){
   if(!signedIn)return <Signin onSignIn={onSignIn}/>;
   const W=collapsed?64:220;
   const screens={
-    dashboard: <Dashboard tickets={viewTickets} shifts={shifts} onShift={onShift} onSettings={()=>setShowSettings(true)} onNav={setScreen}/>,
+    dashboard: <Dashboard tickets={viewTickets} carryTix={carryTix} shifts={shifts} onShift={onShift} onSettings={()=>setShowSettings(true)} onNav={setScreen}/>,
     daily:     <DailyReport tickets={tickets} onUpdate={onUpdate} onSettings={()=>setShowSettings(true)}/>,
     all:       <AllComplaints tickets={viewTickets} onUpdate={onUpdate} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});showToast('Updated '+ids.length+' ticket'+(ids.length>1?'s':'')+' ✅');}} onBatchUpdate={function(updates){setTickets(function(prev){const next=prev.map(function(t){const u=updates.find(function(x){return x.id===t.id;});return u?Object.assign({},t,u):t;});persistTickets(next);return next;});showToast('✅ Batch-updated '+updates.length+' tickets');}} onDelete={function(ids){setTickets(function(prev){const next=prev.filter(function(t){return !ids.includes(t.id);});persistTickets(next);return next;});showToast('🗑 Deleted '+ids.length+' ticket'+(ids.length>1?'s':'')+' permanently.');}} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
     log:       <LogTicket tickets={tickets} onAdd={onAdd} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
@@ -4826,7 +4859,7 @@ function App(){
       <main className={'main'+(collapsed?' nc':'')} style={{paddingLeft:W}}>
         {screens[screen]||screens.dashboard}
       </main>
-      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset} onResetMonth={onResetMonth} onDedup={onDedup} activeMonth={activeMonth}/>}
+      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset} onResetMonth={onResetMonth} onDedup={onDedup} onPurge={onPurge} activeMonth={activeMonth}/>}
       <Toast toast={toast}/>
     </div>
   );
