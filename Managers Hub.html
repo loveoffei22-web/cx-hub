@@ -134,6 +134,51 @@ body[data-theme="bright"] .main-inner .card-head span{color:#3A4A90!important;}
 body[data-theme="bright"] .main-inner .btn-sm{background:rgba(68,85,168,.08)!important;color:#1A2560!important;border-color:#C0CAEE!important;}
 body[data-theme="bright"] .main-inner .btn-sm:disabled{opacity:.4;}
 body[data-theme="bright"] .main-inner .btn-primary{background:linear-gradient(135deg,#F97316,#EA6C0A)!important;color:#fff!important;border-color:#F97316!important;}
+/* Catch-all: force all text in main content area to be dark in bright theme */
+body[data-theme="bright"] .main *{color:inherit;}
+body[data-theme="bright"] .main{color:#080F2E!important;}
+body[data-theme="bright"] .main .card{background:#fff!important;color:#080F2E!important;}
+body[data-theme="bright"] .main .page-header h1{color:#F97316!important;}
+body[data-theme="bright"] .main .page-sub{color:#3A4A90!important;}
+/* Fix hardcoded transparent/white rgba backgrounds used in dark theme */
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.03)"]{background:rgba(68,85,168,.04)!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.05)"]{background:rgba(68,85,168,.05)!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.08)"]{background:rgba(68,85,168,.06)!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.1)"]:not(img):not(svg){background:rgba(68,85,168,.08)!important;}
+/* Fix text that's hard-coded white/near-white */
+body[data-theme="bright"] .main [style*="color:#fff"]{color:#080F2E!important;}
+body[data-theme="bright"] .main [style*="color:rgba(255,255,255"]{color:#3A4A90!important;}
+body[data-theme="bright"] .main [style*="color:#E8F0FF"]{color:#080F2E!important;}
+body[data-theme="bright"] .main [style*="color:#CBD5E1"]{color:#1A2560!important;}
+body[data-theme="bright"] .main [style*="color:#94A3B8"]{color:#3A4A90!important;}
+body[data-theme="bright"] .main [style*="color:#64748B"]{color:#3A4A90!important;}
+/* Fix stat/KPI cards that use dark bg */
+body[data-theme="bright"] .main [style*="background:#0C1830"]{background:#EDF0FF!important;}
+body[data-theme="bright"] .main [style*="background:#1E2A45"]{background:#F5F7FF!important;}
+body[data-theme="bright"] .main [style*="background:#162035"]{background:#F5F7FF!important;}
+body[data-theme="bright"] .main [style*="background:#0A1628"]{background:#EDF0FF!important;}
+body[data-theme="bright"] .main [style*="background:var(--bg2)"]{background:#EDF0FF!important;}
+body[data-theme="bright"] .main [style*="background:var(--bdark)"]{background:#D0D8F8!important;}
+/* Inputs, selects, textareas everywhere in main */
+body[data-theme="bright"] .main input,
+body[data-theme="bright"] .main select,
+body[data-theme="bright"] .main textarea{background:#fff!important;border-color:#D0D8F8!important;color:#080F2E!important;}
+body[data-theme="bright"] .main input::placeholder{color:#94A3B8!important;}
+/* Tables */
+body[data-theme="bright"] .main table td{color:#080F2E!important;}
+body[data-theme="bright"] .main table th{color:#3A4A90!important;}
+body[data-theme="bright"] .main table tr{border-color:#E5EAFF!important;}
+/* Muted text */
+body[data-theme="bright"] .main [style*="color:var(--muted)"]{color:#3A4A90!important;}
+body[data-theme="bright"] .main [style*="color:var(--fg)"]{color:#080F2E!important;}
+body[data-theme="bright"] .main [style*="color:var(--sub)"]{color:#5060B0!important;}
+/* Buttons */
+body[data-theme="bright"] .main .btn{background:rgba(68,85,168,.06)!important;border-color:#C0CAEE!important;color:#1A2560!important;}
+body[data-theme="bright"] .main .btn-primary{background:linear-gradient(135deg,#F97316,#EA6C0A)!important;color:#fff!important;border-color:#F97316!important;}
+/* Hero/banner area inside main stays dark */
+body[data-theme="bright"] .main .hero-banner [style*="color:#fff"]{color:#fff!important;}
+/* Donut/SVG text */
+body[data-theme="bright"] .main text{fill:#080F2E!important;}
 
 /* ── SOLAR: rich warm amber dark ─────────────────────────── */
 body[data-theme="solar"]{
