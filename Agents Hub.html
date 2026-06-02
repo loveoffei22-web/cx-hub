@@ -2735,16 +2735,7 @@ function App(){
   allTix.forEach(function(t){var ym=shiftWatYM(t);if(ym)_agtMonthSet.add(ym);});
   _agtMonthSet.add(currentYM);
   var availMonths=Array.from(_agtMonthSet).sort();
-  var viewTix=(function(){
-    var monthTix=allTix.filter(function(t){return shiftWatYM(t)===activeMonth;});
-    if(activeMonth===currentYM){
-      var pendingPrior=allTix.filter(function(t){
-        var ym=shiftWatYM(t);return ym&&ym<activeMonth&&t.status!=='resolved';
-      });
-      return pendingPrior.concat(monthTix);
-    }
-    return monthTix;
-  })();
+  var viewTix=allTix.filter(function(t){return shiftWatYM(t)===activeMonth;});
   function setTickets(tix){setTicketsState(tix);if(agent)saveTix(agent.id,tix);}
   function onSignIn(a){
     setAgent(a);document.documentElement.style.setProperty('--agent',a.color);document.documentElement.style.setProperty('--agent-tint',a.tint);

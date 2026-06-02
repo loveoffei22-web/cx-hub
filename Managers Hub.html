@@ -4567,7 +4567,7 @@ function CloudSync({tickets,setTickets,showToast}){
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────
-function Settings({theme,onTheme,onClose,onReset,onDedup}){
+function Settings({theme,onTheme,onClose,onReset,onResetMonth,onDedup,activeMonth}){
   const themes=[
     {id:'auto',  label:'Auto ✨',   sw:'linear-gradient(135deg,#F97316 0%,#2563EB 40%,#030712 100%)', desc:'Switches with the time of day'},
     {id:'bright',label:'Bright ☀️', sw:'linear-gradient(135deg,#F6F8FF 0%,#D8DFFF 100%)',            desc:'Clean white — morning default'},
@@ -4610,7 +4610,8 @@ function Settings({theme,onTheme,onClose,onReset,onDedup}){
         </div>
         <div style={{borderTop:'1px solid var(--bsoft)',paddingTop:16}}>
           <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(59,130,246,.12)',borderColor:'rgba(59,130,246,.3)',color:'#93C5FD'}} onClick={onDedup}>🧹 Remove Duplicate Tickets</button>
-          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset All Data</button>
+          <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(245,158,11,.12)',borderColor:'rgba(245,158,11,.3)',color:'#FCD34D'}} onClick={onResetMonth}>📅 Reset Current Month ({activeMonth})</button>
+          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset Entire App (all months)</button>
           <div style={{font:'500 10px Sora,sans-serif',color:'var(--sub)',textAlign:'center',marginTop:8}}>Reset clears all tickets from localStorage</div>
         </div>
       </div>
@@ -4656,15 +4657,8 @@ function App(){
     return Array.from(s).sort();
   },[tickets,currentYM]);
   const viewTickets=React.useMemo(function(){
-    var monthTix=tickets.filter(function(t){return shiftWatYM(t)===activeMonth;});
-    if(activeMonth===currentYM){
-      var pendingPrior=tickets.filter(function(t){
-        var ym=shiftWatYM(t);return ym&&ym<activeMonth&&t.status!=='resolved';
-      });
-      return pendingPrior.concat(monthTix);
-    }
-    return monthTix;
-  },[tickets,activeMonth,currentYM]);
+    return tickets.filter(function(t){return shiftWatYM(t)===activeMonth;});
+  },[tickets,activeMonth]);
   const[showSettings,setShowSettings]=useState(false);
   const[toast,setToast]=useState(null);
   const toastTimer=useRef(null);
@@ -4717,6 +4711,7 @@ function App(){
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
   function onDedup(){const seen=new Set();const deduped=tickets.filter(function(t){if(seen.has(t.id))return false;seen.add(t.id);return true;});const removed=tickets.length-deduped.length;if(removed===0){showToast('No duplicates found ✓');return;}persistTickets(deduped);setTickets(deduped);setShowSettings(false);showToast('Removed '+removed+' duplicate ticket'+(removed>1?'s':'')+' ✅');}
+  function onResetMonth(){const label=new Date(activeMonth+'-15').toLocaleDateString('en-GB',{month:'long',year:'numeric'});if(!confirm('Delete ALL tickets from '+label+'? This cannot be undone.'))return;const kept=tickets.filter(function(t){return shiftWatYM(t)!==activeMonth;});persistTickets(kept);setTickets(kept);setShowSettings(false);showToast('🗑 Cleared '+label+' tickets.');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;    // Clear all agent tickets
     ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){localStorage.removeItem('ek_tix_'+id);});
     // Clear manager tickets
@@ -4753,7 +4748,7 @@ function App(){
       <main className={'main'+(collapsed?' nc':'')} style={{paddingLeft:W}}>
         {screens[screen]||screens.dashboard}
       </main>
-      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset} onDedup={onDedup}/>}
+      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset} onResetMonth={onResetMonth} onDedup={onDedup} activeMonth={activeMonth}/>}
       <Toast toast={toast}/>
     </div>
   );
