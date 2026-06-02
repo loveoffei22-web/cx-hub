@@ -1187,6 +1187,9 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
   const[fBu,setFBu]=useState('all');
   const[fCat,setFCat]=useState('all');
   const[fOwn,setFOwn]=useState('all');
+  const[fResp,setFResp]=useState('all');
+  const[fFrom,setFFrom]=useState('');
+  const[fTo,setFTo]=useState('');
   const[sort,setSort]=useState('newest');
   const[expanded,setExpanded]=useState(null);
   const[editState,setEditState]=useState({});
@@ -1217,12 +1220,17 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
   }
   const PAGE=100;
 
+  const respOptsA=[...new Set(safeTix.map(function(t){return t.resp;}).filter(Boolean))].sort();
   const filt=safeTix.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(fBu!=='all'&&t.bu!==fBu)return false;
     if(fCat!=='all'&&t.category!==fCat)return false;
     if(fOwn==='mine'&&(t.agent||'')!==agent.id)return false;
     if(fOwn==='updated'&&(t.updatedBy||'')!==agent.id)return false;
+    if(fResp!=='all'&&(t.resp||'')!==fResp)return false;
+    const ticketDate=(t.created||t.receivedAt||'').slice(0,10);
+    if(fFrom&&ticketDate<fFrom)return false;
+    if(fTo&&ticketDate>fTo)return false;
     if(search){const q=search.toLowerCase();const num=String(t.num||'').toLowerCase();if(num.startsWith(q)||num===q)return true;return(t.name+t.phone+t.bu+(t.category||t.issue||'')+(t.addr||'')+t.status).toLowerCase().includes(q);}
     return true;
   }).sort(function(a,b){
@@ -1348,11 +1356,18 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
             <option value="num_desc">Ticket # high → low</option>
             <option value="num_asc">Ticket # low → high</option>
           </select>
+          <select className="sel" style={{flex:'0 0 170px',height:36}} value={fResp} onChange={function(e){setFResp(e.target.value);setPage(0);}}>
+            <option value="all">All resp. parties</option>
+            {respOptsA.map(function(r){return <option key={r} value={r}>{r}</option>;})}
+          </select>
+          <input type="date" className="sel" style={{height:36,flex:'0 0 140px'}} value={fFrom} onChange={function(e){setFFrom(e.target.value);setPage(0);}}/>
+          <input type="date" className="sel" style={{height:36,flex:'0 0 140px'}} value={fTo} onChange={function(e){setFTo(e.target.value);setPage(0);}}/>
           <div style={{display:'flex',gap:4,flexShrink:0}}>
             {[['all','👥 All'],['mine','🙋 Logged by me'],['updated','✏️ Updated by me']].map(function([v,l]){
               return <button key={v} onClick={function(){setFOwn(v);setPage(0);}} style={{padding:'6px 10px',borderRadius:7,border:'1px solid',borderColor:fOwn===v?'var(--agent)':'var(--border)',background:fOwn===v?'var(--agent)':'transparent',color:fOwn===v?'#0A1A4F':'var(--muted)',font:'700 10px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}}>{l}</button>;
             })}
           </div>
+          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all'||fResp!=='all'||fFrom||fTo||sort!=='newest'||fOwn!=='all')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');setFResp('all');setFFrom('');setFTo('');setSort('newest');setFOwn('all');setPage(0);}} style={{height:36}}>Clear</button>}
         </div>
         {totalPages>1&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8,padding:'6px 2px'}}>
             <span style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>Showing <b style={{color:'var(--text)'}}>{safePage*PAGE+1}–{Math.min((safePage+1)*PAGE,filt.length)}</b> of <b style={{color:'var(--ek-gold)'}}>{filt.length}</b></span>

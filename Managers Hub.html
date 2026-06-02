@@ -1555,6 +1555,9 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
   const[fSt,setFSt]=useState('all');
   const[fBu,setFBu]=useState('all');
   const[fCat,setFCat]=useState('all');
+  const[fResp,setFResp]=useState('all');
+  const[fFrom,setFFrom]=useState('');
+  const[fTo,setFTo]=useState('');
   const[sort,setSort]=useState('newest');
   const[expanded,setExpanded]=useState(null);
   const[edits,setEdits]=useState({});
@@ -1599,7 +1602,7 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
   function clearEdit(id){setEdits(function(e){const c=Object.assign({},e);delete c[id];return c;});}
   function saveEdit(t){if(!edits[t.id])return;onUpdate&&onUpdate(Object.assign({},t,edits[t.id]));clearEdit(t.id);}
 
-  useEffect(()=>{setPage(0);},[search,fSt,fBu,fCat,sort]);
+  useEffect(()=>{setPage(0);},[search,fSt,fBu,fCat,fResp,fFrom,fTo,sort]);
 
   // Keyboard shift+arrow selection
   useEffect(function(){
@@ -1620,10 +1623,15 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
     return function(){window.removeEventListener('keydown',onKey);};
   },[lastChecked,paged]);
   const cats=[...new Set(tickets.map(function(t){return t.category;}))].filter(Boolean).sort();
+  const respOpts=[...new Set(tickets.map(function(t){return t.resp;}).filter(Boolean))].sort();
   const filtered=tickets.filter(function(t){
     if(fSt!=='all'&&t.status!==fSt)return false;
     if(fBu!=='all'&&t.bu!==fBu)return false;
     if(fCat!=='all'&&t.category!==fCat)return false;
+    if(fResp!=='all'&&(t.resp||'')!==fResp)return false;
+    const ticketDate=(rptWatDate(t)||(t.created||'').slice(0,10));
+    if(fFrom&&ticketDate<fFrom)return false;
+    if(fTo&&ticketDate>fTo)return false;
     if(search){var q=search.toLowerCase();return(t.num+t.name+t.phone+(t.bu||'')+(t.category||'')+(t.addr||t.address||'')+(t.issue||'')).toLowerCase().includes(q);}
     return true;
   }).sort(function(a,b){
@@ -1811,7 +1819,13 @@ function AllComplaints({tickets,onUpdate,onBulkUpdate,onBatchUpdate,onDelete,sho
             <option value="num_desc">Ticket # high → low</option>
             <option value="num_asc">Ticket # low → high</option>
           </select>
-          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all'||sort!=='newest')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');setSort('newest');}} style={{height:36}}>Clear</button>}
+          <select className="sel" style={{flex:'0 0 170px',height:36}} value={fResp} onChange={function(e){setFResp(e.target.value);}}>
+            <option value="all">All resp. parties</option>
+            {respOpts.map(function(r){return <option key={r} value={r}>{r}</option>;})}
+          </select>
+          <input type="date" className="sel" style={{height:36,flex:'0 0 140px'}} value={fFrom} onChange={function(e){setFFrom(e.target.value);}}/>
+          <input type="date" className="sel" style={{height:36,flex:'0 0 140px'}} value={fTo} onChange={function(e){setFTo(e.target.value);}}/>
+          {(search||fSt!=='all'||fBu!=='all'||fCat!=='all'||fResp!=='all'||fFrom||fTo||sort!=='newest')&&<button className="btn btn-sm btn-danger" onClick={function(){setSearch('');setFSt('all');setFBu('all');setFCat('all');setFResp('all');setFFrom('');setFTo('');setSort('newest');}} style={{height:36}}>Clear</button>}
         </div>
       </div>
 
