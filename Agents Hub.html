@@ -341,12 +341,10 @@ const NAV=[
   {id:'all',      icon:'📂',label:'All Complaints'},
   {id:'tickets',  icon:'📋',label:'My Tickets'},
   {id:'slot',     icon:'📤',label:'Slot Reports'},
-  {id:'guide',    icon:'📖',label:'Support Guide'},
-  {id:'photos',   icon:'📷',label:'Profile Photos'},
   {id:'data',     icon:'📁',label:'Export / Import'},
   {id:'sync',     icon:'☁',label:'Cloud Sync'},
 ];
-const SHIFT_LABELS={day:{emoji:'☀️',text:'Day Shift',sub:'08:00 – 17:00',color:'#FCD34D',bg:'rgba(252,211,77,.15)'},shadow:{emoji:'🌒',text:'Shadow Shift',sub:'17:01 prev – 17:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},night:{emoji:'🌙',text:'Shadow Shift',sub:'17:01 prev – 17:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},off:{emoji:'🔴',text:'Day Off',sub:'',color:'#6B7280',bg:'rgba(107,114,128,.12)'},leave:{emoji:'⛱',text:'Leave',sub:'',color:'#34D399',bg:'rgba(52,211,153,.12)'}};
+const SHIFT_LABELS={day:{emoji:'☀️',text:'Day Shift',sub:'08:00 – 17:00',color:'#FCD34D',bg:'rgba(252,211,77,.15)'},shadow:{emoji:'🌙',text:'Night Shift',sub:'17:01 prev – 17:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},night:{emoji:'🌙',text:'Night Shift',sub:'17:01 prev – 17:00',color:'#818CF8',bg:'rgba(129,140,248,.15)'},off:{emoji:'🔴',text:'Day Off',sub:'',color:'#6B7280',bg:'rgba(107,114,128,.12)'},leave:{emoji:'⛱',text:'Leave',sub:'',color:'#34D399',bg:'rgba(52,211,153,.12)'}};
 
 // parse helpers
 const stripEmoji=function(s){return(s||'').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{200D}\u{20E3}]+/gu,'').replace(/\s{2,}/g,' ').trim();};
@@ -465,18 +463,27 @@ function saveTix(id,tix){
   try{localStorage.setItem('ek_tix_'+id,JSON.stringify(tix));}catch(e){}
 }
 function loadShifts(){try{return JSON.parse(localStorage.getItem('ek_v2_shifts')||'{}');}catch{return{};}}
-// De-dup signature: ticket# + name + complaint text
+// De-dup: ticket number is the sole key when present; fall back to full sig only for numberless tickets
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
-function ticketSig(t){return _norm(t.num)+'|'+_norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
+function ticketSig(t){return _norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
 function dedupTickets(existing,incoming){
   const byNum={};const bySig={};
-  existing.forEach(function(t){if(t.num)byNum[_norm(t.num)]=t;bySig[ticketSig(t)]=t;});
+  existing.forEach(function(t){
+    const n=_norm(t.num);
+    if(n)byNum[n]=t;
+    else bySig[ticketSig(t)]=t;
+  });
   const out=[];let dropped=0;
   incoming.forEach(function(t){
-    const n=_norm(t.num);const sig=ticketSig(t);
-    if(n&&byNum[n]){dropped++;return;}
-    if(bySig[sig]){dropped++;return;}
-    out.push(t);if(n)byNum[n]=t;bySig[sig]=t;
+    const n=_norm(t.num);
+    if(n){
+      if(byNum[n]){dropped++;return;}
+      out.push(t);byNum[n]=t;
+    } else {
+      const sig=ticketSig(t);
+      if(bySig[sig]){dropped++;return;}
+      out.push(t);bySig[sig]=t;
+    }
   });
   return{kept:out,dropped:dropped};
 }
@@ -551,6 +558,117 @@ function LiveClock(){
     </div>
   );
 }
+
+// ── CARRY-FORWARD BANNER (brought forward from May) ───────────────
+function CarryForwardBanner({agent,allTix}){
+  const[cfShow,setCfShow]=useState('my');
+  const TODAY=new Date('2026-06-01T00:00:00');
+
+  const carryAll=allTix.filter(function(t){
+    return t.created&&t.created.startsWith('2026-05')&&t.status!=='resolved';
+  });
+  const myCarry=carryAll.filter(function(t){
+    var resp=(t.responsible||t.resp||'').toLowerCase();
+    var aFirst=(agent.name||'').toLowerCase().split(' ')[0];
+    return aFirst&&resp&&resp.includes(aFirst);
+  });
+
+  if(carryAll.length===0)return null;
+
+  function daysOpen(t){if(!t.created)return 0;return Math.max(0,Math.floor((TODAY-new Date(t.created+'T00:00:00'))/86400000));}
+  function agingStyle(d){
+    if(d>=14)return{bg:'rgba(239,68,68,.18)',color:'#FCA5A5',border:'rgba(239,68,68,.3)',icon:'🔴'};
+    if(d>=7) return{bg:'rgba(245,158,11,.18)',color:'#FCD34D',border:'rgba(245,158,11,.3)',icon:'🟡'};
+    return       {bg:'rgba(34,197,94,.18)', color:'#4ADE80',border:'rgba(34,197,94,.3)', icon:'🟢'};
+  }
+
+  var shown=cfShow==='my'&&myCarry.length>0?myCarry:carryAll;
+  var critical=carryAll.filter(function(t){return daysOpen(t)>=14;}).length;
+
+  return(
+    <div style={{marginBottom:16,background:'rgba(245,158,11,.05)',border:'1.5px solid rgba(245,158,11,.22)',borderRadius:12,overflow:'hidden'}}>
+
+      {/* Header */}
+      <div style={{padding:'13px 18px',background:'linear-gradient(100deg,rgba(245,158,11,.11) 0%,rgba(239,68,68,.07) 100%)',borderBottom:'1px solid rgba(245,158,11,.18)',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+        <span style={{fontSize:18}}>⚠️</span>
+        <div style={{flex:1}}>
+          <div style={{font:'700 9px/1 Sora,sans-serif',color:'#FCD34D',textTransform:'uppercase',letterSpacing:'.14em',marginBottom:5}}>BROUGHT FORWARD FROM MAY 2026</div>
+          <div style={{font:'600 13px/1.2 Sora,sans-serif',color:'#fff'}}>{carryAll.length} open tickets riding into June · Update when support resolves</div>
+        </div>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          {critical>0&&<span style={{padding:'4px 10px',borderRadius:20,font:'700 10px/1 Sora,sans-serif',background:'rgba(239,68,68,.15)',color:'#FCA5A5',border:'1px solid rgba(239,68,68,.25)'}}>🔴 {critical} critical</span>}
+          <div style={{display:'flex',gap:5}}>
+            {[{k:'my',l:'Mine'+(myCarry.length>0?' ('+myCarry.length+')':'')},{k:'all',l:'All ('+carryAll.length+')'}].map(function(o){
+              var on=cfShow===o.k;
+              return React.createElement('button',{key:o.k,onClick:function(){setCfShow(o.k);},style:{padding:'5px 11px',borderRadius:6,border:'1px solid '+(on?'rgba(245,158,11,.5)':'rgba(255,255,255,.1)'),background:on?'rgba(245,158,11,.15)':'transparent',color:on?'#FCD34D':'var(--muted)',font:'600 10px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}},o.l);
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Mini stats */}
+      <div style={{display:'flex',borderBottom:'1px solid var(--border)'}}>
+        {[
+          {l:'Unresolved',v:carryAll.filter(function(t){return t.status==='unresolved';}).length,c:'#FCA5A5',bg:'rgba(239,68,68,.08)'},
+          {l:'In Progress',v:carryAll.filter(function(t){return t.status==='progress';}).length,c:'#FCD34D',bg:'rgba(245,158,11,.08)'},
+          {l:'Critical (14d+)',v:critical,c:'#FCA5A5',bg:'rgba(239,68,68,.06)'},
+          {l:'Shown',v:shown.length,c:'var(--info)',bg:'rgba(59,130,246,.06)'},
+        ].map(function(s){return(
+          <div key={s.l} style={{flex:1,padding:'8px 14px',background:s.bg,borderRight:'1px solid var(--border)',textAlign:'center'}}>
+            <div style={{fontFamily:'JetBrains Mono,monospace',fontWeight:800,fontSize:16,color:s.c}}>{s.v}</div>
+            <div style={{font:'600 9px/1 Sora,sans-serif',color:'var(--muted)',marginTop:3,textTransform:'uppercase'}}>{s.l}</div>
+          </div>
+        );})}
+      </div>
+
+      {/* Table */}
+      <div style={{overflowX:'auto',maxHeight:260,overflowY:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',font:'500 11px/1.4 Sora,sans-serif'}}>
+          <thead>
+            <tr style={{background:'var(--bg2)',position:'sticky',top:0,zIndex:1}}>
+              {['Ticket','Customer','Category','BU','Days Open','Responsible','Status'].map(function(h){return(
+                <th key={h} style={{padding:'8px 12px',textAlign:'left',font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',whiteSpace:'nowrap'}}>{h}</th>
+              );})}
+            </tr>
+          </thead>
+          <tbody>
+            {shown.slice(0,25).map(function(t){
+              var d=daysOpen(t);var ag=agingStyle(d);
+              var ismine=myCarry.includes(t);
+              return(
+                <tr key={t.id||t.num} style={{borderBottom:'1px solid var(--border)',background:ismine?'rgba(255,199,44,.03)':'transparent',transition:'background .15s'}}
+                  onMouseEnter={function(e){e.currentTarget.style.background='rgba(59,130,246,.06)';}}
+                  onMouseLeave={function(e){e.currentTarget.style.background=ismine?'rgba(255,199,44,.03)':'transparent';}}>
+                  <td style={{padding:'8px 12px'}}>
+                    <span style={{fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)',fontSize:11}}>#{t.num}</span>
+                    {ismine&&<span style={{marginLeft:5,fontSize:8,padding:'1px 5px',borderRadius:8,background:'rgba(255,199,44,.15)',color:'var(--agent)',font:'700 8px Sora,sans-serif',verticalAlign:'middle'}}>MINE</span>}
+                  </td>
+                  <td style={{padding:'8px 12px',fontWeight:600,color:'var(--text)',whiteSpace:'nowrap'}}>{t.name}</td>
+                  <td style={{padding:'8px 12px',color:'var(--text2)',fontSize:11,maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{(t.category||'—').split('/')[0].trim()}</td>
+                  <td style={{padding:'8px 12px'}}>
+                    <span style={{display:'inline-flex',padding:'2px 7px',borderRadius:4,font:'700 9px/1 JetBrains Mono,monospace',background:'rgba(29,78,216,.15)',color:'#93C5FD',border:'1px solid rgba(29,78,216,.2)'}}>{t.bu||'—'}</span>
+                  </td>
+                  <td style={{padding:'8px 12px'}}>
+                    <span style={{display:'inline-flex',alignItems:'center',gap:3,padding:'3px 9px',borderRadius:20,fontFamily:'JetBrains Mono,monospace',fontWeight:700,fontSize:10,background:ag.bg,color:ag.color,border:'1px solid '+ag.border}}>{ag.icon} {d}d</span>
+                  </td>
+                  <td style={{padding:'8px 12px',color:ismine?'var(--agent)':'var(--text2)',fontSize:11,whiteSpace:'nowrap',fontWeight:ismine?700:500}}>{(t.responsible||t.resp||'—').split(' ').slice(0,2).join(' ')}</td>
+                  <td style={{padding:'8px 12px'}}>
+                    {t.status==='progress'
+                      ?<span style={{display:'inline-flex',padding:'3px 8px',borderRadius:10,font:'800 9px/1 Sora,sans-serif',background:'rgba(245,158,11,.18)',color:'#FCD34D',border:'1px solid rgba(245,158,11,.3)',textTransform:'uppercase',whiteSpace:'nowrap'}}>⏳ In Progress</span>
+                      :<span style={{display:'inline-flex',padding:'3px 8px',borderRadius:10,font:'800 9px/1 Sora,sans-serif',background:'rgba(239,68,68,.18)',color:'#FCA5A5',border:'1px solid rgba(239,68,68,.3)',textTransform:'uppercase',whiteSpace:'nowrap'}}>🔴 Unresolved</span>}
+                  </td>
+                </tr>
+              );
+            })}
+            {shown.length===0&&<tr><td colSpan={7} style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No carried tickets</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      {shown.length>25&&<div style={{padding:'8px 18px',borderTop:'1px solid var(--border)',font:'600 10px Sora,sans-serif',color:'var(--muted)',textAlign:'center'}}>Showing 25 of {shown.length} · See All Complaints for full list</div>}
+    </div>
+  );
+}
+
 function Dashboard({agent,allTix,shifts}){
   const[weekOffset,setWeekOffset]=useState(0);
   const[view,setView]=useState('month'); // 'today' | 'month'
@@ -631,6 +749,7 @@ function Dashboard({agent,allTix,shifts}){
         <div style={{background:'rgba(37,99,235,.08)',border:'1px solid rgba(37,99,235,.2)',borderRadius:9,padding:'8px 14px',marginBottom:16,display:'flex',alignItems:'center',gap:8}}>
           <span style={{font:'600 11px/1.5 Sora,sans-serif',color:'rgba(147,197,253,.8)'}}>ℹ Roster set by Love (Managers Hub) and synced here automatically. View only — to change your shift, message Love.</span>
         </div>
+        <CarryForwardBanner agent={agent} allTix={allTix}/>
 
         {/* KPI Table Card */}
         <div className="card" style={{marginBottom:18}}>
@@ -687,7 +806,7 @@ function Dashboard({agent,allTix,shifts}){
                       {/* Shift pill */}
                       <td style={{padding:'12px 12px'}}>
                         <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:7,background:sl.bg,border:'1px solid '+(sl.color)+'33',font:'700 11px/1 Sora,sans-serif',color:sl.color,whiteSpace:'nowrap'}}>
-                          {sl.emoji} {shift==='day'?'Day · 08:00–17:00':(shift==='night'||shift==='shadow')?'Shadow · 17:01–17:00':shift==='leave'?'Leave':'Day Off'}
+                          {sl.emoji} {shift==='day'?'Day · 08:00–17:00':(shift==='night'||shift==='shadow')?'Night · 17:01–17:00':shift==='leave'?'Leave':'Day Off'}
                         </div>
                       </td>
                       {/* MTD */}
@@ -817,7 +936,7 @@ function getDutyWindow(agentShift){
     end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
   } else {// Tue–Fri: depends on shift
     var isShadow=(agentShift==='shadow'||agentShift==='night');
-    if(isShadow){// shadow: prev day 17:01 → today 17:00
+    if(isShadow){// night: prev day 17:01 → today 17:00
       var prev=new Date(todayBase);prev.setDate(prev.getDate()-1);
       start=new Date(prev.getFullYear(),prev.getMonth(),prev.getDate(),17,1,0);
       end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
@@ -888,8 +1007,8 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
   const unr=filt.filter(function(t){return t.status==='unresolved';}).length;
 
   function exportCSV(){
-    const rows=[['#','Ticket','Time','Date','Customer','Phone','BU','Category','Status','Note']];
-    filt.forEach(function(t){rows.push([String(filt.indexOf(t)+1),t.num,t.time,fmtDay(t),t.name,t.phone,t.bu,t.category||t.issue||'',t.status,t.note||'']);});
+    const headers=['ID','Customer Name','Customer Address','Meter No./Account No.','Meter No','Account No','Metered','Action Taken','Telephone Number','Email Address','Business Unit','Complaint Description','Assigned to','Status','Complaint Category','Complaint Sub-category','Channel of Complaint','Customer House No','Customer Street Name','Customer State of Resident','Customer Local Govt Area','Disco Code','Forum Name','Complaint House No','Complaint Street Name','Complaint Local Govt Area','Complaint Area','Resolved Date','Closed By','Disco REF No','Customer Service Name','Conversation ID','Created','Created By'];
+    const rows=[headers,...filt.map(function(t,i){return[t.num,t.name,t.addr||t.address||'',t.meter||'',t.meter||'',t.account||'',t.metered||'',t.note||'',t.phone,t.email||'',t.bu,t.issue||t.complaint||'',t.resp||t.responsible||'',t.status,t.category||'','',t.channel||'Mobile App','','','','','','','','','','',t.resolvedDate||'','','',' ',t.name,t.conversationId||'',t.created||'','PowerPlatform'];})];
     const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
     const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='EKEDP_'+agent.id+'_tickets.csv';a.click();
   }
@@ -1059,7 +1178,10 @@ function MyTickets({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agen
 
 // ── ALL COMPLAINTS ──────────────────────────────────────────
 function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
-  const safeTix=Array.isArray(allTix)?allTix:[];
+  // Dedup allTix by ticket number
+  const _rawTix=Array.isArray(allTix)?allTix:[];
+  const _seenNums={};
+  const safeTix=_rawTix.filter(function(t){const n=String(t.num||'').trim().toLowerCase();if(!n)return true;if(_seenNums[n])return false;_seenNums[n]=true;return true;});
   const[search,setSearch]=useState('');
   const[fSt,setFSt]=useState('all');
   const[fBu,setFBu]=useState('all');
@@ -1101,7 +1223,7 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
     if(fCat!=='all'&&t.category!==fCat)return false;
     if(fOwn==='mine'&&(t.agent||'')!==agent.id)return false;
     if(fOwn==='updated'&&(t.updatedBy||'')!==agent.id)return false;
-    if(search){const q=search.toLowerCase();return(t.num+t.name+t.phone+t.bu+(t.category||t.issue||'')+(t.addr||'')+t.status).toLowerCase().includes(q);}
+    if(search){const q=search.toLowerCase();const num=String(t.num||'').toLowerCase();if(num.startsWith(q)||num===q)return true;return(t.name+t.phone+t.bu+(t.category||t.issue||'')+(t.addr||'')+t.status).toLowerCase().includes(q);}
     return true;
   }).sort(function(a,b){
     const an=parseInt(a.num,10)||0;const bn=parseInt(b.num,10)||0;
@@ -1179,8 +1301,8 @@ function AllComplaints({agent,allTix,onUpdate,onDelete,showToast}){
     }
   }
   function exportCSV(){
-    const rows=[['#','Ticket','Time','Day','Customer','Phone','BU','Category','Status','Note']];
-    filt.forEach(function(t,i){rows.push([i+1,t.num,t.time||'',t.day||'',t.name,t.phone,t.bu,t.category||t.issue||'',t.status,t.note||'']);});
+    const headers=['ID','Customer Name','Customer Address','Meter No./Account No.','Meter No','Account No','Metered','Action Taken','Telephone Number','Email Address','Business Unit','Complaint Description','Assigned to','Status','Complaint Category','Complaint Sub-category','Channel of Complaint','Customer House No','Customer Street Name','Customer State of Resident','Customer Local Govt Area','Disco Code','Forum Name','Complaint House No','Complaint Street Name','Complaint Local Govt Area','Complaint Area','Resolved Date','Closed By','Disco REF No','Customer Service Name','Conversation ID','Created','Created By'];
+    const rows=[headers,...filt.map(function(t,i){return[t.num,t.name,t.addr||t.address||'',t.meter||'',t.meter||'',t.account||'',t.metered||'',t.note||'',t.phone,t.email||'',t.bu,t.issue||t.complaint||'',t.resp||t.responsible||'',t.status,t.category||'','',t.channel||'Mobile App','','','','','','','','','','',t.resolvedDate||'','','',' ',t.name,t.conversationId||'',t.created||'','PowerPlatform'];})];
     const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
     const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='EKEDP_AllComplaints.csv';a.click();
   }
@@ -2355,7 +2477,7 @@ function DataScreen({agent,tickets,setTickets,showToast,agentShift}){
   const fileRef=useRef(null);
   function dlToday(){const data={exportedBy:{name:agent.name,id:agent.id},exportedAt:new Date().toISOString(),period:{date:todayStr},tickets:todayTix};const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));a.download='ekedp_agent_'+agent.id+'_'+todayStr+'.json';a.click();showToast('Exported '+todayTix.length+' tickets ✓');}
   function dlAll(){const data={exportedBy:{name:agent.name,id:agent.id},exportedAt:new Date().toISOString(),tickets:tickets};const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(data,null,2));a.download='ekedp_agent_'+agent.id+'_all_'+todayStr+'.json';a.click();showToast('All exported ✓');}
-  function exportCSV(){const rows=[['#','Ticket','Time','Customer','Phone','BU','Category','Status','Note']];tickets.slice().reverse().forEach(function(t,i){rows.push([i+1,t.num,t.time,t.name,t.phone,t.bu,t.category,t.status,t.note||'']);});const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='ekedp_agent_'+agent.id+'.csv';a.click();showToast('CSV exported ✓');}
+  function exportCSV(){const headers=['ID','Customer Name','Customer Address','Meter No./Account No.','Meter No','Account No','Metered','Action Taken','Telephone Number','Email Address','Business Unit','Complaint Description','Assigned to','Status','Complaint Category','Complaint Sub-category','Channel of Complaint','Customer House No','Customer Street Name','Customer State of Resident','Customer Local Govt Area','Disco Code','Forum Name','Complaint House No','Complaint Street Name','Complaint Local Govt Area','Complaint Area','Resolved Date','Closed By','Disco REF No','Customer Service Name','Conversation ID','Created','Created By'];const rows=[headers,...tickets.slice().reverse().map(function(t,i){return[t.num,t.name,t.addr||t.address||'',t.meter||'',t.meter||'',t.account||'',t.metered||'',t.note||'',t.phone,t.email||'',t.bu,t.issue||t.complaint||'',t.resp||t.responsible||'',t.status,t.category||'','',t.channel||'Mobile App','','','','','','','','','','',t.resolvedDate||'','','',' ',t.name,t.conversationId||'',t.created||'','PowerPlatform'];})];const csv=rows.map(function(r){return r.map(function(c){return'"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='ekedp_agent_'+agent.id+'.csv';a.click();showToast('CSV exported ✓');}
   function processFile(file){const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);let imported=[];if(Array.isArray(data)){imported=data;}else if(Array.isArray(data.tickets)){imported=data.tickets;}else if(Array.isArray(data.days)){data.days.forEach(function(day){(day.tickets||[]).forEach(function(t){imported.push(t);});});}else{Object.keys(data).forEach(function(k){if(k.charAt(0)!=='_'&&Array.isArray(data[k]))data[k].forEach(function(t){imported.push(t);});});}if(!imported.length)throw new Error('No tickets found');setPreview({count:imported.length,by:data.exportedBy,tickets:imported});}catch(err){showToast('Invalid JSON: '+err.message,'error');}};reader.readAsText(file);}
   function confirmImport(){if(!preview)return;
     const r=dedupTickets(tickets,preview.tickets);
@@ -2428,9 +2550,77 @@ function getAutoTheme(){
 }
 function TicketsScreen({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,agentShift,onCreate}){
   const[showAdd,setShowAdd]=useState(false);
+  const[guideOpen,setGuideOpen]=useState(false);
+  const[guideEdit,setGuideEdit]=useState(false);
+  const[guideDraft,setGuideDraft]=useState([]);
   return(
     <div>
       <MyTickets agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdate} onDelete={onDelete} showToast={showToast} agentShift={agentShift}/>
+      {/* ── COLLAPSIBLE SUPPORT GUIDE ───────────────────────────── */}
+      <div style={{margin:'0 28px 16px'}}>
+        <button onClick={function(){setGuideOpen(function(v){return !v;});setGuideEdit(false);}}
+          style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 16px',background:'rgba(255,255,255,.03)',border:'1px solid var(--bsoft)',borderRadius:guideOpen?'10px 10px 0 0':'10px',color:'var(--muted)',font:'600 12px/1 Sora,sans-serif',cursor:'pointer',transition:'all .2s'}}>
+          <span style={{display:'flex',alignItems:'center',gap:8}}>
+            <span>📖</span>
+            <span style={{color:'var(--text)'}}>Support Guide</span>
+            <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)'}}>— who resolves what</span>
+          </span>
+          <span style={{fontSize:12,transition:'transform .2s',display:'inline-block',transform:guideOpen?'rotate(180deg)':'none'}}>▾</span>
+        </button>
+        {guideOpen&&(function(){
+          var rows=loadGuide();
+          function startEdit(){setGuideDraft(rows.map(function(r){return Object.assign({},r);}));setGuideEdit(true);}
+          function cancelEdit(){setGuideEdit(false);setGuideDraft([]);}
+          function up(i,k,v){setGuideDraft(function(d){var n=d.slice();n[i]=Object.assign({},n[i],{[k]:v});return n;});}
+          function del(i){setGuideDraft(function(d){return d.filter(function(_,x){return x!==i;});});}
+          function addRow(){setGuideDraft(function(d){return d.concat([{who:'',cat:'',help:''}]);});}
+          function saveGuide(){var c=guideDraft.filter(function(r){return(r.who||'').trim()||(r.cat||'').trim();});saveGuideLs(c);setGuideEdit(false);setGuideDraft([]);showToast&&showToast('Guide saved · '+c.length+' rows');}
+          return(
+            <div style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderTop:'none',borderRadius:'0 0 10px 10px',overflow:'hidden'}}>
+              {!guideEdit?(
+                <React.Fragment>
+                  <table style={{width:'100%',borderCollapse:'collapse'}}>
+                    <thead><tr style={{background:'rgba(0,0,0,.3)'}}>
+                      {['Responsible Party','Category','What they resolve'].map(function(h){return(
+                        <th key={h} style={{padding:'9px 14px',textAlign:'left',font:'700 9px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em'}}>{h}</th>
+                      );})}
+                    </tr></thead>
+                    <tbody>{rows.map(function(r,i){return(
+                      <tr key={i} style={{borderTop:'1px solid var(--bsoft)'}}>
+                        <td style={{padding:'10px 14px',font:'700 12px Sora,sans-serif',color:'var(--text)',whiteSpace:'nowrap'}}>{r.who}</td>
+                        <td style={{padding:'10px 14px',font:'600 12px Sora,sans-serif',color:'var(--agent)',whiteSpace:'nowrap'}}>{r.cat}</td>
+                        <td style={{padding:'10px 14px',font:'500 11px/1.55 Sora,sans-serif',color:'var(--muted)'}}>{r.help}</td>
+                      </tr>
+                    );})}</tbody>
+                  </table>
+                  <div style={{padding:'10px 14px',borderTop:'1px solid var(--bsoft)'}}>
+                    <button onClick={startEdit} style={{padding:'7px 14px',background:'var(--agent)',color:'#fff',border:'none',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>✏ Edit guide</button>
+                  </div>
+                </React.Fragment>
+              ):(
+                <div style={{padding:14}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1.3fr 1.1fr 2fr 36px',gap:7,paddingBottom:8,borderBottom:'1px solid var(--bsoft)',marginBottom:8,font:'700 9px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em'}}>
+                    <div>Party</div><div>Category</div><div>Help</div><div></div>
+                  </div>
+                  {guideDraft.map(function(r,i){return(
+                    <div key={i} style={{display:'grid',gridTemplateColumns:'1.3fr 1.1fr 2fr 36px',gap:7,marginBottom:7,alignItems:'flex-start'}}>
+                      <input className="inp" value={r.who} onChange={function(e){up(i,'who',e.target.value);}} placeholder="Name"/>
+                      <input className="inp" value={r.cat} onChange={function(e){up(i,'cat',e.target.value);}} placeholder="Category"/>
+                      <textarea className="inp" rows={2} value={r.help} onChange={function(e){up(i,'help',e.target.value);}} placeholder="What they resolve…" style={{resize:'vertical'}}/>
+                      <button onClick={function(){del(i);}} style={{padding:'7px',background:'rgba(239,68,68,.12)',color:'#EF4444',border:'1px solid rgba(239,68,68,.3)',borderRadius:7,cursor:'pointer'}}>✕</button>
+                    </div>
+                  );})}
+                  <div style={{display:'flex',gap:8,marginTop:8}}>
+                    <button onClick={addRow} style={{padding:'8px 14px',background:'rgba(34,197,94,.1)',color:'#22C55E',border:'1px solid rgba(34,197,94,.3)',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>＋ Row</button>
+                    <button onClick={cancelEdit} className="btn btn-sm">Cancel</button>
+                    <button onClick={saveGuide} style={{padding:'8px 14px',background:'#16A34A',color:'#fff',border:'none',borderRadius:7,font:'700 11px Sora,sans-serif',cursor:'pointer'}}>💾 Save</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </div>
       <div style={{padding:'0 28px 28px'}}>
         <button onClick={function(){setShowAdd(function(v){return !v;});}} style={{width:'100%',padding:'10px',background:'rgba(255,255,255,.04)',border:'2px dashed var(--bsoft)',borderRadius:10,color:'var(--muted)',font:'700 12px Sora,sans-serif',cursor:'pointer',marginBottom:showAdd?12:0}}>
           {showAdd?'▲ Hide Emergency Add Form':'⚡ Emergency: Add Ticket Manually ▼'}
@@ -2443,6 +2633,12 @@ function TicketsScreen({agent,tickets,allTix,onEdit,onUpdate,onDelete,showToast,
 function App(){
   const[agent,setAgent]=useState(null);
   const[screen,setScreen]=useState('dashboard');
+  const _agtnow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  const currentYM=_agtnow.getFullYear()+'-'+String(_agtnow.getMonth()+1).padStart(2,'0');
+  const[activeMonth,setActiveMonth]=useState(function(){
+    var saved=localStorage.getItem('ek_active_month');
+    return saved||currentYM;
+  });
   const[theme,setTheme]=useState(function(){
     const mode=localStorage.getItem('ek_theme_mode');
     if(!mode||mode==='auto')return getAutoTheme();
@@ -2485,6 +2681,20 @@ function App(){
     var seen={};return raw2.filter(function(t){var k=(t.num||'').trim().toLowerCase()+'|'+(t.name||'').trim().toLowerCase();if(!k||k==='|')return true;if(seen[k])return false;seen[k]=true;return true;});
   })();
 
+  var _agtMonthSet=new Set();
+  allTix.forEach(function(t){if(t.created)_agtMonthSet.add(t.created.slice(0,7));});
+  _agtMonthSet.add(currentYM);
+  var availMonths=Array.from(_agtMonthSet).sort();
+  var viewTix=(function(){
+    var monthTix=allTix.filter(function(t){return t.created&&t.created.startsWith(activeMonth);});
+    if(activeMonth===currentYM){
+      var pendingPrior=allTix.filter(function(t){
+        return t.created&&t.created.slice(0,7)<activeMonth&&t.status!=='resolved';
+      });
+      return pendingPrior.concat(monthTix);
+    }
+    return monthTix;
+  })();
   function setTickets(tix){setTicketsState(tix);if(agent)saveTix(agent.id,tix);}
   function onSignIn(a){
     setAgent(a);document.documentElement.style.setProperty('--agent',a.color);document.documentElement.style.setProperty('--agent-tint',a.tint);
@@ -2558,13 +2768,13 @@ function App(){
 
   const agentShift=shifts[agent.id]||'day';
   const screens={
-    dashboard:<Dashboard agent={agent} allTix={allTix} shifts={shifts}/>,
-    all:      <AllComplaints agent={agent} allTix={allTix} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast}/>,
-    tickets:  <TicketsScreen agent={agent} tickets={tickets} allTix={allTix} onEdit={onEdit} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast} agentShift={agentShift} onCreate={onCreate}/>,
+    dashboard:<Dashboard agent={agent} allTix={viewTix} shifts={shifts}/>,
+    all:      <AllComplaints agent={agent} allTix={viewTix} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast}/>,
+    tickets:  <TicketsScreen agent={agent} tickets={tickets} allTix={viewTix} onEdit={onEdit} onUpdate={onUpdateAllTix} onDelete={onDeleteAllTix} showToast={showToast} agentShift={agentShift} onCreate={onCreate}/>,
     slot:     <SlotReport agent={agent} tickets={tickets} showToast={showToast} agentShift={agentShift}/>,
     guide:    <SupportGuide agent={agent} showToast={showToast}/>,
     photos:   <ProfilePhotos showToast={showToast}/>,
-    data:     <DataScreen agent={agent} tickets={tickets} setTickets={setTickets} showToast={showToast} agentShift={agentShift}/>,
+    data:     <DataScreen agent={agent} tickets={viewTix} setTickets={setTickets} showToast={showToast} agentShift={agentShift}/>,
     sync:     <CloudSync agent={agent} tickets={tickets} setTickets={setTickets} showToast={showToast} agentShift={agentShift}/>,
   };
 
@@ -2580,6 +2790,29 @@ function App(){
           <div className="nav-user">
             <Av agent={agent} size={30}/>
             <div><div className="nav-user-info">Signed in as</div><div className="nav-user-name">{agent.name.split(' ')[0]}</div></div>
+          </div>
+        </div>
+        <div style={{padding:'8px 12px',borderBottom:'1px solid rgba(42,64,153,.4)'}}>
+          <div style={{font:'700 8px/1 Sora,sans-serif',color:'rgba(255,255,255,.25)',textTransform:'uppercase',letterSpacing:'.14em',marginBottom:6}}>MONTH</div>
+          <div style={{display:'flex',flexDirection:'column',gap:3,maxHeight:140,overflowY:'auto'}}>
+            {availMonths.map(function(ym){
+              var on=activeMonth===ym;
+              var isCur=ym===currentYM;
+              var parts=ym.split('-');
+              var label=new Date(parseInt(parts[0]),parseInt(parts[1])-1,1).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+              var pending=allTix.filter(function(t){return t.created&&t.created.startsWith(ym)&&t.status!=='resolved';}).length;
+              var acBorder=isCur?'#22C55E':'rgba(227,6,19,.6)';
+              var acBg=isCur?'rgba(34,197,94,.1)':'rgba(227,6,19,.1)';
+              return(
+                <button key={ym} onClick={function(){setActiveMonth(ym);localStorage.setItem('ek_active_month',ym);}}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 9px',borderRadius:7,border:'1px solid '+(on?acBorder:'rgba(42,64,153,.5)'),background:on?acBg:'transparent',color:on?'#fff':'rgba(255,255,255,.35)',font:'600 11px/1 Sora,sans-serif',cursor:'pointer',transition:'all .15s'}}>
+                  <span>{label}</span>
+                  <span style={{fontSize:8,padding:'2px 6px',borderRadius:8,background:on?(isCur?'rgba(34,197,94,.2)':'rgba(227,6,19,.2)'):'rgba(255,255,255,.06)',color:isCur?'#4ADE80':pending>0?'#FCD34D':'rgba(255,255,255,.3)',fontWeight:700,letterSpacing:'.06em',whiteSpace:'nowrap'}}>
+                    {isCur?'LIVE':pending>0?pending+'p':'✓'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="nav-body">
