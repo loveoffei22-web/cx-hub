@@ -4673,6 +4673,7 @@ function App(){
 
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
+  function onDedup(){const seen=new Set();const deduped=tickets.filter(function(t){if(seen.has(t.id))return false;seen.add(t.id);return true;});const removed=tickets.length-deduped.length;if(removed===0){showToast('No duplicates found ✓');return;}persistTickets(deduped);setTickets(deduped);setShowSettings(false);showToast('Removed '+removed+' duplicate ticket'+(removed>1?'s':'')+' ✅');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;    // Clear all agent tickets
     ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){localStorage.removeItem('ek_tix_'+id);});
     // Clear manager tickets
