@@ -24,7 +24,7 @@ window.Msal = {
 <style>
 :root{--ek-navy:#001F5C;--ek-gold:#FFC72C;--ek-gold-deep:#C99209;--ek-red:#E30613;
 --bg:#030712;--bg2:#060D1C;--surface:#0C1528;--card:#101D35;--card2:#142342;
---border:#1E3557;--bsoft:#162844;--text:#E8F0FF;--text2:#A8BCDE;--muted:#6080AC;--sub:#3D5F8C;
+--border:#1E3557;--bsoft:#162844;--bdark:#0C1830;--text:#E8F0FF;--text2:#A8BCDE;--fg:#E8F0FF;--muted:#6080AC;--sub:#3D5F8C;
 --ok:#22C55E;--okb:#86EFAC;--okt:rgba(34,197,94,.18);
 --wn:#F59E0B;--wnb:#FCD34D;--wnt:rgba(245,158,11,.18);
 --bd:#EF4444;--bdb:#FCA5A5;--bdt:rgba(239,68,68,.18);
@@ -34,7 +34,7 @@ window.Msal = {
 /* ── BRIGHT: clean white daylight ───────────────────────── */
 body[data-theme="bright"]{
   --bg:#F6F8FF;--bg2:#EDF0FF;--surface:#FFFFFF;--card:#FFFFFF;--card2:#F5F8FF;
-  --border:#D8DFFF;--bsoft:#E5EAFF;--text:#080F2E;--text2:#1A2560;--muted:#4455A8;--sub:#7082D0;
+  --border:#D8DFFF;--bsoft:#E5EAFF;--bdark:#D0D8F8;--text:#080F2E;--text2:#1A2560;--fg:#080F2E;--muted:#3A4A90;--sub:#5060B0;
   --ek-gold:#F97316;--ek-gold-deep:#EA6C0A;
   --ok:#16A34A;--okb:#15803D;--okt:rgba(22,163,74,.1);
   --wn:#D97706;--wnb:#B45309;--wnt:rgba(217,119,6,.1);
@@ -119,11 +119,26 @@ body[data-theme="bright"] .stat-bar{border-color:#D8DFFF!important;}
 body[data-theme="bright"] .sbar-item{border-color:#D8DFFF!important;background:#F5F7FF!important;}
 body[data-theme="bright"] .sbar-lbl{color:#5060A0!important;}
 body[data-theme="bright"] .xls-inp,.xls-sel{background:rgba(26,37,96,.9)!important;color:#fff!important;}
+/* Bright theme: report screens readable text */
+body[data-theme="bright"] .main-inner{color:#080F2E;}
+body[data-theme="bright"] .page-sub{color:#3A4A90!important;}
+body[data-theme="bright"] .main-inner table td{color:#080F2E!important;}
+body[data-theme="bright"] .main-inner table th{color:#3A4A90!important;}
+body[data-theme="bright"] .main-inner select,
+body[data-theme="bright"] .main-inner input,
+body[data-theme="bright"] .main-inner textarea{background:#fff!important;border-color:#D8DFFF!important;color:#080F2E!important;}
+body[data-theme="bright"] .main-inner select option{background:#fff;color:#080F2E;}
+body[data-theme="bright"] .main-inner .card-head{background:#F5F7FF!important;border-color:#D8DFFF!important;}
+body[data-theme="bright"] .main-inner .card-head h3{color:#080F2E!important;}
+body[data-theme="bright"] .main-inner .card-head span{color:#3A4A90!important;}
+body[data-theme="bright"] .main-inner .btn-sm{background:rgba(68,85,168,.08)!important;color:#1A2560!important;border-color:#C0CAEE!important;}
+body[data-theme="bright"] .main-inner .btn-sm:disabled{opacity:.4;}
+body[data-theme="bright"] .main-inner .btn-primary{background:linear-gradient(135deg,#F97316,#EA6C0A)!important;color:#fff!important;border-color:#F97316!important;}
 
 /* ── SOLAR: rich warm amber dark ─────────────────────────── */
 body[data-theme="solar"]{
   --bg:#110B00;--bg2:#1E1200;--surface:#2D1B00;--card:#3A2400;--card2:#472D00;
-  --border:#7A5400;--bsoft:#5E4000;--text:#FFF4DE;--text2:#F0D9A5;--muted:#CCA040;--sub:#A07C25;
+  --border:#7A5400;--bsoft:#5E4000;--bdark:#110B00;--text:#FFF4DE;--text2:#F0D9A5;--fg:#FFF4DE;--muted:#CCA040;--sub:#A07C25;
   --ek-gold:#FFBE00;--ek-gold-deep:#E5A500;
   --ok:#22C55E;--okb:#86EFAC;--okt:rgba(34,197,94,.2);
   --wn:#F59E0B;--wnb:#FCD34D;--wnt:rgba(245,158,11,.2);
@@ -136,7 +151,7 @@ body[data-theme="solar"] .hero{background:linear-gradient(135deg,#3A2400 0%,#7A5
 /* ── NIGHT: deep premium dark ────────────────────────────── */
 body[data-theme="night"]{
   --bg:#030712;--bg2:#060D1C;--surface:#0C1528;--card:#101D35;--card2:#142342;
-  --border:#1E3557;--bsoft:#162844;--text:#E8F0FF;--text2:#A8BCDE;--muted:#6080AC;--sub:#3D5F8C;
+  --border:#1E3557;--bsoft:#162844;--bdark:#0C1830;--text:#E8F0FF;--text2:#A8BCDE;--fg:#E8F0FF;--muted:#6080AC;--sub:#3D5F8C;
   --ek-gold:#38BDF8;--ek-gold-deep:#0EA5E9;
   --ok:#22C55E;--okb:#86EFAC;--okt:rgba(34,197,94,.18);
   --wn:#F59E0B;--wnb:#FCD34D;--wnt:rgba(245,158,11,.18);
@@ -149,7 +164,7 @@ body[data-theme="night"] .hero{background:linear-gradient(135deg,#060D1C 0%,#0F2
 /* ── GREEN: forest emerald ────────────────────────────────── */
 body[data-theme="green"]{
   --bg:#020E07;--bg2:#041408;--surface:#0B2414;--card:#0F2E1A;--card2:#133820;
-  --border:#1A5432;--bsoft:#133827;--text:#ECFDF5;--text2:#A7F3D0;--muted:#34D399;--sub:#10B981;
+  --border:#1A5432;--bsoft:#133827;--bdark:#020E07;--text:#ECFDF5;--text2:#A7F3D0;--fg:#ECFDF5;--muted:#34D399;--sub:#10B981;
   --ek-gold:#34D399;--ek-gold-deep:#10B981;
   --ok:#22C55E;--okb:#86EFAC;--okt:rgba(34,197,94,.25);
   --wn:#FBBF24;--wnb:#FCD34D;--wnt:rgba(251,191,36,.18);
