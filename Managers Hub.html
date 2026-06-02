@@ -33,14 +33,14 @@ window.Msal = {
 
 /* ── BRIGHT: clean white daylight ───────────────────────── */
 body[data-theme="bright"]{
-  --bg:#F6F8FF;--bg2:#EDF0FF;--surface:#FFFFFF;--card:#FFFFFF;--card2:#F5F8FF;
-  --border:#D8DFFF;--bsoft:#E5EAFF;--bdark:#D0D8F8;--text:#080F2E;--text2:#1A2560;--fg:#080F2E;--muted:#3A4A90;--sub:#5060B0;
-  --ek-gold:#F97316;--ek-gold-deep:#EA6C0A;
-  --ok:#16A34A;--okb:#15803D;--okt:rgba(22,163,74,.1);
-  --wn:#D97706;--wnb:#B45309;--wnt:rgba(217,119,6,.1);
-  --bd:#DC2626;--bdb:#B91C1C;--bdt:rgba(220,38,38,.1);
-  --info:#2563EB;--infob:#1D4ED8;--violet:#7C3AED;
-  --agent:#F97316;--agent-tint:rgba(249,115,22,.12);}
+  --bg:#F5F5F5;--bg2:#EBEBEB;--surface:#FFFFFF;--card:#FFFFFF;--card2:#F8F8F8;
+  --border:#CCCCCC;--bsoft:#DDDDDD;--bdark:#BBBBBB;--text:#111111;--text2:#222222;--fg:#111111;--muted:#444444;--sub:#666666;
+  --ek-gold:#E05C00;--ek-gold-deep:#C44F00;
+  --ok:#16A34A;--okb:#15803D;--okt:rgba(22,163,74,.15);
+  --wn:#D97706;--wnb:#B45309;--wnt:rgba(217,119,6,.15);
+  --bd:#DC2626;--bdb:#B91C1C;--bdt:rgba(220,38,38,.15);
+  --info:#1D4ED8;--infob:#1E3A8A;--violet:#6D28D9;
+  --agent:#E05C00;--agent-tint:rgba(224,92,0,.12);}
 body[data-theme="bright"] .nav{background:linear-gradient(180deg,#FFFFFF 0%,#F5F7FF 100%)!important;border-right:1.5px solid #D8DFFF!important;}
 body[data-theme="bright"] .nav-brand-txt,body[data-theme="bright"] .nav-brand-title{color:#080F2E!important;}
 body[data-theme="bright"] .nav-brand-title span{color:#F97316!important;}
@@ -134,51 +134,47 @@ body[data-theme="bright"] .main-inner .card-head span{color:#3A4A90!important;}
 body[data-theme="bright"] .main-inner .btn-sm{background:rgba(68,85,168,.08)!important;color:#1A2560!important;border-color:#C0CAEE!important;}
 body[data-theme="bright"] .main-inner .btn-sm:disabled{opacity:.4;}
 body[data-theme="bright"] .main-inner .btn-primary{background:linear-gradient(135deg,#F97316,#EA6C0A)!important;color:#fff!important;border-color:#F97316!important;}
-/* Catch-all: force all text in main content area to be dark in bright theme */
-body[data-theme="bright"] .main *{color:inherit;}
-body[data-theme="bright"] .main{color:#080F2E!important;}
-body[data-theme="bright"] .main .card{background:#fff!important;color:#080F2E!important;}
-body[data-theme="bright"] .main .page-header h1{color:#F97316!important;}
-body[data-theme="bright"] .main .page-sub{color:#3A4A90!important;}
-/* Fix hardcoded transparent/white rgba backgrounds used in dark theme */
-body[data-theme="bright"] .main [style*="rgba(255,255,255,.03)"]{background:rgba(68,85,168,.04)!important;}
-body[data-theme="bright"] .main [style*="rgba(255,255,255,.05)"]{background:rgba(68,85,168,.05)!important;}
-body[data-theme="bright"] .main [style*="rgba(255,255,255,.08)"]{background:rgba(68,85,168,.06)!important;}
-body[data-theme="bright"] .main [style*="rgba(255,255,255,.1)"]:not(img):not(svg){background:rgba(68,85,168,.08)!important;}
-/* Fix text that's hard-coded white/near-white */
-body[data-theme="bright"] .main [style*="color:#fff"]{color:#080F2E!important;}
-body[data-theme="bright"] .main [style*="color:rgba(255,255,255"]{color:#3A4A90!important;}
-body[data-theme="bright"] .main [style*="color:#E8F0FF"]{color:#080F2E!important;}
-body[data-theme="bright"] .main [style*="color:#CBD5E1"]{color:#1A2560!important;}
-body[data-theme="bright"] .main [style*="color:#94A3B8"]{color:#3A4A90!important;}
-body[data-theme="bright"] .main [style*="color:#64748B"]{color:#3A4A90!important;}
-/* Fix stat/KPI cards that use dark bg */
-body[data-theme="bright"] .main [style*="background:#0C1830"]{background:#EDF0FF!important;}
-body[data-theme="bright"] .main [style*="background:#1E2A45"]{background:#F5F7FF!important;}
-body[data-theme="bright"] .main [style*="background:#162035"]{background:#F5F7FF!important;}
-body[data-theme="bright"] .main [style*="background:#0A1628"]{background:#EDF0FF!important;}
-body[data-theme="bright"] .main [style*="background:var(--bg2)"]{background:#EDF0FF!important;}
-body[data-theme="bright"] .main [style*="background:var(--bdark)"]{background:#D0D8F8!important;}
-/* Inputs, selects, textareas everywhere in main */
+/* Bright theme: force pure black text throughout main content */
+body[data-theme="bright"] .main{color:#111!important;background:#F5F5F5!important;}
+body[data-theme="bright"] .main .card{background:#fff!important;color:#111!important;}
+body[data-theme="bright"] .main .page-header h1{color:#C44F00!important;}
+body[data-theme="bright"] .main .page-sub{color:#444!important;}
+/* Override any hardcoded white/near-white text */
+body[data-theme="bright"] .main [style*="color:#fff"]{color:#111!important;}
+body[data-theme="bright"] .main [style*="color:rgba(255,255,255"]{color:#444!important;}
+body[data-theme="bright"] .main [style*="color:#E8F0FF"]{color:#111!important;}
+body[data-theme="bright"] .main [style*="color:#CBD5E1"]{color:#222!important;}
+body[data-theme="bright"] .main [style*="color:#94A3B8"]{color:#555!important;}
+body[data-theme="bright"] .main [style*="color:#64748B"]{color:#444!important;}
+body[data-theme="bright"] .main [style*="color:#8892B0"]{color:#444!important;}
+/* Override dark card/section backgrounds */
+body[data-theme="bright"] .main [style*="background:#0C1830"]{background:#F0F0F0!important;}
+body[data-theme="bright"] .main [style*="background:#1E2A45"]{background:#F0F0F0!important;}
+body[data-theme="bright"] .main [style*="background:#162035"]{background:#F0F0F0!important;}
+body[data-theme="bright"] .main [style*="background:#0A1628"]{background:#F0F0F0!important;}
+body[data-theme="bright"] .main [style*="background:#0C1628"]{background:#F0F0F0!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.03)"]{background:rgba(0,0,0,.03)!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.05)"]{background:rgba(0,0,0,.04)!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.08)"]{background:rgba(0,0,0,.05)!important;}
+body[data-theme="bright"] .main [style*="rgba(255,255,255,.1)"]:not(img):not(svg){background:rgba(0,0,0,.06)!important;}
+/* Inputs, selects, textareas */
 body[data-theme="bright"] .main input,
 body[data-theme="bright"] .main select,
-body[data-theme="bright"] .main textarea{background:#fff!important;border-color:#D0D8F8!important;color:#080F2E!important;}
-body[data-theme="bright"] .main input::placeholder{color:#94A3B8!important;}
+body[data-theme="bright"] .main textarea{background:#fff!important;border-color:#CCC!important;color:#111!important;}
+body[data-theme="bright"] .main input::placeholder{color:#999!important;}
 /* Tables */
-body[data-theme="bright"] .main table td{color:#080F2E!important;}
-body[data-theme="bright"] .main table th{color:#3A4A90!important;}
-body[data-theme="bright"] .main table tr{border-color:#E5EAFF!important;}
-/* Muted text */
-body[data-theme="bright"] .main [style*="color:var(--muted)"]{color:#3A4A90!important;}
-body[data-theme="bright"] .main [style*="color:var(--fg)"]{color:#080F2E!important;}
-body[data-theme="bright"] .main [style*="color:var(--sub)"]{color:#5060B0!important;}
+body[data-theme="bright"] .main table td{color:#111!important;}
+body[data-theme="bright"] .main table th{color:#444!important;background:#EBEBEB!important;}
+body[data-theme="bright"] .main table tr{border-color:#DDD!important;}
 /* Buttons */
-body[data-theme="bright"] .main .btn{background:rgba(68,85,168,.06)!important;border-color:#C0CAEE!important;color:#1A2560!important;}
-body[data-theme="bright"] .main .btn-primary{background:linear-gradient(135deg,#F97316,#EA6C0A)!important;color:#fff!important;border-color:#F97316!important;}
-/* Hero/banner area inside main stays dark */
-body[data-theme="bright"] .main .hero-banner [style*="color:#fff"]{color:#fff!important;}
-/* Donut/SVG text */
-body[data-theme="bright"] .main text{fill:#080F2E!important;}
+body[data-theme="bright"] .main .btn{background:#EBEBEB!important;border-color:#CCC!important;color:#222!important;}
+body[data-theme="bright"] .main .btn-primary{background:linear-gradient(135deg,#E05C00,#C44F00)!important;color:#fff!important;border-color:#E05C00!important;}
+/* Status badges stay coloured */
+body[data-theme="bright"] .main .badge-res{background:rgba(22,163,74,.15)!important;color:#15803D!important;}
+body[data-theme="bright"] .main .badge-prg{background:rgba(217,119,6,.15)!important;color:#B45309!important;}
+body[data-theme="bright"] .main .badge-unr{background:rgba(220,38,38,.15)!important;color:#B91C1C!important;}
+/* SVG / chart text */
+body[data-theme="bright"] .main text{fill:#111!important;}
 
 /* ── SOLAR: rich warm amber dark ─────────────────────────── */
 body[data-theme="solar"]{
@@ -797,7 +793,7 @@ function Nav({active,onChange,collapsed,onToggle,onSettings,onSignOut,onReset,us
             var isCur=ym===currentYM;
             var parts=ym.split('-');
             var label=new Date(parseInt(parts[0]),parseInt(parts[1])-1,1).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-            var pending=(tickets||[]).filter(function(t){return t.created&&t.created.startsWith(ym)&&t.status!=='resolved';}).length;
+            var pending=(tickets||[]).filter(function(t){return shiftWatYM(t)===ym&&t.status!=='resolved';}).length;
             var acBorder=isCur?'#22C55E':'rgba(227,6,19,.6)';
             var acBg=isCur?'rgba(34,197,94,.1)':'rgba(227,6,19,.1)';
             return(
@@ -1313,6 +1309,20 @@ function DailyReport({tickets,onUpdate,onSettings}){
     );
   }
 
+  // ── Inline edit state ───────────────────────────────────────────
+  const[editId,setEditId]=React.useState(null);
+  const[editVals,setEditVals]=React.useState({});
+  function openEdit(t){setEditId(t.id);setEditVals({status:t.status||'unresolved',category:t.category||'',resp:t.resp||t.responsible||'',note:t.note||''});}
+  function closeEdit(){setEditId(null);setEditVals({});}
+  function saveRowEdit(t){
+    var upd=Object.assign({},t,editVals,{updatedAt:new Date().toISOString()});
+    if(editVals.status==='resolved'&&!t.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
+    if(onUpdate)onUpdate(upd);
+    closeEdit();
+  }
+  var knownCats=[...new Set(tickets.map(function(t){return t.category;}).filter(Boolean))].sort();
+  var knownParties=[...new Set(tickets.map(function(t){return t.resp||t.responsible;}).filter(Boolean))].sort();
+
   // ── Status cycle helper ─────────────────────────────────────────
   function cycleStatus(t){
     var order=['unresolved','progress','resolved'];
@@ -1327,6 +1337,7 @@ function DailyReport({tickets,onUpdate,onSettings}){
   }
 
   // ── Carry table (shared, interactive) ───────────────────────────
+  var INPUT_S={background:'var(--bg2)',border:'1px solid var(--border)',color:'var(--text)',borderRadius:6,padding:'5px 9px',font:'500 11px Sora,sans-serif',width:'100%',boxSizing:'border-box'};
   function carryTable(rows){
     return React.createElement('div',{style:{overflowX:'auto',maxHeight:380,overflowY:'auto'}},
       rows.length===0
@@ -1334,7 +1345,7 @@ function DailyReport({tickets,onUpdate,onSettings}){
         :React.createElement('table',{style:{width:'100%',borderCollapse:'collapse',font:'500 11px/1.4 Sora,sans-serif'}},
           React.createElement('thead',null,
             React.createElement('tr',{style:{background:'var(--bg2)',position:'sticky',top:0,zIndex:1}},
-              ['#','Ticket','Customer','Category','BU','Days Open','Responsible','Status','Action'].map(function(h){
+              ['#','Ticket','Customer','Category','BU','Days','Responsible','Status',''].map(function(h){
                 return React.createElement('th',{key:h,style:{padding:'9px 12px',textAlign:'left',font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',whiteSpace:'nowrap'}},h);
               })
             )
@@ -1342,9 +1353,15 @@ function DailyReport({tickets,onUpdate,onSettings}){
           React.createElement('tbody',null,
             rows.map(function(t,i){
               var d=daysOpen(t);var ag=agingStyle(d);
-              return React.createElement('tr',{key:t.id||t.num,style:{borderBottom:'1px solid var(--border)'},
-                onMouseEnter:function(e){e.currentTarget.style.background='rgba(59,130,246,.06)';},
-                onMouseLeave:function(e){e.currentTarget.style.background='transparent';}},
+              var isEditing=editId===t.id;
+              var stC={resolved:'#4ADE80',progress:'#FCD34D',unresolved:'#FCA5A5'}[t.status]||'#FCA5A5';
+              var stBg={resolved:'rgba(34,197,94,.15)',progress:'rgba(245,158,11,.15)',unresolved:'rgba(239,68,68,.15)'}[t.status]||'rgba(239,68,68,.15)';
+              // Normal row
+              var normalRow=React.createElement('tr',{key:t.id||t.num,
+                style:{borderBottom:'1px solid var(--border)',cursor:'pointer',transition:'background .12s'},
+                onClick:function(){isEditing?closeEdit():openEdit(t);},
+                onMouseEnter:function(e){if(!isEditing)e.currentTarget.style.background='rgba(59,130,246,.06)';},
+                onMouseLeave:function(e){if(!isEditing)e.currentTarget.style.background='transparent';}},
                 React.createElement('td',{style:{padding:'9px 12px',color:'var(--muted)',fontSize:10}},i+1),
                 React.createElement('td',{style:{padding:'9px 12px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)',fontSize:11}},'#'+t.num),
                 React.createElement('td',{style:{padding:'9px 12px',fontWeight:600,color:'var(--text)',whiteSpace:'nowrap'}},t.name),
@@ -1356,29 +1373,48 @@ function DailyReport({tickets,onUpdate,onSettings}){
                   React.createElement('span',{style:{display:'inline-flex',alignItems:'center',gap:3,padding:'3px 9px',borderRadius:20,fontFamily:'JetBrains Mono,monospace',fontWeight:700,fontSize:10,background:ag.bg,color:ag.color,border:'1px solid '+ag.border}},ag.icon,' ',d,'d')
                 ),
                 React.createElement('td',{style:{padding:'9px 12px',color:'var(--text2)',fontSize:11,whiteSpace:'nowrap'}},(t.responsible||t.resp||'—').split(' ').slice(0,2).join(' ')),
-                // Clickable status badge — cycles through statuses
                 React.createElement('td',{style:{padding:'9px 12px'}},
-                  React.createElement('button',{
-                    onClick:function(){cycleStatus(t);},
-                    title:'Click to cycle status',
-                    style:{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 9px',borderRadius:10,font:'800 9px/1 Sora,sans-serif',border:'none',cursor:'pointer',textTransform:'uppercase',whiteSpace:'nowrap',
-                      background:t.status==='progress'?'rgba(245,158,11,.2)':'rgba(239,68,68,.2)',
-                      color:t.status==='progress'?'#FCD34D':'#FCA5A5'}},
-                    t.status==='progress'?'⏳ In Progress':'🔴 Unresolved',
-                    React.createElement('span',{style:{opacity:.6,fontSize:8,marginLeft:2}},'↻')
-                  )
+                  React.createElement('span',{style:{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 9px',borderRadius:10,font:'800 9px/1 Sora,sans-serif',textTransform:'uppercase',whiteSpace:'nowrap',background:stBg,color:stC}},
+                    t.status==='resolved'?'✓ Resolved':t.status==='progress'?'⏳ In Progress':'🔴 Unresolved')
                 ),
-                // Quick resolve button
                 React.createElement('td',{style:{padding:'9px 12px'}},
-                  React.createElement('button',{
-                    onClick:function(){quickResolve(t);},
-                    title:'Mark as resolved',
-                    style:{padding:'4px 10px',borderRadius:7,border:'1px solid rgba(34,197,94,.3)',background:'rgba(34,197,94,.1)',color:'#4ADE80',font:'700 10px/1 Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s'},
-                    onMouseEnter:function(e){e.currentTarget.style.background='rgba(34,197,94,.25)';e.currentTarget.style.color='#fff';},
-                    onMouseLeave:function(e){e.currentTarget.style.background='rgba(34,197,94,.1)';e.currentTarget.style.color='#4ADE80';}
-                  },'✓ Resolve')
+                  React.createElement('span',{style:{font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.5}},isEditing?'▲':'✎')
                 )
               );
+              // Edit row (replaces normal row when editing)
+              var editRow=React.createElement('tr',{key:t.id+'_edit',style:{borderBottom:'2px solid var(--ek-gold)',background:'var(--bg2)'}},
+                React.createElement('td',{colSpan:9,style:{padding:'12px 16px'}},
+                  React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr auto',gap:8,alignItems:'end'}},
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Status'),
+                      React.createElement('select',{value:editVals.status||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{status:v});});},style:INPUT_S},
+                        React.createElement('option',{value:'resolved'},'✓ Resolved'),
+                        React.createElement('option',{value:'progress'},'⏳ In Progress'),
+                        React.createElement('option',{value:'unresolved'},'🔴 Unresolved')
+                      )
+                    ),
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Category'),
+                      React.createElement('input',{list:'ec-cats',value:editVals.category||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{category:v});});},placeholder:'Category',style:INPUT_S}),
+                      React.createElement('datalist',{id:'ec-cats'},knownCats.map(function(c){return React.createElement('option',{key:c,value:c});}))
+                    ),
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Responsible Party'),
+                      React.createElement('input',{list:'ec-resp',value:editVals.resp||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{resp:v});});},placeholder:'Party',style:INPUT_S}),
+                      React.createElement('datalist',{id:'ec-resp'},knownParties.map(function(p){return React.createElement('option',{key:p,value:p});}))
+                    ),
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Note'),
+                      React.createElement('input',{value:editVals.note||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{note:v});});},placeholder:'Add note…',style:INPUT_S})
+                    ),
+                    React.createElement('div',{style:{display:'flex',gap:6}},
+                      React.createElement('button',{onClick:function(e){e.stopPropagation();saveRowEdit(t);},style:{padding:'7px 14px',borderRadius:7,border:'none',background:'#E05C00',color:'#fff',font:'700 11px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}},'Save'),
+                      React.createElement('button',{onClick:function(e){e.stopPropagation();closeEdit();},style:{padding:'7px 12px',borderRadius:7,border:'1px solid var(--border)',background:'transparent',color:'var(--muted)',font:'600 11px Sora,sans-serif',cursor:'pointer'}},'✕')
+                    )
+                  )
+                )
+              );
+              return isEditing?[normalRow,editRow]:normalRow;
             })
           )
         )
@@ -2807,11 +2843,18 @@ function SlotReport({tickets,showToast}){
 }
 
 // ── REPORTS SHARED HELPERS ────────────────────────────────────────
-function rptWatDate(t){
-  if(t.created)return String(t.created).slice(0,10);
-  if(t.received){try{return new Date(new Date(t.received).toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,10);}catch(e){return null;}}
-  return null;
+function shiftWatDate(t){
+  var raw=t.created||t.received||t.receivedAt;
+  if(!raw)return null;
+  try{
+    var d=new Date(raw);if(isNaN(d.getTime()))return null;
+    var wat=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+    if(wat.getHours()<17)wat.setDate(wat.getDate()-1);
+    return wat.getFullYear()+'-'+String(wat.getMonth()+1).padStart(2,'0')+'-'+String(wat.getDate()).padStart(2,'0');
+  }catch(e){return null;}
 }
+function shiftWatYM(t){var d=shiftWatDate(t);return d?d.slice(0,7):null;}
+function rptWatDate(t){return shiftWatDate(t);}
 function rptMonday(d){const dt=new Date(d);const day=dt.getDay()||7;dt.setDate(dt.getDate()-day+1);return dt.toISOString().slice(0,10);}
 function rptSunday(d){const dt=new Date(d);const day=dt.getDay()||7;dt.setDate(dt.getDate()+(7-day));return dt.toISOString().slice(0,10);}
 function rptWatNow(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));}
@@ -4111,42 +4154,97 @@ function Agents({tickets,shifts,onShift,showToast}){
   const onCount=Object.values(shifts).filter(function(s){return s==='day'||s==='night';}).length;
   function importCSV(e){
     const file=e.target.files[0];if(!file)return;
+    e.target.value='';
     const reader=new FileReader();
     reader.onload=function(ev){
       try{
-        // Strip BOM and normalise line endings
         const raw=ev.target.result.replace(/^﻿/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-        const lines=raw.split('\n').filter(Boolean);
-        // Strip quotes from header row
-        const headers=lines[0].replace(/"/g,'').split(',');
-        const iDate=headers.indexOf('TitleDate');
-        const iName=headers.indexOf('AgentName');
-        const iShift=headers.indexOf('ShiftType');
-        if(iDate<0||iName<0||iShift<0){showToast('CSV error: expected columns TitleDate, AgentName, ShiftType','error');return;}
-        const AGENT_MAP={'Matthew Akhigbe':'matthew','Racheal Ogunleke':'racheal','Tomina Egbokwu':'tomina','Esther Okafor':'esther','Loveth Okpara':'loveth','Okafor Esther Ifunnaya':'esther','Okpara Loveth Ifeoma':'loveth'};
-        const SHIFT_MAP={'Day':'day','Night':'shadow','Off':'off','Leave':'leave','Shadow':'shadow'};
+        const lines=raw.split('\n').filter(function(l){return l.trim();});
+        if(!lines.length){showToast('CSV is empty','error');return;}
+        // Parse a CSV line (handles quoted fields)
+        function parseLine(line){
+          var result=[],cur='',inQ=false;
+          for(var i=0;i<line.length;i++){
+            var c=line[i];
+            if(c==='"'){inQ=!inQ;}
+            else if(c===','&&!inQ){result.push(cur.trim());cur='';}
+            else{cur+=c;}
+          }
+          result.push(cur.trim());
+          return result;
+        }
+        const headers=parseLine(lines[0]).map(function(h){return h.toLowerCase().replace(/[^a-z0-9]/g,'');});
+        // Flexible column detection
+        function findCol(candidates){for(var i=0;i<candidates.length;i++){var idx=headers.indexOf(candidates[i]);if(idx>=0)return idx;}return -1;}
+        const iDate=findCol(['titledate','date','shiftdate','scheduledate','day']);
+        const iName=findCol(['agentname','name','agent','staffname','employeename','fullname']);
+        const iShift=findCol(['shifttype','shift','shiftname','type','schedule','schedtype']);
+        if(iDate<0||iName<0||iShift<0){
+          showToast('CSV missing columns. Need: Date, Agent Name, Shift. Found: '+headers.join(', '),'error');
+          return;
+        }
+        // Flexible name map (first name or full name match)
+        const AGENT_MAP={
+          'matthew akhigbe':'matthew','matthew':'matthew',
+          'racheal ogunleke':'racheal','racheal':'racheal',
+          'tomina egbokwu':'tomina','tomina':'tomina',
+          'esther okafor':'esther','okafor esther ifunnaya':'esther','esther':'esther',
+          'loveth okpara':'loveth','okpara loveth ifeoma':'loveth','loveth':'loveth',
+        };
+        const SHIFT_MAP={
+          'day':'day','day shift':'day',
+          'night':'shadow','night shift':'shadow','shadow':'shadow',
+          'off':'off','rest':'off','leave':'leave','annual leave':'leave','sick':'leave',
+        };
+        function parseDate(raw){
+          // Try YYYY-MM-DD
+          if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
+          // Try DD/MM/YYYY
+          var p=raw.split('/');
+          if(p.length===3){
+            var y=p[2].length===4?p[2]:'20'+p[2];
+            // Determine if first part is day or month (>12 = must be day)
+            if(parseInt(p[0])>12){return y+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
+            // Default: try DD/MM/YYYY (common in Nigeria)
+            return y+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+          }
+          // Try MM/DD/YYYY (US)
+          var p2=raw.split('-');
+          if(p2.length===3&&p2[0].length<=2){
+            return p2[2]+'-'+p2[0].padStart(2,'0')+'-'+p2[1].padStart(2,'0');
+          }
+          return null;
+        }
         const newShifts=Object.assign({},shifts);
-        let count=0;
+        var count=0;var skipped=[];
+        const watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+        const todayStr=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
         lines.slice(1).forEach(function(line){
-          // Parse quoted CSV properly: strip outer quotes then split on ","
-          const cols=line.replace(/^"|"$/g,'').split(/","/);
-          const rawDate=(cols[iDate]||'').trim().replace(/"/g,'');
-          const rawName=(cols[iName]||'').trim().replace(/"/g,'');
-          const rawShift=(cols[iShift]||'').trim().replace(/"/g,'');
-          const agentId=AGENT_MAP[rawName];
-          const shift=SHIFT_MAP[rawShift]||'off';
-          if(!agentId||!rawDate)return;
-          const parts=rawDate.split('/');
-          if(parts.length!==3)return;
-          const dateStr=parts[2]+'-'+parts[0].padStart(2,'0')+'-'+parts[1].padStart(2,'0');
+          if(!line.trim())return;
+          var cols=parseLine(line);
+          var rawDate=(cols[iDate]||'').replace(/"/g,'').trim();
+          var rawName=(cols[iName]||'').replace(/"/g,'').trim();
+          var rawShift=(cols[iShift]||'').replace(/"/g,'').trim();
+          var agentId=AGENT_MAP[rawName.toLowerCase()];
+          if(!agentId){
+            // Try first-name match
+            var firstName=rawName.split(/\s+/)[0].toLowerCase();
+            agentId=AGENT_MAP[firstName];
+          }
+          var shift=SHIFT_MAP[rawShift.toLowerCase()]||'off';
+          if(!agentId){if(rawName)skipped.push(rawName);return;}
+          var dateStr=parseDate(rawDate);
+          if(!dateStr)return;
           localStorage.setItem('ek_sched_'+agentId+'_'+dateStr,shift);
-          const watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-          const todayStr=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
           if(dateStr===todayStr){newShifts[agentId]=shift;}
           count++;
         });
         setShifts(newShifts);
         localStorage.setItem('ek_v2_shifts',JSON.stringify(newShifts));
+        var msg='✅ '+count+' schedule entries imported';
+        if(skipped.length){var uniq=[...new Set(skipped)];msg+=' · Skipped unknown: '+uniq.slice(0,3).join(', ')+(uniq.length>3?' +'+( uniq.length-3)+' more':'');}
+        showToast(msg);
+        if(skipped.length)console.warn('[Roster CSV] Unrecognised agents:',skipped);
         // Build full schedule object for Gist push
         const schedObj={};
         EK_AGENTS.forEach(function(a){
@@ -4524,7 +4622,7 @@ function CloudSync({tickets,setTickets,showToast}){
 }
 
 // ── SETTINGS ───────────────────────────────────────────────────────
-function Settings({theme,onTheme,onClose,onReset,onDedup}){
+function Settings({theme,onTheme,onClose,onReset,onResetMonth,onDedup,activeMonth}){
   const themes=[
     {id:'auto',  label:'Auto ✨',   sw:'linear-gradient(135deg,#F97316 0%,#2563EB 40%,#030712 100%)', desc:'Switches with the time of day'},
     {id:'bright',label:'Bright ☀️', sw:'linear-gradient(135deg,#F6F8FF 0%,#D8DFFF 100%)',            desc:'Clean white — morning default'},
@@ -4567,7 +4665,8 @@ function Settings({theme,onTheme,onClose,onReset,onDedup}){
         </div>
         <div style={{borderTop:'1px solid var(--bsoft)',paddingTop:16}}>
           <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(59,130,246,.12)',borderColor:'rgba(59,130,246,.3)',color:'#93C5FD'}} onClick={onDedup}>🧹 Remove Duplicate Tickets</button>
-          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset All Data</button>
+          <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(245,158,11,.12)',borderColor:'rgba(245,158,11,.3)',color:'#FCD34D'}} onClick={onResetMonth}>📅 Reset Current Month ({activeMonth})</button>
+          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset Entire App (all months)</button>
           <div style={{font:'500 10px Sora,sans-serif',color:'var(--sub)',textAlign:'center',marginTop:8}}>Reset clears all tickets from localStorage</div>
         </div>
       </div>
@@ -4608,20 +4707,13 @@ function App(){
   });
   const availMonths=React.useMemo(function(){
     var s=new Set();
-    tickets.forEach(function(t){if(t.created)s.add(t.created.slice(0,7));});
+    tickets.forEach(function(t){var ym=shiftWatYM(t);if(ym)s.add(ym);});
     s.add(currentYM);
     return Array.from(s).sort();
   },[tickets,currentYM]);
   const viewTickets=React.useMemo(function(){
-    var monthTix=tickets.filter(function(t){return t.created&&t.created.startsWith(activeMonth);});
-    if(activeMonth===currentYM){
-      var pendingPrior=tickets.filter(function(t){
-        return t.created&&t.created.slice(0,7)<activeMonth&&t.status!=='resolved';
-      });
-      return pendingPrior.concat(monthTix);
-    }
-    return monthTix;
-  },[tickets,activeMonth,currentYM]);
+    return tickets.filter(function(t){return shiftWatYM(t)===activeMonth;});
+  },[tickets,activeMonth]);
   const[showSettings,setShowSettings]=useState(false);
   const[toast,setToast]=useState(null);
   const toastTimer=useRef(null);
@@ -4674,6 +4766,7 @@ function App(){
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
   function onDedup(){const seen=new Set();const deduped=tickets.filter(function(t){if(seen.has(t.id))return false;seen.add(t.id);return true;});const removed=tickets.length-deduped.length;if(removed===0){showToast('No duplicates found ✓');return;}persistTickets(deduped);setTickets(deduped);setShowSettings(false);showToast('Removed '+removed+' duplicate ticket'+(removed>1?'s':'')+' ✅');}
+  function onResetMonth(){const label=new Date(activeMonth+'-15').toLocaleDateString('en-GB',{month:'long',year:'numeric'});if(!confirm('Delete ALL tickets from '+label+'? This cannot be undone.'))return;const kept=tickets.filter(function(t){return shiftWatYM(t)!==activeMonth;});persistTickets(kept);setTickets(kept);setShowSettings(false);showToast('🗑 Cleared '+label+' tickets.');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;    // Clear all agent tickets
     ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){localStorage.removeItem('ek_tix_'+id);});
     // Clear manager tickets
@@ -4710,7 +4803,7 @@ function App(){
       <main className={'main'+(collapsed?' nc':'')} style={{paddingLeft:W}}>
         {screens[screen]||screens.dashboard}
       </main>
-      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset} onDedup={onDedup}/>}
+      {showSettings&&<Settings theme={theme} onTheme={function(t){setTheme(t);setAutoTheme(localStorage.getItem('ek_theme_mode')==='auto');}} onClose={()=>setShowSettings(false)} onReset={onReset} onResetMonth={onResetMonth} onDedup={onDedup} activeMonth={activeMonth}/>}
       <Toast toast={toast}/>
     </div>
   );
