@@ -1309,6 +1309,20 @@ function DailyReport({tickets,onUpdate,onSettings}){
     );
   }
 
+  // ── Inline edit state ───────────────────────────────────────────
+  const[editId,setEditId]=React.useState(null);
+  const[editVals,setEditVals]=React.useState({});
+  function openEdit(t){setEditId(t.id);setEditVals({status:t.status||'unresolved',category:t.category||'',resp:t.resp||t.responsible||'',note:t.note||''});}
+  function closeEdit(){setEditId(null);setEditVals({});}
+  function saveRowEdit(t){
+    var upd=Object.assign({},t,editVals,{updatedAt:new Date().toISOString()});
+    if(editVals.status==='resolved'&&!t.resolvedDate)upd.resolvedDate=new Date().toISOString().slice(0,10);
+    if(onUpdate)onUpdate(upd);
+    closeEdit();
+  }
+  var knownCats=[...new Set(tickets.map(function(t){return t.category;}).filter(Boolean))].sort();
+  var knownParties=[...new Set(tickets.map(function(t){return t.resp||t.responsible;}).filter(Boolean))].sort();
+
   // ── Status cycle helper ─────────────────────────────────────────
   function cycleStatus(t){
     var order=['unresolved','progress','resolved'];
@@ -1323,6 +1337,7 @@ function DailyReport({tickets,onUpdate,onSettings}){
   }
 
   // ── Carry table (shared, interactive) ───────────────────────────
+  var INPUT_S={background:'var(--bg2)',border:'1px solid var(--border)',color:'var(--text)',borderRadius:6,padding:'5px 9px',font:'500 11px Sora,sans-serif',width:'100%',boxSizing:'border-box'};
   function carryTable(rows){
     return React.createElement('div',{style:{overflowX:'auto',maxHeight:380,overflowY:'auto'}},
       rows.length===0
@@ -1330,7 +1345,7 @@ function DailyReport({tickets,onUpdate,onSettings}){
         :React.createElement('table',{style:{width:'100%',borderCollapse:'collapse',font:'500 11px/1.4 Sora,sans-serif'}},
           React.createElement('thead',null,
             React.createElement('tr',{style:{background:'var(--bg2)',position:'sticky',top:0,zIndex:1}},
-              ['#','Ticket','Customer','Category','BU','Days Open','Responsible','Status','Action'].map(function(h){
+              ['#','Ticket','Customer','Category','BU','Days','Responsible','Status',''].map(function(h){
                 return React.createElement('th',{key:h,style:{padding:'9px 12px',textAlign:'left',font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',whiteSpace:'nowrap'}},h);
               })
             )
@@ -1338,9 +1353,15 @@ function DailyReport({tickets,onUpdate,onSettings}){
           React.createElement('tbody',null,
             rows.map(function(t,i){
               var d=daysOpen(t);var ag=agingStyle(d);
-              return React.createElement('tr',{key:t.id||t.num,style:{borderBottom:'1px solid var(--border)'},
-                onMouseEnter:function(e){e.currentTarget.style.background='rgba(59,130,246,.06)';},
-                onMouseLeave:function(e){e.currentTarget.style.background='transparent';}},
+              var isEditing=editId===t.id;
+              var stC={resolved:'#4ADE80',progress:'#FCD34D',unresolved:'#FCA5A5'}[t.status]||'#FCA5A5';
+              var stBg={resolved:'rgba(34,197,94,.15)',progress:'rgba(245,158,11,.15)',unresolved:'rgba(239,68,68,.15)'}[t.status]||'rgba(239,68,68,.15)';
+              // Normal row
+              var normalRow=React.createElement('tr',{key:t.id||t.num,
+                style:{borderBottom:'1px solid var(--border)',cursor:'pointer',transition:'background .12s'},
+                onClick:function(){isEditing?closeEdit():openEdit(t);},
+                onMouseEnter:function(e){if(!isEditing)e.currentTarget.style.background='rgba(59,130,246,.06)';},
+                onMouseLeave:function(e){if(!isEditing)e.currentTarget.style.background='transparent';}},
                 React.createElement('td',{style:{padding:'9px 12px',color:'var(--muted)',fontSize:10}},i+1),
                 React.createElement('td',{style:{padding:'9px 12px',fontFamily:'JetBrains Mono,monospace',fontWeight:700,color:'var(--info)',fontSize:11}},'#'+t.num),
                 React.createElement('td',{style:{padding:'9px 12px',fontWeight:600,color:'var(--text)',whiteSpace:'nowrap'}},t.name),
@@ -1352,29 +1373,48 @@ function DailyReport({tickets,onUpdate,onSettings}){
                   React.createElement('span',{style:{display:'inline-flex',alignItems:'center',gap:3,padding:'3px 9px',borderRadius:20,fontFamily:'JetBrains Mono,monospace',fontWeight:700,fontSize:10,background:ag.bg,color:ag.color,border:'1px solid '+ag.border}},ag.icon,' ',d,'d')
                 ),
                 React.createElement('td',{style:{padding:'9px 12px',color:'var(--text2)',fontSize:11,whiteSpace:'nowrap'}},(t.responsible||t.resp||'—').split(' ').slice(0,2).join(' ')),
-                // Clickable status badge — cycles through statuses
                 React.createElement('td',{style:{padding:'9px 12px'}},
-                  React.createElement('button',{
-                    onClick:function(){cycleStatus(t);},
-                    title:'Click to cycle status',
-                    style:{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 9px',borderRadius:10,font:'800 9px/1 Sora,sans-serif',border:'none',cursor:'pointer',textTransform:'uppercase',whiteSpace:'nowrap',
-                      background:t.status==='progress'?'rgba(245,158,11,.2)':'rgba(239,68,68,.2)',
-                      color:t.status==='progress'?'#FCD34D':'#FCA5A5'}},
-                    t.status==='progress'?'⏳ In Progress':'🔴 Unresolved',
-                    React.createElement('span',{style:{opacity:.6,fontSize:8,marginLeft:2}},'↻')
-                  )
+                  React.createElement('span',{style:{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 9px',borderRadius:10,font:'800 9px/1 Sora,sans-serif',textTransform:'uppercase',whiteSpace:'nowrap',background:stBg,color:stC}},
+                    t.status==='resolved'?'✓ Resolved':t.status==='progress'?'⏳ In Progress':'🔴 Unresolved')
                 ),
-                // Quick resolve button
                 React.createElement('td',{style:{padding:'9px 12px'}},
-                  React.createElement('button',{
-                    onClick:function(){quickResolve(t);},
-                    title:'Mark as resolved',
-                    style:{padding:'4px 10px',borderRadius:7,border:'1px solid rgba(34,197,94,.3)',background:'rgba(34,197,94,.1)',color:'#4ADE80',font:'700 10px/1 Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap',transition:'all .15s'},
-                    onMouseEnter:function(e){e.currentTarget.style.background='rgba(34,197,94,.25)';e.currentTarget.style.color='#fff';},
-                    onMouseLeave:function(e){e.currentTarget.style.background='rgba(34,197,94,.1)';e.currentTarget.style.color='#4ADE80';}
-                  },'✓ Resolve')
+                  React.createElement('span',{style:{font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.5}},isEditing?'▲':'✎')
                 )
               );
+              // Edit row (replaces normal row when editing)
+              var editRow=React.createElement('tr',{key:t.id+'_edit',style:{borderBottom:'2px solid var(--ek-gold)',background:'var(--bg2)'}},
+                React.createElement('td',{colSpan:9,style:{padding:'12px 16px'}},
+                  React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr auto',gap:8,alignItems:'end'}},
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Status'),
+                      React.createElement('select',{value:editVals.status||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{status:v});});},style:INPUT_S},
+                        React.createElement('option',{value:'resolved'},'✓ Resolved'),
+                        React.createElement('option',{value:'progress'},'⏳ In Progress'),
+                        React.createElement('option',{value:'unresolved'},'🔴 Unresolved')
+                      )
+                    ),
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Category'),
+                      React.createElement('input',{list:'ec-cats',value:editVals.category||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{category:v});});},placeholder:'Category',style:INPUT_S}),
+                      React.createElement('datalist',{id:'ec-cats'},knownCats.map(function(c){return React.createElement('option',{key:c,value:c});}))
+                    ),
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Responsible Party'),
+                      React.createElement('input',{list:'ec-resp',value:editVals.resp||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{resp:v});});},placeholder:'Party',style:INPUT_S}),
+                      React.createElement('datalist',{id:'ec-resp'},knownParties.map(function(p){return React.createElement('option',{key:p,value:p});}))
+                    ),
+                    React.createElement('div',null,
+                      React.createElement('div',{style:{font:'700 9px/1 Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:4}},'Note'),
+                      React.createElement('input',{value:editVals.note||'',onChange:function(e){var v=e.target.value;setEditVals(function(p){return Object.assign({},p,{note:v});});},placeholder:'Add note…',style:INPUT_S})
+                    ),
+                    React.createElement('div',{style:{display:'flex',gap:6}},
+                      React.createElement('button',{onClick:function(e){e.stopPropagation();saveRowEdit(t);},style:{padding:'7px 14px',borderRadius:7,border:'none',background:'#E05C00',color:'#fff',font:'700 11px Sora,sans-serif',cursor:'pointer',whiteSpace:'nowrap'}},'Save'),
+                      React.createElement('button',{onClick:function(e){e.stopPropagation();closeEdit();},style:{padding:'7px 12px',borderRadius:7,border:'1px solid var(--border)',background:'transparent',color:'var(--muted)',font:'600 11px Sora,sans-serif',cursor:'pointer'}},'✕')
+                    )
+                  )
+                )
+              );
+              return isEditing?[normalRow,editRow]:normalRow;
             })
           )
         )
