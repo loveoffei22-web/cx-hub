@@ -509,16 +509,35 @@ function persistTickets(tix){window.EK_TICKETS=tix;localStorage.setItem('ek_v2_t
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
 function ticketSig(t){return _norm(t.num)+'|'+_norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
 function dedupTickets(existing,incoming){
-  // Unique key is the ticket number (t.num) — the app's canonical identifier
-  const seen=new Set();
-  existing.forEach(function(t){var n=_norm(t.num||'');if(n)seen.add(n);});
-  const out=[];let dropped=0;
+  // Compare by ticket number (t.num) + status:
+  // - same num, same status → duplicate, skip
+  // - same num, different status → status update, merge into existing
+  // - new num → add
+  const byNum={};// num → index in result array
+  const result=existing.slice();
+  result.forEach(function(t,i){var n=_norm(t.num||'');if(n)byNum[n]=i;});
+  let kept=[];let dropped=0;let updated=0;
   incoming.forEach(function(t){
     var n=_norm(t.num||'');
-    if(n&&seen.has(n)){dropped++;return;}
-    out.push(t);if(n)seen.add(n);
+    if(n&&byNum[n]!==undefined){
+      var idx=byNum[n];
+      if(result[idx].status!==t.status){
+        // Status changed — merge: update status (and note/resp if provided)
+        result[idx]=Object.assign({},result[idx],{
+          status:t.status,
+          note:t.note||result[idx].note,
+          resp:t.resp||result[idx].resp,
+        });
+        updated++;
+      } else {
+        dropped++;// exact duplicate
+      }
+      return;
+    }
+    kept.push(t);
+    if(n)byNum[n]=result.length+kept.length-1;
   });
-  return{kept:out,dropped:dropped};
+  return{kept:kept,dropped:dropped,updated:updated,merged:result};
 }
 
 
@@ -3845,7 +3864,7 @@ function DataPage({tickets,setTickets,showToast}){
       });
       const r=dedupTickets(next,toAdd);
       added=r.kept.length;
-      next=[...next,...r.kept];
+      next=[...r.merged,...r.kept];
       persistTickets(next);
       return next;
     });
@@ -4447,7 +4466,7 @@ function CloudSync({tickets,setTickets,showToast}){
           return d?Object.assign({},t,{created:d}):t;
         });
         const r=dedupTickets(merged,normalised);
-        r.kept.forEach(function(t){merged.push(t);count++;});
+        merged=r.merged;r.kept.forEach(function(t){merged.push(t);count++;});count+=(r.updated||0);
       });
       persistTickets(merged);setTickets(merged);
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
@@ -4807,9 +4826,10 @@ function App(){
   function onAdd(newTix){
     setTickets(function(prev){
       const r=dedupTickets(prev,newTix);
-      const merged=[...prev,...r.kept];
+      const merged=[...r.merged,...r.kept];
       persistTickets(merged);
-      if(r.dropped>0)showToast('Added '+r.kept.length+' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped','warn');
+      if(r.updated>0)showToast('Added '+r.kept.length+' · '+r.updated+' status update'+(r.updated>1?'s':'')+' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped','warn');
+      else if(r.dropped>0)showToast('Added '+r.kept.length+' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped','warn');
       return merged;
     });
   }
