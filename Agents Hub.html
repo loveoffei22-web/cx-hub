@@ -2303,7 +2303,6 @@ function CloudSync({agent,tickets,setTickets,showToast,agentShift}){
         });
         normalized1={manager:flatAll};
       } else if(Array.isArray(cloud1.days)){
-      } else if(Array.isArray(cloud1.days)){
         var flatTickets=[];
         cloud1.days.forEach(function(day){
           (day.tickets||[]).forEach(function(t){
@@ -2362,23 +2361,16 @@ function CloudSync({agent,tickets,setTickets,showToast,agentShift}){
       }
       if(Array.isArray(cloud._guide)&&cloud._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloud._guide));}catch(e){}}
 
-      // Merge all agent ticket arrays into one shared pool
-      var myExisting=tickets.slice();
-      var existingIds=new Set(myExisting.map(function(t){return t.id||t.num;}));
+      // Merge all agent ticket arrays into one shared pool using dedupTickets
+      var merged=tickets.slice();
       var added=0;
       Object.keys(cloud).forEach(function(agId){
         if(agId.charAt(0)==='_')return;
         if(!Array.isArray(cloud[agId]))return;
-        var existing=[];
-        try{existing=JSON.parse(localStorage.getItem('ek_tix_'+agId)||'[]');}catch(e){}
-        var existingAgIds=new Set(existing.map(function(t){return t.id||t.num;}));
-        var newForAgent=cloud[agId].filter(function(t){return !existingAgIds.has(t.id||t.num);});
-        localStorage.setItem('ek_tix_'+agId,JSON.stringify(existing.concat(newForAgent)));
-        cloud[agId].forEach(function(t){
-          if(!existingIds.has(t.id||t.num)){myExisting.push(t);existingIds.add(t.id||t.num);added++;}
-        });
+        var r=dedupTickets(merged,cloud[agId]);
+        r.kept.forEach(function(t){merged.push(t);added++;});
       });
-      setTickets(myExisting);
+      persistTickets(merged);setTickets(merged);
 
       const now=new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'});
       setLastSync(now);localStorage.setItem('ek_last_sync',now);setPreview(cloud);
