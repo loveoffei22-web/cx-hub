@@ -491,25 +491,34 @@ function loadShifts(){try{return JSON.parse(localStorage.getItem('ek_v2_shifts')
 function _norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();}
 function ticketSig(t){return _norm(t.name)+'|'+_norm(t.issue||t.complaint||t.category||'');}
 function dedupTickets(existing,incoming){
-  const byNum={};const bySig={};
-  existing.forEach(function(t){
-    const n=_norm(t.num);
-    if(n)byNum[n]=t;
-    else bySig[ticketSig(t)]=t;
-  });
-  const out=[];let dropped=0;
+  // Compare by ticket number (t.num) + status:
+  // - same num, same status → duplicate, skip
+  // - same num, different status → status update, merge into existing
+  // - new num → add
+  var byNum={};
+  var result=existing.slice();
+  result.forEach(function(t,i){var n=_norm(t.num||'');if(n)byNum[n]=i;});
+  var kept=[];var dropped=0;var updated=0;
   incoming.forEach(function(t){
-    const n=_norm(t.num);
-    if(n){
-      if(byNum[n]){dropped++;return;}
-      out.push(t);byNum[n]=t;
-    } else {
-      const sig=ticketSig(t);
-      if(bySig[sig]){dropped++;return;}
-      out.push(t);bySig[sig]=t;
+    var n=_norm(t.num||'');
+    if(n&&byNum[n]!==undefined){
+      var idx=byNum[n];
+      if(result[idx].status!==t.status){
+        result[idx]=Object.assign({},result[idx],{
+          status:t.status,
+          note:t.note||result[idx].note,
+          resp:t.resp||result[idx].resp,
+        });
+        updated++;
+      } else {
+        dropped++;
+      }
+      return;
     }
+    kept.push(t);
+    if(n)byNum[n]=result.length+kept.length-1;
   });
-  return{kept:out,dropped:dropped};
+  return{kept:kept,dropped:dropped,updated:updated,merged:result};
 }
 
 // ── AVATAR ──────────────────────────────────────────────────
@@ -2380,7 +2389,7 @@ function CloudSync({agent,tickets,setTickets,showToast,agentShift}){
           return d?Object.assign({},t,{created:d}):t;
         });
         var r=dedupTickets(merged,normalised);
-        r.kept.forEach(function(t){merged.push(t);added++;});
+        merged=r.merged;r.kept.forEach(function(t){merged.push(t);added++;});added+=(r.updated||0);
       });
       persistTickets(merged);setTickets(merged);
 
@@ -2535,8 +2544,8 @@ function DataScreen({agent,tickets,setTickets,showToast,agentShift}){
   function processFile(file){const reader=new FileReader();reader.onload=function(e){try{const data=JSON.parse(e.target.result);let imported=[];if(Array.isArray(data)){imported=data;}else if(Array.isArray(data.tickets)){imported=data.tickets;}else if(Array.isArray(data.days)){data.days.forEach(function(day){(day.tickets||[]).forEach(function(t){imported.push(t);});});}else{Object.keys(data).forEach(function(k){if(k.charAt(0)!=='_'&&Array.isArray(data[k]))data[k].forEach(function(t){imported.push(t);});});}if(!imported.length)throw new Error('No tickets found');setPreview({count:imported.length,by:data.exportedBy,tickets:imported});}catch(err){showToast('Invalid JSON: '+err.message,'error');}};reader.readAsText(file);}
   function confirmImport(){if(!preview)return;
     const r=dedupTickets(tickets,preview.tickets);
-    setTickets([...tickets,...r.kept]);
-    showToast('Imported '+r.kept.length+' new'+(r.dropped>0?' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped':'')+' ✓');
+    setTickets([...r.merged,...r.kept]);
+    showToast('Imported '+r.kept.length+' new'+(r.updated>0?' · '+r.updated+' updated':'')+(r.dropped>0?' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped':'')+' ✓');
     setPreview(null);
   }
   const tabSt=function(id){return{padding:'8px 16px',border:'none',borderBottom:'2.5px solid '+(tab===id?'var(--agent)':'transparent'),background:'transparent',color:tab===id?'var(--agent)':'var(--muted)',font:'700 12px Sora,sans-serif',cursor:'pointer'};};
@@ -2784,7 +2793,7 @@ function App(){
   function onCreate(t){
     const arr=Array.isArray(t)?t:[t];
     const r=dedupTickets(tickets,arr);
-    const u=[...tickets,...r.kept];
+    const u=[...r.merged,...r.kept];
     setTickets(u);
     if(r.dropped>0)showToast('Added '+r.kept.length+' · '+r.dropped+' duplicate'+(r.dropped>1?'s':'')+' skipped','warn');
     else showToast('Ticket'+(r.kept.length>1?'s':' #'+(r.kept[0]||{}).num)+' saved!');
