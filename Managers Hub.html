@@ -4154,42 +4154,97 @@ function Agents({tickets,shifts,onShift,showToast}){
   const onCount=Object.values(shifts).filter(function(s){return s==='day'||s==='night';}).length;
   function importCSV(e){
     const file=e.target.files[0];if(!file)return;
+    e.target.value='';
     const reader=new FileReader();
     reader.onload=function(ev){
       try{
-        // Strip BOM and normalise line endings
         const raw=ev.target.result.replace(/^﻿/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-        const lines=raw.split('\n').filter(Boolean);
-        // Strip quotes from header row
-        const headers=lines[0].replace(/"/g,'').split(',');
-        const iDate=headers.indexOf('TitleDate');
-        const iName=headers.indexOf('AgentName');
-        const iShift=headers.indexOf('ShiftType');
-        if(iDate<0||iName<0||iShift<0){showToast('CSV error: expected columns TitleDate, AgentName, ShiftType','error');return;}
-        const AGENT_MAP={'Matthew Akhigbe':'matthew','Racheal Ogunleke':'racheal','Tomina Egbokwu':'tomina','Esther Okafor':'esther','Loveth Okpara':'loveth','Okafor Esther Ifunnaya':'esther','Okpara Loveth Ifeoma':'loveth'};
-        const SHIFT_MAP={'Day':'day','Night':'shadow','Off':'off','Leave':'leave','Shadow':'shadow'};
+        const lines=raw.split('\n').filter(function(l){return l.trim();});
+        if(!lines.length){showToast('CSV is empty','error');return;}
+        // Parse a CSV line (handles quoted fields)
+        function parseLine(line){
+          var result=[],cur='',inQ=false;
+          for(var i=0;i<line.length;i++){
+            var c=line[i];
+            if(c==='"'){inQ=!inQ;}
+            else if(c===','&&!inQ){result.push(cur.trim());cur='';}
+            else{cur+=c;}
+          }
+          result.push(cur.trim());
+          return result;
+        }
+        const headers=parseLine(lines[0]).map(function(h){return h.toLowerCase().replace(/[^a-z0-9]/g,'');});
+        // Flexible column detection
+        function findCol(candidates){for(var i=0;i<candidates.length;i++){var idx=headers.indexOf(candidates[i]);if(idx>=0)return idx;}return -1;}
+        const iDate=findCol(['titledate','date','shiftdate','scheduledate','day']);
+        const iName=findCol(['agentname','name','agent','staffname','employeename','fullname']);
+        const iShift=findCol(['shifttype','shift','shiftname','type','schedule','schedtype']);
+        if(iDate<0||iName<0||iShift<0){
+          showToast('CSV missing columns. Need: Date, Agent Name, Shift. Found: '+headers.join(', '),'error');
+          return;
+        }
+        // Flexible name map (first name or full name match)
+        const AGENT_MAP={
+          'matthew akhigbe':'matthew','matthew':'matthew',
+          'racheal ogunleke':'racheal','racheal':'racheal',
+          'tomina egbokwu':'tomina','tomina':'tomina',
+          'esther okafor':'esther','okafor esther ifunnaya':'esther','esther':'esther',
+          'loveth okpara':'loveth','okpara loveth ifeoma':'loveth','loveth':'loveth',
+        };
+        const SHIFT_MAP={
+          'day':'day','day shift':'day',
+          'night':'shadow','night shift':'shadow','shadow':'shadow',
+          'off':'off','rest':'off','leave':'leave','annual leave':'leave','sick':'leave',
+        };
+        function parseDate(raw){
+          // Try YYYY-MM-DD
+          if(/^\d{4}-\d{2}-\d{2}$/.test(raw))return raw;
+          // Try DD/MM/YYYY
+          var p=raw.split('/');
+          if(p.length===3){
+            var y=p[2].length===4?p[2]:'20'+p[2];
+            // Determine if first part is day or month (>12 = must be day)
+            if(parseInt(p[0])>12){return y+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
+            // Default: try DD/MM/YYYY (common in Nigeria)
+            return y+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+          }
+          // Try MM/DD/YYYY (US)
+          var p2=raw.split('-');
+          if(p2.length===3&&p2[0].length<=2){
+            return p2[2]+'-'+p2[0].padStart(2,'0')+'-'+p2[1].padStart(2,'0');
+          }
+          return null;
+        }
         const newShifts=Object.assign({},shifts);
-        let count=0;
+        var count=0;var skipped=[];
+        const watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+        const todayStr=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
         lines.slice(1).forEach(function(line){
-          // Parse quoted CSV properly: strip outer quotes then split on ","
-          const cols=line.replace(/^"|"$/g,'').split(/","/);
-          const rawDate=(cols[iDate]||'').trim().replace(/"/g,'');
-          const rawName=(cols[iName]||'').trim().replace(/"/g,'');
-          const rawShift=(cols[iShift]||'').trim().replace(/"/g,'');
-          const agentId=AGENT_MAP[rawName];
-          const shift=SHIFT_MAP[rawShift]||'off';
-          if(!agentId||!rawDate)return;
-          const parts=rawDate.split('/');
-          if(parts.length!==3)return;
-          const dateStr=parts[2]+'-'+parts[0].padStart(2,'0')+'-'+parts[1].padStart(2,'0');
+          if(!line.trim())return;
+          var cols=parseLine(line);
+          var rawDate=(cols[iDate]||'').replace(/"/g,'').trim();
+          var rawName=(cols[iName]||'').replace(/"/g,'').trim();
+          var rawShift=(cols[iShift]||'').replace(/"/g,'').trim();
+          var agentId=AGENT_MAP[rawName.toLowerCase()];
+          if(!agentId){
+            // Try first-name match
+            var firstName=rawName.split(/\s+/)[0].toLowerCase();
+            agentId=AGENT_MAP[firstName];
+          }
+          var shift=SHIFT_MAP[rawShift.toLowerCase()]||'off';
+          if(!agentId){if(rawName)skipped.push(rawName);return;}
+          var dateStr=parseDate(rawDate);
+          if(!dateStr)return;
           localStorage.setItem('ek_sched_'+agentId+'_'+dateStr,shift);
-          const watToday=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-          const todayStr=watToday.getFullYear()+'-'+String(watToday.getMonth()+1).padStart(2,'0')+'-'+String(watToday.getDate()).padStart(2,'0');
           if(dateStr===todayStr){newShifts[agentId]=shift;}
           count++;
         });
         setShifts(newShifts);
         localStorage.setItem('ek_v2_shifts',JSON.stringify(newShifts));
+        var msg='✅ '+count+' schedule entries imported';
+        if(skipped.length){var uniq=[...new Set(skipped)];msg+=' · Skipped unknown: '+uniq.slice(0,3).join(', ')+(uniq.length>3?' +'+( uniq.length-3)+' more':'');}
+        showToast(msg);
+        if(skipped.length)console.warn('[Roster CSV] Unrecognised agents:',skipped);
         // Build full schedule object for Gist push
         const schedObj={};
         EK_AGENTS.forEach(function(a){
