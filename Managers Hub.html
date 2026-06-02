@@ -2867,10 +2867,16 @@ function SlotReport({tickets,showToast}){
 
 // ── REPORTS SHARED HELPERS ────────────────────────────────────────
 function shiftWatDate(t){
-  var raw=t.created||t.received||t.receivedAt;
-  if(!raw)return null;
+  var raw=t.created||t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||t.Timestamp||'';
+  if(!raw||typeof raw==='number')return null;
+  raw=String(raw).trim();if(!raw)return null;
   try{
-    var d=new Date(raw);if(isNaN(d.getTime()))return null;
+    var d=new Date(raw);
+    if(isNaN(d.getTime())){
+      var dm=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(dm)d=new Date(dm[3]+'-'+dm[2].padStart(2,'0')+'-'+dm[1].padStart(2,'0'));
+      if(isNaN(d.getTime()))return null;
+    }
     var wat=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
     if(wat.getHours()<17)wat.setDate(wat.getDate()-1);
     return wat.getFullYear()+'-'+String(wat.getMonth()+1).padStart(2,'0')+'-'+String(wat.getDate()).padStart(2,'0');
@@ -4412,7 +4418,7 @@ function CloudSync({tickets,setTickets,showToast}){
               issue:t.note||t.title||'',resp:t.assignee||'',
               status:STATUS_MAP_N[(t.status||'').toLowerCase()]||'unresolved',
               note:t.resolutionNote||'',day:day.dayNum||new Date().getDate(),
-              agent:t.agent||'manager',created:t.created||'',
+              agent:t.agent||'manager',created:t.created||t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||'',
             });
           });
         });
@@ -4425,7 +4431,13 @@ function CloudSync({tickets,setTickets,showToast}){
         if(agentId==='_guide'&&Array.isArray(cloudNorm._guide)&&cloudNorm._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloudNorm._guide));}catch(e){}return;}
         if(agentId.charAt(0)==='_')return;
         if(!Array.isArray(cloudNorm[agentId]))return;
-        const r=dedupTickets(merged,cloudNorm[agentId]);
+        // Ensure every pulled ticket has a 'created' field for month-grouping
+        const normalised=cloudNorm[agentId].map(function(t){
+          if(t.created)return t;
+          var d=t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||'';
+          return d?Object.assign({},t,{created:d}):t;
+        });
+        const r=dedupTickets(merged,normalised);
         r.kept.forEach(function(t){merged.push(t);count++;});
       });
       persistTickets(merged);setTickets(merged);

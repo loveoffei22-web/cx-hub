@@ -938,10 +938,16 @@ function Dashboard({agent,allTix,shifts}){
 // Shift-aware duty window rules:
 // Saturday   : Fri 17:01 → Sat 16:00
 function shiftWatDate(t){
-  var raw=t.created||t.received||t.receivedAt;
-  if(!raw)return null;
+  var raw=t.created||t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||t.Timestamp||'';
+  if(!raw||typeof raw==='number')return null;
+  raw=String(raw).trim();if(!raw)return null;
   try{
-    var d=new Date(raw);if(isNaN(d.getTime()))return null;
+    var d=new Date(raw);
+    if(isNaN(d.getTime())){
+      var dm=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(dm)d=new Date(dm[3]+'-'+dm[2].padStart(2,'0')+'-'+dm[1].padStart(2,'0'));
+      if(isNaN(d.getTime()))return null;
+    }
     var wat=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
     if(wat.getHours()<17)wat.setDate(wat.getDate()-1);
     return wat.getFullYear()+'-'+String(wat.getMonth()+1).padStart(2,'0')+'-'+String(wat.getDate()).padStart(2,'0');
@@ -2309,7 +2315,7 @@ function CloudSync({agent,tickets,setTickets,showToast,agentShift}){
             flatTickets.push({
               id:t.id||('tk_'+t.num),
               num:t.num||'',
-              created:t.created||'',
+              created:t.created||t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||'',
               time:t.time||'',
               name:t.name||'',
               phone:(t.phone||'').replace(/^\+234/,'0'),
@@ -2367,7 +2373,13 @@ function CloudSync({agent,tickets,setTickets,showToast,agentShift}){
       Object.keys(cloud).forEach(function(agId){
         if(agId.charAt(0)==='_')return;
         if(!Array.isArray(cloud[agId]))return;
-        var r=dedupTickets(merged,cloud[agId]);
+        // Ensure every pulled ticket has 'created' for month-grouping
+        var normalised=cloud[agId].map(function(t){
+          if(t.created)return t;
+          var d=t.received||t.receivedAt||t.createdAt||t.date||t.Date||t.dateCreated||t.receivedDate||t.Created||t.timestamp||'';
+          return d?Object.assign({},t,{created:d}):t;
+        });
+        var r=dedupTickets(merged,normalised);
         r.kept.forEach(function(t){merged.push(t);added++;});
       });
       persistTickets(merged);setTickets(merged);
