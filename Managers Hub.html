@@ -4447,7 +4447,7 @@ function CloudSync({tickets,setTickets,showToast}){
         norm1={manager:flatTickets};
       }
       const cloudNorm=Object.assign({},norm1);
-      let count=0;const merged=[...tickets];
+      let count=0;let merged=[...tickets];
       Object.keys(cloudNorm).forEach(function(agentId){
         if(agentId==='_shifts'&&cloudNorm._shifts&&typeof cloudNorm._shifts==='object'){try{localStorage.setItem('ek_v2_shifts',JSON.stringify(cloudNorm._shifts));}catch(e){}return;}
         if(agentId==='_guide'&&Array.isArray(cloudNorm._guide)&&cloudNorm._guide.length){try{localStorage.setItem('ek_guide',JSON.stringify(cloudNorm._guide));}catch(e){}return;}
