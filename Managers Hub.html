@@ -701,14 +701,10 @@ const NAV_GROUPS=[
   {label:'Operations',items:[{id:'dashboard',icon:'dash',label:'Dashboard'},{id:'daily',icon:'daily',label:'Monthly Report'},{id:'all',icon:'all',label:'All Complaints'}]},
   {label:'Insights',items:[{id:'cumulative',icon:'cum',label:'Cumulative'},{id:'analytics',icon:'analy',label:'Analytics'},{id:'slot',icon:'report',label:'Slot Report',badge:'NEW'}]},
   {label:'Team',items:[{id:'agents',icon:'agents',label:'Agents'},{id:'sync',icon:'sync',label:'Cloud Sync'},{id:'data',icon:'report',label:'Import / Export'}]},
-  {label:'Reports',items:[{id:'rpt_verify',icon:'all',label:'Verify'},{id:'rpt_anomaly',icon:'analy',label:'Anomaly'},{id:'rpt_executive',icon:'cum',label:'Executive'},{id:'rpt_party',icon:'agents',label:'Responsible Party'},{id:'rpt_weekly',icon:'daily',label:'Weekly'},{id:'rpt_monthly',icon:'report',label:'Monthly'}]},
+  {label:'Reports',items:[{id:'rpt_verify',icon:'all',label:'Verify'},{id:'rpt_anomaly',icon:'analy',label:'Anomaly'},{id:'rpt_executive',icon:'cum',label:'Executive'},{id:'rpt_weekly',icon:'daily',label:'Weekly'},{id:'rpt_monthly',icon:'report',label:'Monthly'}]},
 ];
 
-<<<<<<< HEAD
 function Nav({active,onChange,collapsed,onToggle,onSettings,onSignOut,onReset,user,activeMonth,setActiveMonth,availMonths,currentYM,tickets}){
-=======
-function Nav({active,onChange,collapsed,onToggle,onSettings,onSignOut,onReset,user,readOnly}){
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
   const[now,setNow]=useState(()=>new Date());
   useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
   const wat=new Date(now.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
@@ -1184,7 +1180,6 @@ function Dashboard({tickets,shifts,onShift,onSettings,onNav,signedInName}){
   );
 }
 
-<<<<<<< HEAD
 // ── MONTHLY REPORT (replaces Daily Report) ────────────────────────
 function DailyReport({tickets,onUpdate,onSettings}){
   const[activeMonth,setActiveMonth]=React.useState('june');
@@ -1207,210 +1202,6 @@ function DailyReport({tickets,onUpdate,onSettings}){
   const junePrg=juneTix.filter(function(t){return t.status==='progress';}).length;
   const juneUnr=juneTix.filter(function(t){return t.status==='unresolved';}).length;
   const juneRate=juneTix.length?Math.round(juneRes/juneTix.length*100):0;
-=======
-
-// ── DAILY TICKETS TABLE — Agents Hub style ──────────────────────────
-function DailyTicketsTable({dayTix,activeDay,onUpdate,showToast}){
-  const[expanded,setExpanded]=useState(null);
-  const[editState,setEditState]=useState({});
-  const[search,setSearch]=useState('');
-  const[fSt,setFSt]=useState('all');
-
-  // Repeat detection
-  const phoneFreq={};
-  dayTix.forEach(function(t){const p=String(t.phone||'').trim();if(p)phoneFreq[p]=(phoneFreq[p]||0)+1;});
-  function repeatCount(t){return phoneFreq[String(t.phone||'').trim()]||0;}
-  function isRepeat(t){return repeatCount(t)>1;}
-
-  const filt=dayTix.filter(function(t){
-    if(fSt!=='all'&&t.status!==fSt)return false;
-    if(search){const q=search.toLowerCase();const num=String(t.num||'').toLowerCase();if(num.startsWith(q))return true;return(t.name+t.phone+t.bu+(t.category||t.issue||'')).toLowerCase().includes(q);}
-    return true;
-  });
-
-  const res=filt.filter(function(t){return t.status==='resolved';}).length;
-  const prg=filt.filter(function(t){return t.status==='progress';}).length;
-  const unr=filt.filter(function(t){return t.status==='unresolved';}).length;
-  const rep=filt.filter(isRepeat).length;
-
-  function getEdit(t){const e=editState[t.id]||{};return{category:e.category!==undefined?e.category:(t.category||''),resp:e.resp!==undefined?e.resp:(t.resp||''),status:e.status!==undefined?e.status:(t.status||'unresolved'),note:e.note!==undefined?e.note:(t.note||'')};}
-  function setEdit(id,k,v){setEditState(function(s){return Object.assign({},s,{[id]:Object.assign({},s[id]||{},{[k]:v})});});}
-  function saveUpdate(t){
-    const e=getEdit(t);
-    const updated=Object.assign({},t,{category:e.category,issue:e.category,resp:e.resp,status:e.status,note:e.note,updatedAt:new Date().toISOString()});
-    if(e.status==='resolved'&&!updated.resolvedDate)updated.resolvedDate=new Date().toISOString().slice(0,10);
-    onUpdate&&onUpdate(updated);
-    setEditState(function(s){const n=Object.assign({},s);delete n[t.id];return n;});
-    setExpanded(null);
-  }
-
-  return(
-    <div style={{padding:'0 28px 20px'}}>
-      {/* Stat bar */}
-      <div className="stat-bar" style={{marginBottom:14}}>
-        {[{l:'Total',v:filt.length,c:'var(--text)'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#F59E0B'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Repeat 🔁',v:rep,c:'#A78BFA'}].map(function(k){return(
-          <div key={k.l} className="sbar-item">
-            <span className="sbar-lbl">{k.l}</span>
-            <span className="sbar-val" style={{color:k.c}}>{k.v}</span>
-          </div>);})}
-      </div>
-      {/* Filter bar */}
-      <div style={{display:'flex',gap:8,marginBottom:12}}>
-        <div style={{position:'relative',flex:1}}>
-          <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'var(--sub)',fontSize:12}}>🔍</span>
-          <input className="inp" style={{paddingLeft:30}} value={search} onChange={function(e){setSearch(e.target.value);}} placeholder="Search ticket · customer · phone · category…"/>
-        </div>
-        <select className="sel" style={{width:140}} value={fSt} onChange={function(e){setFSt(e.target.value);}}>
-          <option value="all">All statuses</option><option value="resolved">Resolved</option><option value="progress">In Progress</option><option value="unresolved">Unresolved</option>
-        </select>
-      </div>
-      <div style={{marginBottom:8,font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.7}}>💡 Click any row to expand and update</div>
-      {/* Table */}
-      <div style={{background:'rgba(0,0,0,.2)',border:'1px solid var(--bsoft)',borderRadius:10,overflow:'hidden'}}>
-        <div className="xls-scroll">
-          <table className="ctbl">
-            <colgroup>
-              <col style={{width:36}}/><col style={{width:100}}/><col style={{width:68}}/><col style={{width:68}}/>
-              <col style={{width:160}}/><col style={{width:130}}/><col style={{width:64}}/><col style={{width:160}}/>
-              <col style={{width:110}}/><col style={{width:32}}/>
-            </colgroup>
-            <thead><tr>
-              <th>#</th><th>TICKET</th><th>TIME</th><th>DATE</th>
-              <th>CUSTOMER</th><th>PHONE</th><th>BU</th><th>CATEGORY</th>
-              <th>STATUS</th><th>▼</th>
-            </tr></thead>
-            <tbody>
-              {filt.map(function(t,i){
-                const isEx=expanded===t.id;
-                const e=getEdit(t);
-                return(
-                  <React.Fragment key={t.id||i}>
-                    <tr style={{cursor:'pointer',background:isEx?'rgba(255,199,44,.07)':i%2===0?'transparent':'rgba(255,255,255,.01)'}} onClick={function(){setExpanded(isEx?null:t.id);}}>
-                      <td style={{color:'var(--text2)',fontSize:12}}>{String(i+1).padStart(2,'0')}</td>
-                      <td><span style={{font:"800 13px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span></td>
-                      <td style={{color:'var(--text2)',fontSize:12}}>{t.time||'—'}</td>
-                      <td style={{color:'var(--text2)',fontSize:12,whiteSpace:'nowrap'}}>{t.created?new Date(t.created).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Africa/Lagos'}):(t.day?'Day '+t.day:'—')}</td>
-                      <td style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>
-                        {t.name}
-                        {isRepeat(t)&&<span title={'Repeat — '+repeatCount(t)+' tickets'} style={{marginLeft:5,background:'rgba(167,139,250,.2)',color:'#A78BFA',border:'1px solid rgba(167,139,250,.4)',borderRadius:4,fontSize:9,fontWeight:700,padding:'1px 4px',verticalAlign:'middle'}}>🔁 x{repeatCount(t)}</span>}
-                      </td>
-                      <td><span className="mono" style={{fontSize:12,color:'var(--text2)'}}>{t.phone}</span></td>
-                      <td><span className="bu-tag">{t.bu}</span></td>
-                      <td style={{fontSize:11,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:160}}>{t.category||t.issue||'—'}</td>
-                      <td>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</td>
-                      <td style={{textAlign:'center',color:'var(--ek-gold)',fontSize:10,fontWeight:700}}>{isEx?'▲':'▼'}</td>
-                    </tr>
-                    {isEx&&<tr className="exp-row"><td colSpan={10} style={{padding:0}}>
-                      <div style={{background:'var(--surface)',border:'2px solid var(--info)',borderRadius:10,margin:'4px 6px 8px',overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,.25)'}}>
-                        <div style={{background:'linear-gradient(135deg,#1E3A8A,#0F2461)',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-                          <div style={{display:'flex',alignItems:'center',gap:12}}>
-                            <div style={{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'5px 9px',font:'800 11px Sora,sans-serif',color:'#FFC72C',letterSpacing:'.05em'}}>EKEDP ⚡</div>
-                            <div>
-                              <span style={{font:"800 14px/1 'JetBrains Mono',monospace",color:'var(--info)'}}>#{t.num}</span>
-                              <span style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginLeft:10}}>{t.name}</span>
-                            </div>
-                            <span>{t.status==='resolved'?<span className="st-res">RESOLVED</span>:t.status==='progress'?<span className="st-prg">IN PROGRESS</span>:<span className="st-unr">UNRESOLVED</span>}</span>
-                          </div>
-                          <button onClick={function(ev){ev.stopPropagation();setExpanded(null);}} style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',font:'700 11px Sora,sans-serif'}}>✕ Close</button>
-                        </div>
-                        {isRepeat(t)&&<div style={{background:'rgba(167,139,250,.12)',border:'1px solid rgba(167,139,250,.4)',borderRadius:8,padding:'8px 14px',margin:'10px 16px 0',display:'flex',alignItems:'center',gap:8}}>
-                          <span style={{fontSize:16}}>🔁</span>
-                          <div>
-                            <div style={{font:'700 11px Sora,sans-serif',color:'#A78BFA'}}>REPEAT COMPLAINANT</div>
-                            <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:1}}>This customer has {repeatCount(t)} tickets today.</div>
-                          </div>
-                        </div>}
-                        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,borderBottom:'1px solid rgba(255,255,255,.06)'}}>
-                          {[['📍 ADDRESS',t.addr||t.address||'—'],['⚡ METER',t.meter||'—'],['📞 PHONE',t.phone],['📅 CREATED',t.created?t.created.replace('T',' ').slice(0,16):'—'],['🏢 BU',t.bu],['🔗 CHANNEL',t.channel||'Mobile App'],['📊 STATUS',t.status?.toUpperCase()||'—'],['✅ RESOLVED',t.resolvedDate||'—']].map(function(f){return(
-                            <div key={f[0]} style={{padding:'10px 14px',borderRight:'1px solid rgba(255,255,255,.05)',borderBottom:'1px solid rgba(255,255,255,.05)'}}>
-                              <div style={{font:'700 8.5px Sora,sans-serif',color:'var(--ek-gold)',textTransform:'uppercase',letterSpacing:'.10em',marginBottom:4}}>{f[0]}</div>
-                              <div style={{font:'600 11px Sora,sans-serif',color:'var(--text)',wordBreak:'break-word'}}>{f[1]}</div>
-                            </div>);})}
-                        </div>
-                        {(t.issue||t.note)&&<div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
-                          <div style={{font:'700 8.5px Sora,sans-serif',color:'var(--ek-gold)',textTransform:'uppercase',letterSpacing:'.10em',marginBottom:6}}>📝 COMPLAINT</div>
-                          <div style={{font:'500 11.5px/1.6 Sora,sans-serif',color:'var(--text)',background:'rgba(0,0,0,.2)',borderRadius:7,padding:'10px 12px'}}>{t.issue||t.note}</div>
-                        </div>}
-                        <div style={{padding:'14px 16px',background:'rgba(0,0,0,.15)'}}>
-                          <div style={{font:'700 9px Sora,sans-serif',color:'#818CF8',textTransform:'uppercase',letterSpacing:'.12em',marginBottom:12}}>✏️ UPDATE THIS TICKET</div>
-                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-                            <div>
-                              <label className="lbl">Category</label>
-                              <select className="sel" value={e.category} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'category',ev.target.value);}}>
-                                {EK_CATS.map(function(c){return <option key={c} value={c}>{c}</option>;})}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="lbl">Responsible Party</label>
-                              <select className="sel" value={e.resp} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'resp',ev.target.value);}}>
-                                <option value="">— Select —</option>
-                                {EK_RESP.map(function(r){return <option key={r.name} value={r.name}>{r.name}</option>;})}
-                              </select>
-                            </div>
-                          </div>
-                          <div style={{marginBottom:10}}>
-                            <label className="lbl">Status</label>
-                            <div style={{display:'flex',gap:8}}>
-                              {[{v:'progress',l:'⏳ In Progress',c:'#F59E0B'},{v:'resolved',l:'✅ Resolved',c:'#22C55E'},{v:'unresolved',l:'🔴 Unresolved',c:'#EF4444'}].map(function(s){return(
-                                <button key={s.v} onClick={function(ev){ev.stopPropagation();setEdit(t.id,'status',s.v);}} style={{flex:1,padding:'7px',border:'1px solid '+(e.status===s.v?s.c:'var(--bsoft)'),borderRadius:7,background:e.status===s.v?s.c+'22':'transparent',color:e.status===s.v?s.c:'var(--muted)',font:'700 11px Sora,sans-serif',cursor:'pointer'}}>{s.l}</button>
-                              );})}
-                            </div>
-                          </div>
-                          <div style={{marginBottom:12}}>
-                            <label className="lbl">Action Taken / Note</label>
-                            <textarea className="inp" rows={2} value={e.note} onClick={function(ev){ev.stopPropagation();}} onChange={function(ev){ev.stopPropagation();setEdit(t.id,'note',ev.target.value);}} placeholder="Add action taken or resolution note…" style={{resize:'vertical',fontSize:11}}/>
-                          </div>
-                          <button onClick={function(ev){ev.stopPropagation();saveUpdate(t);}} style={{width:'100%',padding:'10px',background:'#818CF8',color:'#fff',border:'none',borderRadius:8,font:'800 13px Sora,sans-serif',cursor:'pointer'}}>💾 Save Update</button>
-                        </div>
-                      </div>
-                    </td></tr>}
-                  </React.Fragment>
-                );
-              })}
-              {!filt.length&&<tr><td colSpan={10} style={{padding:'32px',textAlign:'center',color:'var(--muted)'}}>No tickets for this day.</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── DAILY REPORT ───────────────────────────────────────────────────
-function DailyReport({tickets,onSettings,onUpdate,showToast}){
-  // Build unique date strings YYYY-MM-DD from tickets
-  function tktDateStr(t){if(t.created){var d=new Date(t.created);if(!isNaN(d.getTime())){var w=new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));return w.getFullYear()+'-'+String(w.getMonth()+1).padStart(2,'0')+'-'+String(w.getDate()).padStart(2,'0');}}return null;}
-  const days=[...new Set(tickets.map(tktDateStr).filter(Boolean))].sort();
-  const _drToday=watTodayStr();const[activeDay,setActiveDay]=useState(days[days.length-1]||_drToday);
-  const[viewMode,setViewMode]=useState('report'); // 'report' | 'table'
-
-  const dayTix=tickets.filter(function(t){return tktDateStr(t)===activeDay;});
-  const res=dayTix.filter(function(t){return t.status==='resolved';}).length;
-  const prg=dayTix.filter(function(t){return t.status==='progress';}).length;
-  const unr=dayTix.filter(function(t){return t.status==='unresolved';}).length;
-  const rate=dayTix.length?Math.round(res/dayTix.length*100):0;
-  const dateLabel=activeDay;
-
-  // prev day for trend
-  const prevIdx=days.indexOf(activeDay)-1;
-  const prevDay=prevIdx>=0?days[prevIdx]:null;
-  const prevTix=prevDay?tickets.filter(function(t){return tktDateStr(t)===prevDay;}):[];
-  const prevRes=prevTix.filter(function(t){return t.status==='resolved';}).length;
-  const prevRate=prevTix.length?Math.round(prevRes/prevTix.length*100):0;
-  const trend=rate-prevRate;
-
-  const _watNowDR=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-  const[calMonth,setCalMonth]=useState(_watNowDR.getMonth()+1);
-  const[calYear,setCalYear]=useState(_watNowDR.getFullYear());
-  const daysInMonth=new Date(calYear,calMonth,0).getDate();
-  const firstDay=new Date(calYear,calMonth-1,1).getDay();
-  const offset=firstDay===0?6:firstDay-1;
-  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function prevMonth(){if(calMonth===1){setCalMonth(12);setCalYear(function(y){return y-1;});}else setCalMonth(function(m){return m-1;});}
-  function nextMonth(){if(calMonth===12){setCalMonth(1);setCalYear(function(y){return y+1;});}else setCalMonth(function(m){return m+1;});}
-  const calDayTickets=function(d){var ds=calYear+'-'+String(calMonth).padStart(2,'0')+'-'+String(d).padStart(2,'0');return tickets.filter(function(t){return tktDateStr(t)===ds;}).length;};
-  function calDayStr(d){return calYear+'-'+String(calMonth).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
 
   // ── Aging ─────────────────────────────────────────────────────────
   const TODAY=new Date('2026-06-01T00:00:00');
@@ -1427,7 +1218,6 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
   const mayCats=Object.entries(mayCatMap).sort(function(a,b){return b[1]-a[1];}).slice(0,7);
   const maxCat=Math.max.apply(null,mayCats.map(function(c){return c[1];})||[1]);
 
-<<<<<<< HEAD
   // ── May responsible party breakdown ───────────────────────────────
   const mayRespMap={};
   mayTix.forEach(function(t){
@@ -1442,16 +1232,6 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
     var p=e[1].total?Math.round(e[1].res/e[1].total*100):0;
     return {name:e[0],pct:p,total:e[1].total,res:e[1].res,prg:e[1].prg,unr:e[1].unr};
   }).sort(function(a,b){return b.total-a.total;}).slice(0,8);
-=======
-  // Trend line (last 7 days)
-  const last7=days.slice(-7);
-  const l7data=last7.map(function(d){const dt=tickets.filter(function(t){return tktDateStr(t)===d;});const dr=dt.filter(function(t){return t.status==='resolved';}).length;return{day:d,total:dt.length,res:dr};});
-  const maxL7=Math.max(...l7data.map(function(d){return d.total;}),1);
-  const W=260,H=80,pad=12;
-  const pts=l7data.map(function(d,i){return{x:pad+i*(W-pad*2)/(Math.max(l7data.length-1,1)),y:d.total?H-pad-(d.total/maxL7)*(H-pad*2):H-pad};});
-  const linePath=pts.map(function(p,i){return(i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
-  const areaPath=linePath+(pts.length?' L'+pts[pts.length-1].x+','+(H-pad)+' L'+pad+','+(H-pad)+' Z':'');
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
 
   // ── Shared card style ─────────────────────────────────────────────
   var cardS={background:'var(--card)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'};
@@ -1568,21 +1348,9 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
         <div style={{position:'absolute',top:0,right:0,width:320,height:'100%',background:'radial-gradient(circle,rgba(227,6,19,.14) 0%,transparent 70%)',pointerEvents:'none'}}/>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
           <div>
-<<<<<<< HEAD
             <div style={{font:'700 9px/1 Sora,sans-serif',color:'#E30613',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:6}}>EKEDP CX HUB · MONTHLY REPORT</div>
             <div style={{font:'800 22px/1.1 Sora,sans-serif',color:'#fff',fontStyle:'italic',marginBottom:4}}>Month-by-Month Overview</div>
             <div style={{font:'500 11px/1 Sora,sans-serif',color:'rgba(255,255,255,.4)'}}>EKEDP Customer Experience · Marina HQ</div>
-=======
-            <div style={{font:'700 9px/1 Sora,sans-serif',color:'#F97316',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:6}}>Daily Report</div>
-            <div style={{font:'800 20px/1.1 Sora,sans-serif',color:'#fff',marginBottom:4}}>Day {new Date(activeDay+'T12:00').getDate()} — {new Date(activeDay+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
-          </div>
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <div style={{display:'flex',gap:6}}>
-              <button onClick={function(){setViewMode('report');}} style={{padding:'7px 12px',border:'1px solid '+(viewMode==='report'?'#F97316':'rgba(255,255,255,.2)'),borderRadius:8,background:viewMode==='report'?'#F97316':'transparent',color:'#fff',font:'700 11px Sora,sans-serif',cursor:'pointer'}}>📊 Report</button>
-              <button onClick={function(){setViewMode('table');}} style={{padding:'7px 12px',border:'1px solid '+(viewMode==='table'?'#F97316':'rgba(255,255,255,.2)'),borderRadius:8,background:viewMode==='table'?'#F97316':'transparent',color:'#fff',font:'700 11px Sora,sans-serif',cursor:'pointer'}}>📋 Table</button>
-            </div>
-            <ScreenClock onSettings={onSettings}/>
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
           </div>
           <ScreenClock onSettings={onSettings}/>
         </div>
@@ -1600,7 +1368,6 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* ── MAY VIEW ─────────────────────────────────────────────── */}
       {activeMonth==='may'&&(
         <div style={{padding:'22px 28px'}}>
@@ -1648,96 +1415,6 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
                     </div>
                   </div>
                 );})}
-=======
-      {viewMode==='table'?(
-        // ── TABLE VIEW — Agents Hub style ────────────────────────────
-        <DailyTicketsTable dayTix={dayTix} activeDay={activeDay} onUpdate={onUpdate} showToast={showToast||onSettings}/>
-      ):(
-        // ── REPORT VIEW (image 1 style) ───────────────────────────────
-        <div style={{padding:'18px 28px',display:'flex',flexDirection:'column',gap:14}}>
-          {/* Row 1: KPI cards + Calendar */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 240px',gap:14}}>
-            {/* KPI cards */}
-            {[
-              {l:'Total Tickets',v:dayTix.length,prev:prevTix.length,c:'#3730A3',bg:'#EEF0FE',bar:'#6366F1'},
-              {l:'Resolved',v:res,prev:prevRes,c:'#16A34A',bg:'#ECFDF5',bar:'#22C55E'},
-              {l:'In Progress',v:prg,prev:prevTix.filter(function(t){return t.status==='progress';}).length,c:'#D97706',bg:'#FFFBEB',bar:'#F59E0B'},
-              {l:'Unresolved',v:unr,prev:prevTix.filter(function(t){return t.status==='unresolved';}).length,c:'#DC2626',bg:'#FEF2F2',bar:'#EF4444'},
-            ].map(function(k){
-              const diff=k.v-k.prev;
-              const up=diff>=0;
-              return(
-                <div key={k.l} style={Object.assign({},lCard,{})}>
-                  <div style={{padding:'14px 16px'}}>
-                    <div style={{font:'700 10px/1 Sora,sans-serif',color:'#64748B',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:8}}>{k.l}</div>
-                    <div style={{font:"900 36px/1 'JetBrains Mono',monospace",color:k.c,marginBottom:8}}>{k.v}</div>
-                    {k.prev>0&&<div style={{display:'flex',alignItems:'center',gap:5,font:'600 11px/1 Sora,sans-serif',color:up?'#16A34A':'#DC2626'}}>
-                      <span style={{fontSize:14}}>{up?'↑':'↓'}</span>
-                      <span>{Math.abs(diff)} vs Day {prevDay||'—'}</span>
-                    </div>}
-                    <div style={{marginTop:10,height:4,background:'#F1F5FF',borderRadius:2}}>
-                      <div style={{width:Math.min(k.v/Math.max(dayTix.length,1)*100,100)+'%',height:4,background:k.bar,borderRadius:2}}/>
-                    </div>
-                  </div>
-                </div>);})}
-
-            {/* Calendar */}
-            <div style={lCard}>
-              <div style={Object.assign({},lHead,{})}>
-                <button onClick={prevMonth} style={{background:'none',border:'none',cursor:'pointer',color:'#3730A3',font:'800 14px/1 Sora,sans-serif',padding:'0 4px'}}>◀</button>
-                <span style={{font:'800 12px Sora,sans-serif',color:'#1E1B4B'}}>{MONTHS[calMonth-1]} {calYear}</span>
-                <button onClick={nextMonth} style={{background:'none',border:'none',cursor:'pointer',color:'#3730A3',font:'800 14px/1 Sora,sans-serif',padding:'0 4px'}}>▶</button>
-              </div>
-              <div style={{padding:'10px 12px'}}>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:4}}>
-                  {['S','M','T','W','T','F','S'].map(function(d,i){return <div key={i} style={{font:'700 8px/1 Sora,sans-serif',color:'#94A3B8',textAlign:'center',padding:'2px 0'}}>{d}</div>;})}
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
-                  {Array.from({length:offset},function(_,i){return <div key={'e'+i}/>;}) }
-                  {Array.from({length:daysInMonth},function(_,i){
-                    const d=i+1;
-                    const isSel=d===activeDay;
-                    const isToday=d===watDayNow();
-                    const hasTix=calDayTickets(d)>0;
-                    return(
-                      <button key={d} onClick={function(){if(calDayTickets(d)>0)setActiveDay(d);}}
-                        style={{padding:'3px 0',borderRadius:6,border:'none',font:"700 10px/1.4 'JetBrains Mono',monospace",
-                          background:isSel?'#6366F1':isToday?'#FEF3C7':'transparent',
-                          color:isSel?'#fff':isToday?'#92400E':hasTix?'#3730A3':'#94A3B8',
-                          cursor:hasTix?'pointer':'default',
-                          boxShadow:isSel?'0 2px 8px rgba(99,102,241,.4)':'none',
-                          position:'relative',textAlign:'center'}}>
-                        {d}
-                        {hasTix&&!isSel&&<span style={{position:'absolute',bottom:1,left:'50%',transform:'translateX(-50%)',width:4,height:4,borderRadius:'50%',background:'#F97316',display:'block'}}/>}
-                      </button>);
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 2: Trend line + Resolution rate + BU bars */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 180px 1fr',gap:14}}>
-            {/* Trend line */}
-            <div style={lCard}>
-              <div style={lHead}><span style={{color:'#1E1B4B',font:'700 12px Sora,sans-serif'}}>7-Day Trend</span><span style={{font:'600 10px Sora,sans-serif',color:'#94A3B8'}}>last {l7data.length} days</span></div>
-              <div style={lBody}>
-                <svg width="100%" viewBox={"0 0 "+W+" "+H} preserveAspectRatio="none" style={{height:80,display:'block',marginBottom:8}}>
-                  <defs>
-                    <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366F1" stopOpacity="0.25"/>
-                      <stop offset="100%" stopColor="#6366F1" stopOpacity="0.02"/>
-                    </linearGradient>
-                  </defs>
-                  {[0,.25,.5,.75,1].map(function(f,i){return <line key={i} x1={pad} y1={pad+(1-f)*(H-pad*2)} x2={W-pad} y2={pad+(1-f)*(H-pad*2)} stroke="#E0E0F8" strokeWidth="1"/>;}) }
-                  <path d={areaPath} fill="url(#tg)"/>
-                  <path d={linePath} fill="none" stroke="#6366F1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  {pts.map(function(p,i){const isActive=l7data[i]&&l7data[i].day===activeDay;return <circle key={i} cx={p.x} cy={p.y} r={isActive?5:3} fill={isActive?'#F97316':'#6366F1'} stroke="#fff" strokeWidth="1.5"/>;}) }
-                </svg>
-                <div style={{display:'flex',justifyContent:'space-between'}}>
-                  {l7data.map(function(d){const lbl=d.day?d.day.slice(5).replace('-','/'):d.day;return <div key={d.day} style={{font:"500 9px/1 'JetBrains Mono',monospace",color:d.day===activeDay?'#F97316':'#94A3B8',textAlign:'center'}}>{lbl}</div>;})}
-                </div>
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
               </div>
             </div>
 
@@ -1772,7 +1449,6 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
             </div>
           </div>
 
-<<<<<<< HEAD
           {/* Carry-forward table */}
           <div style={Object.assign({},cardS,{border:'1px solid rgba(245,158,11,.3)'})}>
             <div style={{padding:'14px 20px',background:'rgba(245,158,11,.07)',borderBottom:'1px solid rgba(245,158,11,.18)',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
@@ -1780,25 +1456,6 @@ function DailyReport({tickets,onSettings,onUpdate,showToast}){
               <div style={{flex:1}}>
                 <div style={{font:'700 9px/1 Sora,sans-serif',color:'#FCD34D',textTransform:'uppercase',letterSpacing:'.14em',marginBottom:4}}>CARRIED FORWARD TO JUNE 2026</div>
                 <div style={{font:'600 13px/1 Sora,sans-serif',color:'#fff'}}>{carryAll.length} tickets still pending · Update in June view when support resolves</div>
-=======
-          {/* Row 3: Responsible party progress */}
-          {byResp.length>0&&(
-            <div style={lCard}>
-              <div style={lHead}><span style={{color:'#1E1B4B'}}>🎯 Responsible Parties — {new Date(activeDay+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span><span style={{font:'600 10px Sora,sans-serif',color:'#94A3B8'}}>{byResp.length} parties</span></div>
-              <div style={{padding:'12px 16px',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10}}>
-                {byResp.map(function(r){const col=r.pct>=80?'#22C55E':r.pct>=50?'#F59E0B':'#EF4444';return(
-                  <div key={r.sn} style={{background:'#F8FAFF',borderRadius:9,padding:'10px 12px',border:'1px solid #E0E0F8'}}>
-                    <div style={{font:'700 11px/1 Sora,sans-serif',color:'#1E1B4B',marginBottom:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</div>
-                    <div style={{font:'500 9px/1 Sora,sans-serif',color:'#94A3B8',marginBottom:8}}>{r.cat} · {r.total} ticket{r.total!==1?'s':''}</div>
-                    <div style={{height:5,background:'#E0E0F8',borderRadius:3,marginBottom:5}}>
-                      <div style={{width:r.pct+'%',height:5,background:col,borderRadius:3,transition:'width .6s'}}/>
-                    </div>
-                    <div style={{display:'flex',justifyContent:'space-between'}}>
-                      <span style={{font:'600 10px JetBrains Mono,monospace',color:'#22C55E'}}>{r.res} res</span>
-                      <span style={{font:'800 11px JetBrains Mono,monospace',color:col}}>{r.pct}%</span>
-                    </div>
-                  </div>);})}
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
               </div>
               {filterPills()}
             </div>
@@ -3118,10 +2775,11 @@ function buildEmailHtml(title,subtitle,bodyHtml){
 }
 
 // ── REPORT: VERIFY ────────────────────────────────────────────────
-function ReportVerify({tickets,showToast}){
+function ReportVerify({tickets,onBulkUpdate,showToast}){
   const[spText,setSpText]=useState('');
   const[spTickets,setSpTickets]=useState([]);
   const[parsed,setParsed]=useState(false);
+  const[fixed,setFixed]=useState({});// num -> true when rectified
   const FIELDS=['status','category','resp'];
   function parseCSV(txt){
     const lines=txt.trim().split('\n');if(lines.length<2)return[];
@@ -3146,24 +2804,14 @@ function ReportVerify({tickets,showToast}){
       return 'unresolved';
     }
     return lines.slice(1).filter(Boolean).map(function(l){
-      var cols=splitLine(l);
-      var o={};hdr.forEach(function(h,i){o[h]=cols[i]?cols[i].replace(/^"|"$/g,'').trim():'';});
-      var num=o['id']||o.num||o['ticket no']||o['ticket_no']||'';
-      if(num.endsWith('.0'))num=num.slice(0,-2);
-      return{
-        num:num,
-        status:normStatus(o.status),
-        spStatusRaw:o.status||'',
-        category:(o.category||o.cat||'').toUpperCase().trim(),
-        resp:o['responsible party']||o.resp||o.responsible||'',
-        bu:o['business unit']||o.bu||'',
-        name:o['customer name']||o.name||'',
-      };
-    }).filter(function(r){return r.num;});
+      const cols=l.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});
+      const o={};hdr.forEach(function(h,i){o[h]=cols[i]||'';});
+      return{num:o.num||o['ticket no']||o['ticket_no']||o.id||'',status:(o.status||'').toLowerCase(),category:o.category||o.cat||'',resp:o.resp||o['responsible party']||o.responsible||''};
+    });
   }
-  function doParse(){const r=parseCSV(spText);setSpTickets(r);setParsed(true);}
+  function doParse(){const r=parseCSV(spText);setSpTickets(r);setParsed(true);setFixed({});}
   const appMap={};tickets.forEach(function(t){if(t.num)appMap[String(t.num)]=t;});
-  const mismatches=spTickets.map(function(sp){
+  const allMismatches=spTickets.map(function(sp){
     const app=appMap[String(sp.num)];
     if(!app)return{num:sp.num,issue:'Not found in app',sp:sp,app:null};
     const spStatus=sp.status||'';
@@ -3179,10 +2827,31 @@ function ReportVerify({tickets,showToast}){
     if(diffs.length)return{num:sp.num,issue:'Mismatch: '+diffs.join(', '),sp:sp,app:app,diffs:diffs};
     return null;
   }).filter(Boolean);
-  const matched=spTickets.length-mismatches.length;
+  const mismatches=allMismatches.filter(function(m){return !fixed[m.num];});
+  const matched=spTickets.length-allMismatches.length;
+
+  function applyFix(m){
+    if(!m.app||!m.diffs)return;
+    const patch={};m.diffs.forEach(function(f){patch[f]=m.sp[f];});
+    onBulkUpdate([m.app.id],patch);
+    setFixed(function(p){return Object.assign({},p,{[m.num]:true});});
+    showToast('Fixed #'+m.num+' ✓');
+  }
+  function applyAll(){
+    const fixable=mismatches.filter(function(m){return m.app&&m.diffs&&m.diffs.length;});
+    if(!fixable.length)return;
+    const byId={};fixable.forEach(function(m){byId[m.app.id]=byId[m.app.id]||{};m.diffs.forEach(function(f){byId[m.app.id][f]=m.sp[f];});});
+    // apply each individually via onBulkUpdate
+    Object.entries(byId).forEach(function(e){onBulkUpdate([e[0]],e[1]);});
+    const newFixed={};fixable.forEach(function(m){newFixed[m.num]=true;});
+    setFixed(function(p){return Object.assign({},p,newFixed);});
+    showToast('Fixed '+fixable.length+' tickets ✓');
+  }
+
+  const fixable=mismatches.filter(function(m){return m.app&&m.diffs&&m.diffs.length;});
   return(
     <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Verify Report</h1><div className="page-sub">Compare SharePoint import vs app tickets</div></div></div>
+      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Verify Report</h1><div className="page-sub">Compare SharePoint import vs app tickets — fix mismatches in one click</div></div></div>
       <div className="card" style={{marginBottom:16}}>
         <div className="card-head"><h3>Paste SharePoint CSV</h3></div>
         <div style={{padding:'0 20px 16px'}}>
@@ -3192,8 +2861,8 @@ function ReportVerify({tickets,showToast}){
       </div>
       {parsed&&(
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
-            {[{l:'SP Tickets',v:spTickets.length,c:'#6366F1'},{l:'Matched',v:matched,c:'#22C55E'},{l:'Mismatches',v:mismatches.length,c:mismatches.length?'#EF4444':'#22C55E'}].map(function(s){return(
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
+            {[{l:'SP Tickets',v:spTickets.length,c:'#6366F1'},{l:'Matched',v:matched,c:'#22C55E'},{l:'Mismatches',v:allMismatches.length,c:allMismatches.length?'#EF4444':'#22C55E'},{l:'Fixed',v:Object.keys(fixed).length,c:'#22C55E'}].map(function(s){return(
               <div key={s.l} className="card" style={{padding:16,textAlign:'center'}}>
                 <div style={{font:'700 28px/1 Sora,sans-serif',color:s.c}}>{s.v}</div>
                 <div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginTop:4}}>{s.l}</div>
@@ -3201,26 +2870,45 @@ function ReportVerify({tickets,showToast}){
             );})}
           </div>
           <div className="card">
-            <div className="card-head"><h3>Mismatches</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{mismatches.length} issues</span></div>
-            {!mismatches.length?<div style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>All tickets match ✓</div>:(
+            <div className="card-head">
+              <h3>Mismatches</h3>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{mismatches.length} remaining</span>
+                {fixable.length>0&&<button className="btn btn-primary btn-sm" onClick={applyAll} style={{fontSize:11,padding:'4px 12px'}}>Fix All ({fixable.length})</button>}
+              </div>
+            </div>
+            {!mismatches.length?<div style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>{allMismatches.length?'All mismatches fixed ✓':'All tickets match ✓'}</div>:(
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
                   <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
-                    {['Ticket #','Issue','SP Status','App Status','SP Category','App Category','SP Resp','App Resp'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}
+                    {['Ticket #','Issue','SP Value → App Value','Action'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}
                   </tr></thead>
                   <tbody>
-                    {mismatches.map(function(m){return(
-                      <tr key={m.num} style={{borderBottom:'1px solid var(--bdark)'}}>
-                        <td style={{padding:'10px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{m.num}</td>
-                        <td style={{padding:'10px 12px',color:m.issue==='Not found in app'?'#F59E0B':'#EF4444',fontSize:11}}>{m.issue}</td>
-                        <td style={{padding:'10px 12px'}}>{m.sp&&<span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'rgba(255,255,255,.1)',fontWeight:600}}>{m.sp.spStatusRaw||m.sp.status}</span>}</td>
-                        <td style={{padding:'10px 12px'}}>{m.app&&<span dangerouslySetInnerHTML={{__html:statusBadgeHtml(m.app.status)}}/>}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.sp&&m.sp.category}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.app&&m.app.category}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.sp&&m.sp.resp}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.app&&m.app.resp}</td>
-                      </tr>
-                    );})}
+                    {mismatches.map(function(m){
+                      const canFix=m.app&&m.diffs&&m.diffs.length;
+                      return(
+                        <tr key={m.num} style={{borderBottom:'1px solid var(--bdark)'}}>
+                          <td style={{padding:'10px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{m.num}</td>
+                          <td style={{padding:'10px 12px',color:'#EF4444',fontSize:11}}>{m.issue}</td>
+                          <td style={{padding:'10px 12px'}}>
+                            {m.diffs&&m.diffs.map(function(f){return(
+                              <div key={f} style={{marginBottom:4,display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+                                <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.06em'}}>{f}:</span>
+                                <span dangerouslySetInnerHTML={{__html:f==='status'?statusBadgeHtml(m.sp[f]):''}}/>
+                                {f!=='status'&&<span style={{font:'500 11px Sora,sans-serif',color:'#EF4444'}}>{m.sp[f]}</span>}
+                                <span style={{color:'var(--muted)'}}>→</span>
+                                <span dangerouslySetInnerHTML={{__html:f==='status'?statusBadgeHtml(m.app[f]):''}}/>
+                                {f!=='status'&&<span style={{font:'500 11px Sora,sans-serif',color:'var(--fg)'}}>{m.app[f]}</span>}
+                              </div>
+                            );})}
+                            {!m.diffs&&<span style={{color:'var(--muted)',fontSize:11}}>Not in app</span>}
+                          </td>
+                          <td style={{padding:'10px 12px'}}>
+                            {canFix&&<button className="btn btn-sm" onClick={function(){applyFix(m);}} style={{fontSize:11,padding:'4px 10px',background:'rgba(99,102,241,.15)',color:'#818CF8',border:'1px solid rgba(99,102,241,.3)'}}>Apply SP Values</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -3233,38 +2921,58 @@ function ReportVerify({tickets,showToast}){
 }
 
 // ── REPORT: ANOMALY ────────────────────────────────────────────────
-function ReportAnomaly({tickets}){
+function ReportAnomaly({tickets,onBulkUpdate,showToast}){
   const now=rptWatNow();
+  // Collect unique responsible parties from resolved tickets for the assign dropdown
+  const knownParties=[...new Set(tickets.map(function(t){return t.resp;}).filter(Boolean))].sort();
+
   const slaBreaches=tickets.filter(function(t){
     if(t.status==='resolved')return false;
     const d=rptWatDate(t);if(!d)return false;
-    const ms=now-new Date(d+'T00:00:00');
-    return ms>48*3600000;
+    return now-new Date(d+'T00:00:00')>48*3600000;
   });
-  const numCounts={};tickets.forEach(function(t){if(t.num){numCounts[String(t.num)]=(numCounts[String(t.num)]||0)+1;}});
+  const numCounts={};tickets.forEach(function(t){if(t.num)numCounts[String(t.num)]=(numCounts[String(t.num)]||0)+1;});
   const dupes=tickets.filter(function(t){return t.num&&numCounts[String(t.num)]>1;});
   const dupeNums=[...new Set(dupes.map(function(t){return String(t.num);}))];
   const orphans=tickets.filter(function(t){return !t.resp&&t.status!=='resolved';});
   const missing=tickets.filter(function(t){return !t.category||!t.num||!t.name;});
-  const sections=[
-    {key:'sla',label:'SLA Breaches (>48h unresolved)',color:'#EF4444',items:slaBreaches,cols:['#','Name','Category','Resp','Status','Created']},
-    {key:'dupe',label:'Duplicate Ticket Numbers',color:'#F97316',items:dupes,cols:['#','Name','Category','Agent','Status']},
-    {key:'orphan',label:'Orphaned Tickets (no responsible party)',color:'#FBBF24',items:orphans,cols:['#','Name','Category','Status','Created']},
-    {key:'missing',label:'Missing Required Fields',color:'#A78BFA',items:missing,cols:['#','Name','Category','Status']},
-  ];
-  function row(t,cols){return cols.map(function(c){
-    if(c==='#')return<td key={c} style={{padding:'8px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{t.num||'—'}</td>;
-    if(c==='Name')return<td key={c} style={{padding:'8px 12px',color:'var(--fg)'}}>{t.name||'—'}</td>;
-    if(c==='Category')return<td key={c} style={{padding:'8px 12px',color:'var(--fg)',fontSize:11}}>{t.category||<span style={{color:'#EF4444'}}>MISSING</span>}</td>;
-    if(c==='Resp')return<td key={c} style={{padding:'8px 12px',color:'var(--fg)'}}>{t.resp||<span style={{color:'#EF4444'}}>NONE</span>}</td>;
-    if(c==='Status')return<td key={c} style={{padding:'8px 12px'}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/></td>;
-    if(c==='Created')return<td key={c} style={{padding:'8px 12px',color:'var(--muted)',fontSize:11}}>{rptWatDate(t)||'—'}</td>;
-    if(c==='Agent')return<td key={c} style={{padding:'8px 12px',color:'var(--muted)'}}>{t.agent||'—'}</td>;
-    return<td key={c} style={{padding:'8px 12px'}}>—</td>;
-  });}
+
+  // Per-ticket inline edit state
+  const[orphanAssign,setOrphanAssign]=useState({});// id -> resp string
+  const[missingEdit,setMissingEdit]=useState({});// id -> {category,num,name}
+
+  function fixSLA(ids,newStatus){
+    onBulkUpdate(ids,{status:newStatus});
+    showToast('Updated '+ids.length+' ticket'+(ids.length>1?'s':'')+' → '+newStatus+' ✓');
+  }
+  function fixOrphan(t){
+    const r=orphanAssign[t.id]||'';if(!r.trim())return;
+    onBulkUpdate([t.id],{resp:r.trim()});
+    showToast('Assigned #'+t.num+' → '+r.trim()+' ✓');
+  }
+  function fixAllOrphans(resp){
+    if(!resp)return;
+    const ids=orphans.map(function(t){return t.id;});
+    onBulkUpdate(ids,{resp});
+    showToast('Assigned '+ids.length+' orphaned tickets → '+resp+' ✓');
+  }
+  function fixMissing(t){
+    const e=missingEdit[t.id]||{};
+    const patch={};
+    if(e.category&&!t.category)patch.category=e.category;
+    if(e.name&&!t.name)patch.name=e.name;
+    if(!Object.keys(patch).length)return;
+    onBulkUpdate([t.id],patch);
+    showToast('Patched #'+t.num+' ✓');
+  }
+
+  const CELL={padding:'8px 12px'};
+  const TH={padding:'8px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'};
+  const inlineInput={background:'var(--bg2)',border:'1px solid var(--bsoft)',borderRadius:6,color:'var(--fg)',font:'12px Sora,sans-serif',padding:'4px 8px',width:'100%'};
+
   return(
     <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Anomaly Report</h1><div className="page-sub">Flags SLA breaches, duplicates, orphans &amp; missing fields</div></div></div>
+      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Anomaly Report</h1><div className="page-sub">Diagnose &amp; fix SLA breaches, duplicates, orphans, missing fields</div></div></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
         {[{l:'SLA Breaches',v:slaBreaches.length,c:'#EF4444'},{l:'Duplicates',v:dupeNums.length+' nums',c:'#F97316'},{l:'Orphaned',v:orphans.length,c:'#FBBF24'},{l:'Missing Fields',v:missing.length,c:'#A78BFA'}].map(function(s){return(
           <div key={s.l} className="card" style={{padding:16,textAlign:'center'}}>
@@ -3273,87 +2981,316 @@ function ReportAnomaly({tickets}){
           </div>
         );})}
       </div>
-      {sections.map(function(sec){return(
-        <div key={sec.key} className="card" style={{marginBottom:16}}>
-          <div className="card-head"><h3 style={{color:sec.color}}>{sec.label}</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{sec.items.length} tickets</span></div>
-          {!sec.items.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
-            <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
-                <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{sec.cols.map(function(h){return<th key={h} style={{padding:'8px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
-                <tbody>{sec.items.map(function(t,i){return<tr key={i} style={{borderBottom:'1px solid var(--bdark)'}}>{row(t,sec.cols)}</tr>;})}</tbody>
-              </table>
-            </div>
-          )}
+
+      {/* SLA BREACHES */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head">
+          <h3 style={{color:'#EF4444'}}>SLA Breaches (&gt;48h unresolved)</h3>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{slaBreaches.length} tickets</span>
+            {slaBreaches.length>0&&<button className="btn btn-sm" onClick={function(){fixSLA(slaBreaches.map(function(t){return t.id;}), 'progress');}} style={{fontSize:11,padding:'4px 10px',background:'rgba(59,130,246,.15)',color:'#93C5FD',border:'1px solid rgba(59,130,246,.3)'}}>Mark All In Progress</button>}
+          </div>
         </div>
-      );})}
+        {!slaBreaches.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Category','Responsible Party','Status','Created','Action'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{slaBreaches.map(function(t){
+                const hrs=Math.round((now-new Date(rptWatDate(t)+'T00:00:00'))/3600000);
+                return(
+                  <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)'}}>
+                    <td style={{...CELL,color:'var(--ek-gold)',fontWeight:700}}>#{t.num||'—'}</td>
+                    <td style={{...CELL,color:'var(--fg)'}}>{t.name||'—'}</td>
+                    <td style={{...CELL,color:'var(--fg)',fontSize:11}}>{t.category||'—'}</td>
+                    <td style={{...CELL,color:'var(--fg)'}}>{t.resp||<span style={{color:'#EF4444'}}>NONE</span>}</td>
+                    <td style={{...CELL}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/><span style={{font:'500 10px Sora,sans-serif',color:'#EF4444',marginLeft:6}}>{hrs}h</span></td>
+                    <td style={{...CELL,color:'var(--muted)',fontSize:11}}>{rptWatDate(t)||'—'}</td>
+                    <td style={{...CELL}}>
+                      <div style={{display:'flex',gap:4}}>
+                        <button className="btn btn-sm" onClick={function(){fixSLA([t.id],'progress');}} style={{fontSize:10,padding:'3px 8px',background:'rgba(59,130,246,.15)',color:'#93C5FD',border:'1px solid rgba(59,130,246,.3)'}}>In Progress</button>
+                        <button className="btn btn-sm" onClick={function(){fixSLA([t.id],'resolved');}} style={{fontSize:10,padding:'3px 8px',background:'rgba(34,197,94,.15)',color:'#86EFAC',border:'1px solid rgba(34,197,94,.3)'}}>Resolve</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* DUPLICATES */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head"><h3 style={{color:'#F97316'}}>Duplicate Ticket Numbers</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{dupeNums.length} duplicate numbers ({dupes.length} tickets)</span></div>
+        {!dupes.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Category','Agent','Status'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{dupes.map(function(t,i){return(
+                <tr key={i} style={{borderBottom:'1px solid var(--bdark)',background:numCounts[String(t.num)]>1?'rgba(249,115,22,.04)':'transparent'}}>
+                  <td style={{...CELL,color:'#F97316',fontWeight:700}}>#{t.num}</td>
+                  <td style={{...CELL,color:'var(--fg)'}}>{t.name||'—'}</td>
+                  <td style={{...CELL,color:'var(--fg)',fontSize:11}}>{t.category||'—'}</td>
+                  <td style={{...CELL,color:'var(--muted)'}}>{t.agent||'—'}</td>
+                  <td style={{...CELL}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/></td>
+                </tr>
+              );})}</tbody>
+            </table>
+            <div style={{padding:'12px 16px',font:'500 11px Sora,sans-serif',color:'var(--muted)',borderTop:'1px solid var(--bdark)'}}>Resolve duplicates by editing tickets in All Complaints and merging or deleting the duplicate entry.</div>
+          </div>
+        )}
+      </div>
+
+      {/* ORPHANS */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head">
+          <h3 style={{color:'#FBBF24'}}>Orphaned Tickets (no responsible party)</h3>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{orphans.length} tickets</span>
+            {orphans.length>0&&knownParties.length>0&&(
+              <div style={{display:'flex',gap:4,alignItems:'center'}}>
+                <select id="orphan-bulk-assign" style={{...inlineInput,width:'auto'}} defaultValue="">
+                  <option value="">Assign all to…</option>
+                  {knownParties.map(function(p){return<option key={p} value={p}>{p}</option>;})}
+                </select>
+                <button className="btn btn-sm" onClick={function(){const s=document.getElementById('orphan-bulk-assign');fixAllOrphans(s.value);}} style={{fontSize:11,padding:'4px 10px',background:'rgba(251,191,36,.15)',color:'#FCD34D',border:'1px solid rgba(251,191,36,.3)'}}>Apply All</button>
+              </div>
+            )}
+          </div>
+        </div>
+        {!orphans.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Category','Status','Created','Assign To','Action'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{orphans.map(function(t){return(
+                <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)'}}>
+                  <td style={{...CELL,color:'var(--ek-gold)',fontWeight:700}}>#{t.num||'—'}</td>
+                  <td style={{...CELL,color:'var(--fg)'}}>{t.name||'—'}</td>
+                  <td style={{...CELL,color:'var(--fg)',fontSize:11}}>{t.category||'—'}</td>
+                  <td style={{...CELL}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/></td>
+                  <td style={{...CELL,color:'var(--muted)',fontSize:11}}>{rptWatDate(t)||'—'}</td>
+                  <td style={{...CELL,minWidth:160}}>
+                    {knownParties.length>0?(
+                      <select value={orphanAssign[t.id]||''} onChange={function(e){setOrphanAssign(function(p){return Object.assign({},p,{[t.id]:e.target.value});});}} style={inlineInput}>
+                        <option value="">Select party…</option>
+                        {knownParties.map(function(p){return<option key={p} value={p}>{p}</option>;})}
+                      </select>
+                    ):(
+                      <input value={orphanAssign[t.id]||''} onChange={function(e){setOrphanAssign(function(p){return Object.assign({},p,{[t.id]:e.target.value});});}} placeholder="Responsible party…" style={inlineInput}/>
+                    )}
+                  </td>
+                  <td style={{...CELL}}>
+                    <button className="btn btn-sm" onClick={function(){fixOrphan(t);}} style={{fontSize:10,padding:'3px 8px',background:'rgba(251,191,36,.15)',color:'#FCD34D',border:'1px solid rgba(251,191,36,.3)'}} disabled={!(orphanAssign[t.id]||'').trim()}>Assign</button>
+                  </td>
+                </tr>
+              );})}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* MISSING FIELDS */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head"><h3 style={{color:'#A78BFA'}}>Missing Required Fields</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{missing.length} tickets</span></div>
+        {!missing.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Missing','Fill In','Action'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{missing.map(function(t){
+                const missingFields=[];if(!t.category)missingFields.push('category');if(!t.num)missingFields.push('num');if(!t.name)missingFields.push('name');
+                const e=missingEdit[t.id]||{};
+                return(
+                  <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)'}}>
+                    <td style={{...CELL,color:'var(--ek-gold)',fontWeight:700}}>#{t.num||<span style={{color:'#EF4444'}}>MISSING</span>}</td>
+                    <td style={{...CELL,color:'var(--fg)'}}>{t.name||<span style={{color:'#EF4444'}}>MISSING</span>}</td>
+                    <td style={{...CELL}}>{missingFields.map(function(f){return<span key={f} style={{display:'inline-block',background:'rgba(167,139,250,.15)',color:'#A78BFA',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,marginRight:4,textTransform:'uppercase'}}>{f}</span>;})}</td>
+                    <td style={{...CELL,minWidth:200}}>
+                      {!t.category&&<input value={e.category||''} onChange={function(ev){var v=ev.target.value;setMissingEdit(function(p){var sub=Object.assign({},p[t.id]||{},{category:v});return Object.assign({},p,{[t.id]:sub});});}} placeholder="Category…" style={{...inlineInput,marginBottom:4}}/>}
+                      {!t.name&&<input value={e.name||''} onChange={function(ev){var v=ev.target.value;setMissingEdit(function(p){var sub=Object.assign({},p[t.id]||{},{name:v});return Object.assign({},p,{[t.id]:sub});});}} placeholder="Name…" style={inlineInput}/>}
+                    </td>
+                    <td style={{...CELL}}>
+                      <button className="btn btn-sm" onClick={function(){fixMissing(t);}} style={{fontSize:10,padding:'3px 8px',background:'rgba(167,139,250,.15)',color:'#C4B5FD',border:'1px solid rgba(167,139,250,.3)'}}>Save</button>
+                    </td>
+                  </tr>
+                );
+              })}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── REPORT: EXECUTIVE ─────────────────────────────────────────────
+// ── REPORT: EXECUTIVE + RESPONSIBLE PARTY (merged) ────────────────
 function ReportExecutive({tickets,showToast}){
+  const[tab,setTab]=useState('overview');
   const total=tickets.length;
   const res=tickets.filter(function(t){return t.status==='resolved';}).length;
   const prg=tickets.filter(function(t){return t.status==='progress';}).length;
   const unr=tickets.filter(function(t){return t.status==='unresolved';}).length;
   const resPct=total?Math.round(res/total*100):0;
+  const resFill=resPct>=80?'#22C55E':resPct>=60?'#F59E0B':'#EF4444';
 
-  // Category breakdown
+  // Category data
   const catMap={};tickets.forEach(function(t){const c=t.category||'Uncategorised';if(!catMap[c])catMap[c]={total:0,res:0,prg:0,unr:0};catMap[c].total++;if(t.status==='resolved')catMap[c].res++;else if(t.status==='progress')catMap[c].prg++;else catMap[c].unr++;});
   const cats=Object.entries(catMap).sort(function(a,b){return b[1].total-a[1].total;});
 
-  // Top 5 unresolved parties
-  const respMap={};tickets.filter(function(t){return t.status==='unresolved';}).forEach(function(t){const r=t.resp||'Unassigned';respMap[r]=(respMap[r]||0)+1;});
-  const top5=Object.entries(respMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  // Responsible party data
+  const partyMap={};tickets.forEach(function(t){const r=t.resp||'Unassigned';if(!partyMap[r])partyMap[r]={total:0,res:0,prg:0,unr:0};partyMap[r].total++;if(t.status==='resolved')partyMap[r].res++;else if(t.status==='progress')partyMap[r].prg++;else partyMap[r].unr++;});
+  const partyRows=Object.entries(partyMap).map(function(e){const p=e[1].total?Math.round(e[1].res/e[1].total*100):0;return{name:e[0],...e[1],pct:p};}).sort(function(a,b){return b.total-a.total;});
+
+  // Top 5 worst unresolved
+  const top5unr=partyRows.slice().sort(function(a,b){return b.unr-a.unr;}).slice(0,5);
+
+  const TABS=[{id:'overview',l:'Overview'},{id:'categories',l:'By Category'},{id:'parties',l:'By Responsible Party'}];
 
   function exportEmail(){
-    const catRows=cats.map(function(e){const c=e[0],d=e[1];const p=d.total?Math.round(d.res/d.total*100):0;return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${c}</td><td style="padding:10px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#1E293B">${d.total}</td><td style="padding:10px 12px;text-align:center">${statusBadgeHtml('resolved').replace(/>RESOLVED</,`>${d.res}<`)}</td><td style="padding:10px 12px;text-align:center">${statusBadgeHtml('unresolved').replace(/>UNRESOLVED</,`>${d.unr}<`)}</td><td style="padding:10px 12px;min-width:120px">${pctBarHtml(p)}<div style="font:600 11px Sora,sans-serif;color:#64748B;margin-top:2px">${p}%</div></td></tr>`;}).join('');
-    const top5Rows=top5.map(function(e,i){return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font:700 13px Sora,sans-serif;color:#${['F97316','F59E0B','FBBF24','A78BFA','6366F1'][i]}">#${i+1}</td><td style="padding:10px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${e[0]}</td><td style="padding:10px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#EF4444">${e[1]}</td></tr>`;}).join('');
+    const catRows=cats.map(function(e){const c=e[0],d=e[1];const p=d.total?Math.round(d.res/d.total*100):0;return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${c}</td><td style="padding:10px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#1E293B">${d.total}</td><td style="padding:10px 12px;text-align:center;color:#22C55E;font:700 13px Sora,sans-serif">${d.res}</td><td style="padding:10px 12px;text-align:center;color:#EF4444;font:700 13px Sora,sans-serif">${d.unr}</td><td style="padding:10px 12px;min-width:120px">${pctBarHtml(p)}<div style="font:600 11px Sora,sans-serif;color:#64748B;margin-top:2px">${p}%</div></td></tr>`;}).join('');
+    const partyHtml=partyRows.map(function(r){return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:8px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${r.name}</td><td style="padding:8px 12px;text-align:center;font:700 13px Sora,sans-serif">${r.total}</td><td style="padding:8px 12px;text-align:center;color:#22C55E;font:700 13px Sora,sans-serif">${r.res}</td><td style="padding:8px 12px;text-align:center;color:#EF4444;font:700 13px Sora,sans-serif">${r.unr}</td><td style="padding:8px 12px">${pctBarHtml(r.pct)}<div style="font:600 10px Sora,sans-serif;color:#64748B;margin-top:2px">${r.pct}%</div></td><td style="padding:8px 12px">${gradeBadgeHtml(r.pct)}</td></tr>`;}).join('');
     const body=`
-<div style="display:flex;gap:16px;margin-bottom:24px">
-${[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution %',v:resPct+'%',c:resPct>=80?'#22C55E':resPct>=60?'#F59E0B':'#EF4444'}].map(function(s){return`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 20px;text-align:center;flex:1"><div style="font:800 26px/1 Sora,sans-serif;color:${s.c}">${s.v}</div><div style="font:500 10px Sora,sans-serif;color:#64748B;margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${s.l}</div></div>`;}).join('')}
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+${[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution Rate',v:resPct+'%',c:resFill}].map(function(s){return`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;text-align:center;flex:1;min-width:80px"><div style="font:800 26px/1 Sora,sans-serif;color:${s.c}">${s.v}</div><div style="font:500 10px Sora,sans-serif;color:#64748B;margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${s.l}</div></div>`;}).join('')}
 </div>
-<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 12px">Category Breakdown</h3>
+<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 10px">Category Breakdown</h3>
 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:24px">
-<thead><tr style="background:#F1F5F9"><th style="padding:10px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Category</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Total</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Resolved</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Unresolved</th><th style="padding:10px 12px;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Rate</th></tr></thead>
-<tbody>${catRows}</tbody>
-</table>
-<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 12px">Top 5 Unresolved Parties</h3>
+<thead><tr style="background:#F1F5F9"><th style="padding:8px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Category</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Total</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Resolved</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Unresolved</th><th style="padding:8px 12px;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Rate</th></tr></thead>
+<tbody>${catRows}</tbody></table>
+<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 10px">Responsible Party Performance</h3>
 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
-<thead><tr style="background:#F1F5F9"><th style="padding:10px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Rank</th><th style="padding:10px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Party</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Unresolved</th></tr></thead>
-<tbody>${top5Rows}</tbody>
-</table>`;
-    const html=buildEmailHtml('Executive Summary Report','EK CX Hub · All Tickets · '+new Date().toLocaleDateString('en-GB'),body);
-    navigator.clipboard.writeText(html).then(function(){showToast('Email HTML copied to clipboard ✓');}).catch(function(){showToast('Copy failed — check clipboard permissions','error');});
+<thead><tr style="background:#F1F5F9"><th style="padding:8px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Party</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Total</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Resolved</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Unresolved</th><th style="padding:8px 12px;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Rate</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Rating</th></tr></thead>
+<tbody>${partyHtml}</tbody></table>`;
+    const html=buildEmailHtml('Executive Summary Report','EK CX Hub · '+new Date().toLocaleDateString('en-GB'),body);
+    navigator.clipboard.writeText(html).then(function(){showToast('Email HTML copied ✓');}).catch(function(){showToast('Copy failed','error');});
   }
+
+  const tabStyle=function(id){return{padding:'8px 18px',border:'none',borderRadius:20,cursor:'pointer',font:'600 12px Sora,sans-serif',transition:'all .15s',background:tab===id?'var(--ek-gold)':' transparent',color:tab===id?'#0A1628':'var(--muted)'};};
 
   return(
     <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Executive Report</h1><div className="page-sub">Full breakdown with resolution rates &amp; top unresolved parties</div></div>
+      <div className="page-header">
+        <div><h1 style={{color:'var(--ek-gold)'}}>Executive Report</h1><div className="page-sub">Category breakdown · Responsible party performance · Export ready</div></div>
         <button className="btn btn-primary" onClick={exportEmail}>Copy Email HTML</button>
       </div>
+
+      {/* KPI row */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:20}}>
-        {[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution %',v:resPct+'%',c:resPct>=80?'#22C55E':resPct>=60?'#F59E0B':'#EF4444'}].map(function(s){return(
+        {[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution %',v:resPct+'%',c:resFill}].map(function(s){return(
           <div key={s.l} className="card" style={{padding:16,textAlign:'center'}}>
             <div style={{font:'800 28px/1 Sora,sans-serif',color:s.c}}>{s.v}</div>
             <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:4,textTransform:'uppercase',letterSpacing:'.1em'}}>{s.l}</div>
           </div>
         );})}
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16}}>
+
+      {/* Donut-style resolution ring + top 5 worst */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        <div className="card" style={{padding:20}}>
+          <div style={{font:'700 12px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:12}}>Overall Resolution Rate</div>
+          <div style={{display:'flex',alignItems:'center',gap:20}}>
+            <div style={{position:'relative',width:100,height:100,flexShrink:0}}>
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg2)" strokeWidth="14"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke={resFill} strokeWidth="14"
+                  strokeDasharray={`${resPct*2.513} 251.3`} strokeDashoffset="62.83" strokeLinecap="round" style={{transition:'stroke-dasharray .6s ease'}}/>
+              </svg>
+              <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}}>
+                <div style={{font:'800 18px/1 Sora,sans-serif',color:resFill}}>{resPct}%</div>
+              </div>
+            </div>
+            <div style={{flex:1}}>
+              {[{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'}].map(function(s){return(
+                <div key={s.l} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                  <div style={{width:10,height:10,borderRadius:'50%',background:s.c,flexShrink:0}}/>
+                  <span style={{flex:1,font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>{s.l}</span>
+                  <span style={{font:'700 13px Sora,sans-serif',color:s.c}}>{s.v}</span>
+                  <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',minWidth:32,textAlign:'right'}}>{total?Math.round(s.v/total*100):0}%</span>
+                </div>
+              );})}
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{padding:20}}>
+          <div style={{font:'700 12px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:12}}>Top 5 — Most Unresolved</div>
+          {top5unr.map(function(r,i){const colors=['#EF4444','#F97316','#F59E0B','#FBBF24','#A78BFA'];return(
+            <div key={r.name} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+              <span style={{font:'800 13px Sora,sans-serif',color:colors[i],minWidth:20}}>#{i+1}</span>
+              <span style={{flex:1,font:'500 12px Sora,sans-serif',color:'var(--fg)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</span>
+              <div style={{minWidth:60,textAlign:'right'}}>
+                <span style={{font:'700 13px Sora,sans-serif',color:'#EF4444'}}>{r.unr}</span>
+                <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginLeft:4}}>unresolved</span>
+              </div>
+            </div>
+          );})}
+          {!top5unr.length&&<div style={{padding:'24px 0',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No unresolved tickets ✓</div>}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:'flex',gap:4,marginBottom:14}}>
+        {TABS.map(function(t){return<button key={t.id} style={tabStyle(t.id)} onClick={function(){setTab(t.id);}}>{t.l}</button>;})}
+      </div>
+
+      {tab==='overview'&&(
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div className="card">
+            <div className="card-head"><h3>Category Volume</h3></div>
+            <div style={{padding:'0 16px 16px'}}>
+              {cats.slice(0,8).map(function(e){const pctC=total?Math.round(e[1].total/total*100):0;const fill=e[1].total?Math.round(e[1].res/e[1].total*100):0;const fCol=fill>=80?'#22C55E':fill>=60?'#F59E0B':'#EF4444';return(
+                <div key={e[0]} style={{marginBottom:10}}>
+                  <div style={{display:'flex',justifyContent:'space-between',font:'500 12px Sora,sans-serif',color:'var(--fg)',marginBottom:3}}>
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'65%'}}>{e[0]}</span>
+                    <span style={{display:'flex',gap:8,flexShrink:0}}>
+                      <span style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>{pctC}%</span>
+                      <span style={{font:'700 12px Sora,sans-serif',color:'var(--fg)'}}>{e[1].total}</span>
+                    </span>
+                  </div>
+                  <div style={{background:'var(--bg2)',borderRadius:4,height:6,position:'relative'}}>
+                    <div style={{background:fCol,width:(e[1].res/e[1].total*100)+'%',height:6,borderRadius:4,position:'absolute',left:0,top:0}}/>
+                    <div style={{background:'rgba(59,130,246,.5)',width:(e[1].prg/e[1].total*100)+'%',height:6,position:'absolute',left:(e[1].res/e[1].total*100)+'%',top:0}}/>
+                  </div>
+                </div>
+              );})}
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-head"><h3>Party Performance</h3></div>
+            <div style={{padding:'0 16px 16px'}}>
+              {partyRows.slice(0,8).map(function(r){return(
+                <div key={r.name} style={{marginBottom:10}}>
+                  <div style={{display:'flex',justifyContent:'space-between',font:'500 12px Sora,sans-serif',color:'var(--fg)',marginBottom:3}}>
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'60%'}}>{r.name}</span>
+                    <span style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+                      <span dangerouslySetInnerHTML={{__html:gradeBadgeHtml(r.pct)}}/>
+                    </span>
+                  </div>
+                  <div style={{background:'var(--bg2)',borderRadius:4,height:6}}>
+                    <div style={{background:r.pct>=80?'#22C55E':r.pct>=60?'#F59E0B':'#EF4444',width:r.pct+'%',height:6,borderRadius:4}}/>
+                  </div>
+                  <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{r.res} resolved / {r.total} total</div>
+                </div>
+              );})}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab==='categories'&&(
         <div className="card">
           <div className="card-head"><h3>Category Breakdown</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{cats.length} categories</span></div>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
-              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['Category','Total','Resolved','Unresolved','Rate'].map(function(h){return<th key={h} style={{padding:'8px 12px',textAlign:h==='Category'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
+                {['Category','Total','Resolved','In Progress','Unresolved','Resolution Rate'].map(function(h){return<th key={h} style={{padding:'8px 12px',textAlign:h==='Category'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
               <tbody>{cats.map(function(e){const c=e[0],d=e[1];const p=d.total?Math.round(d.res/d.total*100):0;const fill=p>=80?'#22C55E':p>=60?'#F59E0B':'#EF4444';return(
                 <tr key={c} style={{borderBottom:'1px solid var(--bdark)'}}>
                   <td style={{padding:'8px 12px',color:'var(--fg)'}}>{c}</td>
                   <td style={{padding:'8px 12px',textAlign:'center',fontWeight:700,color:'var(--fg)'}}>{d.total}</td>
-                  <td style={{padding:'8px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml('resolved').replace('>RESOLVED<',`>${d.res}<`)}}/></td>
-                  <td style={{padding:'8px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml('unresolved').replace('>UNRESOLVED<',`>${d.unr}<`)}}/></td>
-                  <td style={{padding:'8px 12px',minWidth:120}}>
-                    <div style={{background:'var(--bg2)',borderRadius:4,height:8,width:'100%'}}><div style={{background:fill,width:p+'%',height:8,borderRadius:4}}/></div>
+                  <td style={{padding:'8px 12px',textAlign:'center',color:'#22C55E',fontWeight:700}}>{d.res}</td>
+                  <td style={{padding:'8px 12px',textAlign:'center',color:'#3B82F6',fontWeight:700}}>{d.prg}</td>
+                  <td style={{padding:'8px 12px',textAlign:'center',color:'#EF4444',fontWeight:700}}>{d.unr}</td>
+                  <td style={{padding:'8px 12px',minWidth:140}}>
+                    <div style={{background:'var(--bg2)',borderRadius:4,height:7}}><div style={{background:fill,width:p+'%',height:7,borderRadius:4}}/></div>
                     <div style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{p}%</div>
                   </td>
                 </tr>
@@ -3362,66 +3299,37 @@ ${[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progr
             </table>
           </div>
         </div>
+      )}
+
+      {tab==='parties'&&(
         <div className="card">
-          <div className="card-head"><h3>Top 5 Unresolved Parties</h3></div>
-          <div style={{padding:'0 16px 16px'}}>
-            {top5.map(function(e,i){const colors=['#F97316','#F59E0B','#FBBF24','#A78BFA','#6366F1'];return(
-              <div key={e[0]} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:i<4?'1px solid var(--bdark)':'none'}}>
-                <span style={{font:'800 14px Sora,sans-serif',color:colors[i],minWidth:20}}>#{i+1}</span>
-                <span style={{flex:1,font:'500 12px Sora,sans-serif',color:'var(--fg)'}}>{e[0]}</span>
-                <span style={{font:'700 14px Sora,sans-serif',color:'#EF4444'}}>{e[1]}</span>
-              </div>
-            );})}
-            {!top5.length&&<div style={{padding:'24px 0',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No unresolved tickets ✓</div>}
+          <div className="card-head"><h3>Responsible Party Performance</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{partyRows.length} parties</span></div>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
+                {['Responsible Party','Total','Resolved','In Progress','Unresolved','Rate','Rating'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:h==='Responsible Party'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,textTransform:'uppercase'}}>{h}</th>;})}
+              </tr></thead>
+              <tbody>
+                {partyRows.map(function(r){const fill=r.pct>=80?'#22C55E':r.pct>=60?'#F59E0B':'#EF4444';return(
+                  <tr key={r.name} style={{borderBottom:'1px solid var(--bdark)'}}>
+                    <td style={{padding:'10px 12px',color:'var(--fg)',fontWeight:600}}>{r.name}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'var(--fg)'}}>{r.total}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:'#22C55E',fontWeight:700}}>{r.res}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:'#3B82F6',fontWeight:700}}>{r.prg}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:'#EF4444',fontWeight:700}}>{r.unr}</td>
+                    <td style={{padding:'10px 12px',minWidth:130}}>
+                      <div style={{background:'var(--bg2)',borderRadius:4,height:8}}><div style={{background:fill,width:r.pct+'%',height:8,borderRadius:4}}/></div>
+                      <div style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{r.pct}%</div>
+                    </td>
+                    <td style={{padding:'10px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:gradeBadgeHtml(r.pct)}}/></td>
+                  </tr>
+                );})}
+                {!partyRows.length&&<tr><td colSpan={7} style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No ticket data</td></tr>}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ── REPORT: RESPONSIBLE PARTY ─────────────────────────────────────
-function ReportResponsibleParty({tickets}){
-  const partyMap={};
-  tickets.forEach(function(t){
-    const r=t.resp||'Unassigned';
-    if(!partyMap[r])partyMap[r]={total:0,res:0,prg:0,unr:0};
-    partyMap[r].total++;
-    if(t.status==='resolved')partyMap[r].res++;
-    else if(t.status==='progress')partyMap[r].prg++;
-    else partyMap[r].unr++;
-  });
-  const rows=Object.entries(partyMap).map(function(e){const r=e[0],d=e[1];const pct=d.total?Math.round(d.res/d.total*100):0;return{name:r,...d,pct};}).sort(function(a,b){return b.total-a.total;});
-  return(
-    <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Responsible Party Report</h1><div className="page-sub">Per-party resolution rates with performance ratings</div></div></div>
-      <div className="card">
-        <div className="card-head"><h3>All Responsible Parties</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{rows.length} parties</span></div>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
-            <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
-              {['Responsible Party','Total','Resolved','In Progress','Unresolved','Rate','Rating'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:h==='Responsible Party'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}
-            </tr></thead>
-            <tbody>
-              {rows.map(function(r){const fill=r.pct>=80?'#22C55E':r.pct>=60?'#F59E0B':'#EF4444';return(
-                <tr key={r.name} style={{borderBottom:'1px solid var(--bdark)'}}>
-                  <td style={{padding:'10px 12px',color:'var(--fg)',fontWeight:600}}>{r.name}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'var(--fg)'}}>{r.total}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',color:'#22C55E',fontWeight:700}}>{r.res}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',color:'#3B82F6',fontWeight:700}}>{r.prg}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',color:'#EF4444',fontWeight:700}}>{r.unr}</td>
-                  <td style={{padding:'10px 12px',minWidth:130}}>
-                    <div style={{background:'var(--bg2)',borderRadius:4,height:8,width:'100%'}}><div style={{background:fill,width:r.pct+'%',height:8,borderRadius:4}}/></div>
-                    <div style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{r.pct}%</div>
-                  </td>
-                  <td style={{padding:'10px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:gradeBadgeHtml(r.pct)}}/></td>
-                </tr>
-              );})}
-              {!rows.length&&<tr><td colSpan={7} style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No ticket data</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -4519,17 +4427,10 @@ function Settings({theme,onTheme,onClose,onReset,onDedup}){
               </button>);})}
           </div>
         </div>
-<<<<<<< HEAD
         <div style={{borderTop:'1px solid var(--bsoft)',paddingTop:16}}>
           <button className="btn" style={{width:'100%',marginBottom:8,background:'rgba(59,130,246,.12)',borderColor:'rgba(59,130,246,.3)',color:'#93C5FD'}} onClick={onDedup}>🧹 Remove Duplicate Tickets</button>
           <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset All Data</button>
           <div style={{font:'500 10px Sora,sans-serif',color:'var(--sub)',textAlign:'center',marginTop:8}}>Reset clears all tickets from localStorage</div>
-=======
-        <div style={{borderTop:'1px solid var(--bsoft)',paddingTop:16,display:'flex',flexDirection:'column',gap:10}}>
-          <button className="btn btn-sm" style={{width:'100%',background:'rgba(99,102,241,.15)',color:'#A5B4FC',border:'1px solid rgba(99,102,241,.35)'}} onClick={onDedup}>🧹 Remove Duplicate Tickets</button>
-          <button className="btn btn-danger" style={{width:'100%'}} onClick={onReset}>🗑 Reset All Data</button>
-          <div style={{font:'500 10px Sora,sans-serif',color:'var(--sub)',textAlign:'center'}}>Reset clears all tickets from localStorage</div>
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
         </div>
       </div>
     </div>
@@ -4632,32 +4533,9 @@ function App(){
     showToast('✓ Ticket #'+updated.num+' updated');
   }
 
-<<<<<<< HEAD
   function onSignIn(){setSignedIn(true);localStorage.setItem('ek_v2_auth','1');showToast('Welcome back ⚡');}
   function onSignOut(){setSignedIn(false);localStorage.removeItem('ek_v2_auth');}
   function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;    // Clear all agent tickets
-=======
-  function onSignIn(email,name){setSignedIn(true);setSignedInName(name||'');const ro=localStorage.getItem('ek_v2_readonly')==='1';setReadOnly(ro);localStorage.setItem('ek_v2_auth','1');localStorage.setItem('ek_v2_name',name||'');showToast('Welcome, '+name+' ⚡');}
-  function onSignOut(){setSignedIn(false);setSignedInName('');setReadOnly(false);localStorage.removeItem('ek_v2_auth');localStorage.removeItem('ek_v2_name');localStorage.removeItem('ek_v2_readonly');}
-  function onDedup(){
-    setTickets(function(prev){
-      // Only remove tickets with exact same ticket number — duplicate complaints are fine
-      const seen={};
-      const clean=prev.filter(function(t){
-        const n=String(t.num||'').trim().toLowerCase();
-        if(!n)return true;
-        if(seen[n])return false;
-        seen[n]=true;return true;
-      });
-      persistTickets(clean);
-      const removed=prev.length-clean.length;
-      showToast('🧹 Removed '+removed+' duplicate ticket ID'+(removed!==1?'s':'')+' · '+clean.length+' tickets remain');
-      return clean;
-    });
-  }
-  function onReset(){if(!confirm('Reset ALL data for the entire app? This clears all tickets for ALL agents and cannot be undone.'))return;
-    // Clear all agent tickets
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
     ['matthew','racheal','tomina','esther','loveth'].forEach(function(id){localStorage.removeItem('ek_tix_'+id);});
     // Clear manager tickets
     localStorage.removeItem('ek_v2_tickets');
@@ -4670,37 +4548,26 @@ function App(){
   if(!signedIn)return <Signin onSignIn={onSignIn}/>;
   const W=collapsed?64:220;
   const screens={
-<<<<<<< HEAD
     dashboard: <Dashboard tickets={viewTickets} shifts={shifts} onShift={onShift} onSettings={()=>setShowSettings(true)} onNav={setScreen}/>,
     daily:     <DailyReport tickets={tickets} onUpdate={onUpdate} onSettings={()=>setShowSettings(true)}/>,
     all:       <AllComplaints tickets={viewTickets} onUpdate={onUpdate} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});showToast('Updated '+ids.length+' ticket'+(ids.length>1?'s':'')+' ✅');}} onBatchUpdate={function(updates){setTickets(function(prev){const next=prev.map(function(t){const u=updates.find(function(x){return x.id===t.id;});return u?Object.assign({},t,u):t;});persistTickets(next);return next;});showToast('✅ Batch-updated '+updates.length+' tickets');}} onDelete={function(ids){setTickets(function(prev){const next=prev.filter(function(t){return !ids.includes(t.id);});persistTickets(next);return next;});showToast('🗑 Deleted '+ids.length+' ticket'+(ids.length>1?'s':'')+' permanently.');}} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
-=======
-    dashboard: <Dashboard tickets={tickets} shifts={shifts} onShift={onShift} onSettings={()=>setShowSettings(true)} onNav={setScreen} signedInName={signedInName}/>,
-    daily:     <DailyReport tickets={tickets} onSettings={()=>setShowSettings(true)} onUpdate={onUpdate} showToast={showToast}/>,
-    all:       <AllComplaints tickets={tickets} readOnly={readOnly} onUpdate={readOnly?null:onUpdate} onBulkUpdate={readOnly?null:function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});showToast('Updated '+ids.length+' ticket'+(ids.length>1?'s':'')+' ✅');}} onBatchUpdate={readOnly?null:function(updates){setTickets(function(prev){const next=prev.map(function(t){const u=updates.find(function(x){return x.id===t.id;});return u?Object.assign({},t,u):t;});persistTickets(next);return next;});showToast('✅ Batch-updated '+updates.length+' tickets');}} onDelete={readOnly?null:function(ids){setTickets(function(prev){const next=prev.filter(function(t){return !ids.includes(t.id);});persistTickets(next);return next;});showToast('🗑 Deleted '+ids.length+' ticket'+(ids.length>1?'s':'')+' permanently.');}} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
     log:       <LogTicket tickets={tickets} onAdd={onAdd} showToast={showToast} onSettings={()=>setShowSettings(true)}/>,
     cumulative:<Cumulative tickets={viewTickets} showToast={showToast}/>,
     analytics: <Analytics tickets={viewTickets}/>,
     slot:      <SlotReport tickets={viewTickets} showToast={showToast}/>,
     agents:    <Agents tickets={viewTickets} shifts={shifts} onShift={onShift} showToast={showToast}/>,
     sync:      <CloudSync tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
-    data:      <DataPage tickets={viewTickets} setTickets={setTickets} showToast={showToast}/>,
-    rpt_verify:    <ReportVerify tickets={viewTickets} showToast={showToast}/>,
-    rpt_anomaly:   <ReportAnomaly tickets={viewTickets}/>,
-    rpt_executive: <ReportExecutive tickets={viewTickets} showToast={showToast}/>,
-    rpt_party:     <ReportResponsibleParty tickets={viewTickets}/>,
-    rpt_weekly:    <ReportWeekly tickets={viewTickets} showToast={showToast}/>,
-    rpt_monthly:   <ReportMonthly tickets={viewTickets} showToast={showToast}/>,
+    data:      <DataPage tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
+    rpt_verify:    <ReportVerify tickets={tickets} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});}} showToast={showToast}/>,
+    rpt_anomaly:   <ReportAnomaly tickets={tickets} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});}} showToast={showToast}/>,
+    rpt_executive: <ReportExecutive tickets={tickets} showToast={showToast}/>,
+    rpt_weekly:    <ReportWeekly tickets={tickets} showToast={showToast}/>,
+    rpt_monthly:   <ReportMonthly tickets={tickets} showToast={showToast}/>,
   };
 
   return(
     <div>
-<<<<<<< HEAD
       <Nav active={screen} onChange={setScreen} collapsed={collapsed} onToggle={()=>setCollapsed(c=>!c)} onSettings={()=>setShowSettings(true)} onSignOut={onSignOut} onReset={onReset} user="Love Offei" activeMonth={activeMonth} setActiveMonth={setActiveMonth} availMonths={availMonths} currentYM={currentYM} tickets={tickets}/>
-=======
-      <Nav active={screen} onChange={setScreen} collapsed={collapsed} onToggle={()=>setCollapsed(c=>!c)} onSettings={()=>setShowSettings(true)} onSignOut={onSignOut} onReset={onReset} user={signedInName} readOnly={readOnly}/>
->>>>>>> 8a8079beb6401a6077ac99ca98d9f3edc9e127a6
       <main className={'main'+(collapsed?' nc':'')} style={{paddingLeft:W}}>
         {screens[screen]||screens.dashboard}
       </main>
