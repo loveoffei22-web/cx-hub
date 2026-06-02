@@ -719,7 +719,7 @@ const NAV_GROUPS=[
   {label:'Reports',items:[{id:'rpt_verify',icon:'all',label:'Verify'},{id:'rpt_anomaly',icon:'analy',label:'Anomaly'},{id:'rpt_executive',icon:'cum',label:'Executive'},{id:'rpt_weekly',icon:'daily',label:'Weekly'},{id:'rpt_monthly',icon:'report',label:'Monthly'}]},
 ];
 
-function Nav({active,onChange,collapsed,onToggle,onSettings,onSignOut,onReset,user,activeMonth,setActiveMonth,availMonths,currentYM,tickets}){
+function Nav({active,onChange,collapsed,onToggle,onSettings,onSignOut,onReset,user,activeMonth,setActiveMonth,availMonths,currentYM,tickets,readOnly}){
   const[now,setNow]=useState(()=>new Date());
   useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
   const wat=new Date(now.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
@@ -3454,13 +3454,14 @@ ${[{l:'Total',v:wTix.length,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In
 }
 
 // ── REPORT: MONTHLY ────────────────────────────────────────────────
-function ReportMonthly({tickets,showToast}){
+function ReportMonthly({tickets,onBulkUpdate,showToast}){
   const watNow=rptWatNow();
   const curYM=watNow.toISOString().slice(0,7);
   const monthSet=new Set();tickets.forEach(function(t){const d=rptWatDate(t);if(d)monthSet.add(d.slice(0,7));});
   monthSet.add(curYM);
   const months=[...monthSet].sort().reverse();
   const[selMonth,setSelMonth]=useState(curYM);
+  const[editRow,setEditRow]=useState(null);// {id,status,category,resp,note}
   const mTix=tickets.filter(function(t){const d=rptWatDate(t);return d&&d.slice(0,7)===selMonth;});
   const res=mTix.filter(function(t){return t.status==='resolved';}).length;
   const prg=mTix.filter(function(t){return t.status==='progress';}).length;
@@ -3470,6 +3471,11 @@ function ReportMonthly({tickets,showToast}){
   const cats=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];});
   const respMap={};mTix.forEach(function(t){const r=t.resp||'Unassigned';if(!respMap[r])respMap[r]={total:0,res:0};respMap[r].total++;if(t.status==='resolved')respMap[r].res++;});
   const partyRows=Object.entries(respMap).map(function(e){const p=e[1].total?Math.round(e[1].res/e[1].total*100):0;return{name:e[0],...e[1],pct:p};}).sort(function(a,b){return b.total-a.total;});
+  const knownCats=[...new Set(tickets.map(function(t){return t.category;}).filter(Boolean))].sort();
+  const knownParties=[...new Set(tickets.map(function(t){return t.resp;}).filter(Boolean))].sort();
+  function startEdit(t){setEditRow({id:t.id,status:t.status||'unresolved',category:t.category||'',resp:t.resp||'',note:t.note||''});}
+  function saveEdit(){if(!editRow)return;onBulkUpdate([editRow.id],{status:editRow.status,category:editRow.category,resp:editRow.resp,note:editRow.note});showToast('Ticket updated ✓');setEditRow(null);}
+  const STATUS_OPTS=[{v:'resolved',l:'Resolved',c:'#22C55E'},{v:'progress',l:'In Progress',c:'#3B82F6'},{v:'unresolved',l:'Unresolved',c:'#EF4444'}];
 
   function exportEmail(){
     const catRows=cats.map(function(e){return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:8px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${e[0]}</td><td style="padding:8px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#1E293B">${e[1]}</td></tr>`;}).join('');
@@ -3542,6 +3548,64 @@ ${[{l:'Total',v:mTix.length,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Editable tickets table */}
+      <div className="card" style={{marginTop:16}}>
+        <div className="card-head"><h3>All Tickets This Month</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{mTix.length} tickets — click row to edit</span></div>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+            <thead><tr style={{borderBottom:'2px solid var(--bsoft)'}}>
+              {['#','Date','Account','Status','Category','Responsible Party','Note',''].map(function(h){return<th key={h} style={{padding:'8px 10px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,textTransform:'uppercase',whiteSpace:'nowrap'}}>{h}</th>;})}
+            </tr></thead>
+            <tbody>
+              {mTix.map(function(t,i){
+                const isEditing=editRow&&editRow.id===t.id;
+                const statusColor={resolved:'#22C55E',progress:'#3B82F6',unresolved:'#EF4444'}[t.status]||'#94A3B8';
+                if(isEditing){return(
+                  <tr key={t.id} style={{borderBottom:'1px solid var(--bsoft)',background:'var(--bg2)'}}>
+                    <td style={{padding:'8px 10px',color:'var(--muted)',fontWeight:600,fontSize:11}}>{i+1}</td>
+                    <td style={{padding:'8px 10px',color:'var(--fg)',whiteSpace:'nowrap'}}>{(rptWatDate(t)||'').slice(5)}</td>
+                    <td style={{padding:'8px 10px',color:'var(--fg)',fontWeight:600}}>{t.account||t.id}</td>
+                    <td style={{padding:'6px 10px'}}>
+                      <select value={editRow.status} onChange={function(e){setEditRow(function(r){return Object.assign({},r,{status:e.target.value});});}} style={{background:'var(--bg2)',border:'1px solid var(--bsoft)',color:'var(--fg)',borderRadius:6,padding:'4px 8px',font:'600 11px Sora,sans-serif',width:'100%'}}>
+                        {STATUS_OPTS.map(function(o){return<option key={o.v} value={o.v}>{o.l}</option>;})}
+                      </select>
+                    </td>
+                    <td style={{padding:'6px 10px'}}>
+                      <input list={'cats-'+t.id} value={editRow.category} onChange={function(e){setEditRow(function(r){return Object.assign({},r,{category:e.target.value});});}} placeholder="Category" style={{background:'var(--bg2)',border:'1px solid var(--bsoft)',color:'var(--fg)',borderRadius:6,padding:'4px 8px',font:'500 11px Sora,sans-serif',width:'100%'}}/>
+                      <datalist id={'cats-'+t.id}>{knownCats.map(function(c){return<option key={c} value={c}/>;})}</datalist>
+                    </td>
+                    <td style={{padding:'6px 10px'}}>
+                      <input list={'resp-'+t.id} value={editRow.resp} onChange={function(e){setEditRow(function(r){return Object.assign({},r,{resp:e.target.value});});}} placeholder="Party" style={{background:'var(--bg2)',border:'1px solid var(--bsoft)',color:'var(--fg)',borderRadius:6,padding:'4px 8px',font:'500 11px Sora,sans-serif',width:'100%'}}/>
+                      <datalist id={'resp-'+t.id}>{knownParties.map(function(p){return<option key={p} value={p}/>;})}</datalist>
+                    </td>
+                    <td style={{padding:'6px 10px'}}>
+                      <input value={editRow.note} onChange={function(e){setEditRow(function(r){return Object.assign({},r,{note:e.target.value});});}} placeholder="Note" style={{background:'var(--bg2)',border:'1px solid var(--bsoft)',color:'var(--fg)',borderRadius:6,padding:'4px 8px',font:'500 11px Sora,sans-serif',width:'100%'}}/>
+                    </td>
+                    <td style={{padding:'6px 10px',whiteSpace:'nowrap'}}>
+                      <button className="btn btn-primary" onClick={saveEdit} style={{padding:'4px 10px',fontSize:11,marginRight:4}}>Save</button>
+                      <button className="btn" onClick={function(){setEditRow(null);}} style={{padding:'4px 10px',fontSize:11}}>Cancel</button>
+                    </td>
+                  </tr>
+                );}
+                return(
+                  <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)',cursor:'pointer'}} onClick={function(){startEdit(t);}} onMouseEnter={function(e){e.currentTarget.style.background='var(--bg2)';}} onMouseLeave={function(e){e.currentTarget.style.background='';}} >
+                    <td style={{padding:'8px 10px',color:'var(--muted)',fontWeight:600,fontSize:11}}>{i+1}</td>
+                    <td style={{padding:'8px 10px',color:'var(--fg)',whiteSpace:'nowrap'}}>{(rptWatDate(t)||'').slice(5)}</td>
+                    <td style={{padding:'8px 10px',color:'var(--fg)',fontWeight:600}}>{t.account||t.id}</td>
+                    <td style={{padding:'8px 10px'}}><span style={{background:statusColor+'22',color:statusColor,borderRadius:4,padding:'2px 8px',fontWeight:700,fontSize:10}}>{t.status==='resolved'?'Resolved':t.status==='progress'?'In Progress':'Unresolved'}</span></td>
+                    <td style={{padding:'8px 10px',color:'var(--fg)'}}>{t.category||<span style={{opacity:.4}}>—</span>}</td>
+                    <td style={{padding:'8px 10px',color:'var(--fg)'}}>{t.resp||<span style={{opacity:.4}}>—</span>}</td>
+                    <td style={{padding:'8px 10px',color:'var(--muted)',maxWidth:180,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.note||<span style={{opacity:.4}}>—</span>}</td>
+                    <td style={{padding:'8px 10px'}}><span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',opacity:.5}}>edit</span></td>
+                  </tr>
+                );
+              })}
+              {!mTix.length&&<tr><td colSpan={8} style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No tickets this month</td></tr>}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -4591,12 +4655,12 @@ function App(){
     rpt_anomaly:   <ReportAnomaly tickets={tickets} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});}} showToast={showToast}/>,
     rpt_executive: <ReportExecutive tickets={tickets} showToast={showToast}/>,
     rpt_weekly:    <ReportWeekly tickets={tickets} showToast={showToast}/>,
-    rpt_monthly:   <ReportMonthly tickets={tickets} showToast={showToast}/>,
+    rpt_monthly:   <ReportMonthly tickets={tickets} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});}} showToast={showToast}/>,
   };
 
   return(
     <div>
-      <Nav active={screen} onChange={setScreen} collapsed={collapsed} onToggle={()=>setCollapsed(c=>!c)} onSettings={()=>setShowSettings(true)} onSignOut={onSignOut} onReset={onReset} user="Love Offei" activeMonth={activeMonth} setActiveMonth={setActiveMonth} availMonths={availMonths} currentYM={currentYM} tickets={tickets}/>
+      <Nav active={screen} onChange={setScreen} collapsed={collapsed} onToggle={()=>setCollapsed(c=>!c)} onSettings={()=>setShowSettings(true)} onSignOut={onSignOut} onReset={onReset} user="Love Offei" activeMonth={activeMonth} setActiveMonth={setActiveMonth} availMonths={availMonths} currentYM={currentYM} tickets={tickets} readOnly={readOnly}/>
       <main className={'main'+(collapsed?' nc':'')} style={{paddingLeft:W}}>
         {screens[screen]||screens.dashboard}
       </main>
