@@ -930,19 +930,19 @@ function getDutyWindow(agentShift){
     var sat=new Date(todayBase);sat.setDate(sat.getDate()-1);
     start=new Date(sat.getFullYear(),sat.getMonth(),sat.getDate(),16,0,0);
     end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),16,0,0);
-  } else if(dow===1){// Monday: Sun 16:00 → Mon 17:00
+  } else if(dow===1){// Monday: Sun 16:00 → Mon 17:59
     var sun=new Date(todayBase);sun.setDate(sun.getDate()-1);
     start=new Date(sun.getFullYear(),sun.getMonth(),sun.getDate(),16,0,0);
-    end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
+    end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,59,59);
   } else {// Tue–Fri: depends on shift
     var isShadow=(agentShift==='shadow'||agentShift==='night');
-    if(isShadow){// night: prev day 17:01 → today 17:00
+    if(isShadow){// night: prev day 17:01 → today 17:59
       var prev=new Date(todayBase);prev.setDate(prev.getDate()-1);
       start=new Date(prev.getFullYear(),prev.getMonth(),prev.getDate(),17,1,0);
-      end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
-    } else {// day: 08:00 → 17:00 today
+      end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,59,59);
+    } else {// day: 08:00 → 17:59 today
       start=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),8,0,0);
-      end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,0,0);
+      end=new Date(todayBase.getFullYear(),todayBase.getMonth(),todayBase.getDate(),17,59,59);
     }
   }
   return{start:start,end:end};
