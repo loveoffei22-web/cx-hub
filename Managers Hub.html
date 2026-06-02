@@ -1023,25 +1023,19 @@ function Dashboard({tickets,carryTix,shifts,onShift,onSettings,onNav,signedInNam
 
       {/* BACKLOG PROGRESS + RESPONSIBLE PARTY LEADERBOARD */}
       {(function(){
-        var TODAY=new Date('2026-06-01T00:00:00');
-        // Carry-forward: pending from any closed month
-        var allPending=tickets.filter(function(t){
-          var ym=t.created?t.created.slice(0,7):'';
-          var watNowYM=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,7);
-          return ym&&ym<watNowYM&&t.status!=='resolved';
-        });
-        var allCarry=tickets.filter(function(t){
-          var ym=t.created?t.created.slice(0,7):'';
-          var watNowYM=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,7);
-          return ym&&ym<watNowYM;
-        });
+        var TODAY=new Date();
+        // Carry-forward: use carryTix (unresolved from prev month) passed from App
+        // allCarry = all tickets from prior months (any status), allPending = unresolved subset
+        var watNowYM=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'})).toISOString().slice(0,7);
+        var allCarry=tickets.filter(function(t){var ym=shiftWatYM(t);return ym&&ym<watNowYM;});
+        var allPending=allCarry.filter(function(t){return t.status!=='resolved';});
         var cfTotal=allCarry.length;
         var cfResolved=allCarry.filter(function(t){return t.status==='resolved';}).length;
         var cfPending=cfTotal-cfResolved;
         var cfPct=cfTotal?Math.round(cfResolved/cfTotal*100):0;
         var cfCrit=allPending.filter(function(t){
-          if(!t.created)return false;
-          return Math.floor((TODAY-new Date(t.created+'T00:00:00'))/86400000)>=14;
+          var d=shiftWatDate(t);if(!d)return false;
+          return Math.floor((TODAY-new Date(d+'T00:00:00'))/86400000)>=14;
         }).length;
 
         // Responsible party leaderboard from ALL tickets
