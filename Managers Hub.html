@@ -692,7 +692,7 @@ const NAV_GROUPS=[
   {label:'Operations',items:[{id:'dashboard',icon:'dash',label:'Dashboard'},{id:'daily',icon:'daily',label:'Daily Report'},{id:'all',icon:'all',label:'All Complaints'},{id:'log',icon:'log',label:'Log Ticket'}]},
   {label:'Insights',items:[{id:'cumulative',icon:'cum',label:'Cumulative'},{id:'analytics',icon:'analy',label:'Analytics'},{id:'slot',icon:'report',label:'Slot Report',badge:'NEW'}]},
   {label:'Team',items:[{id:'agents',icon:'agents',label:'Agents'},{id:'sync',icon:'sync',label:'Cloud Sync'},{id:'data',icon:'report',label:'Import / Export'}]},
-  {label:'Reports',items:[{id:'rpt_verify',icon:'all',label:'Verify'},{id:'rpt_anomaly',icon:'analy',label:'Anomaly'},{id:'rpt_executive',icon:'cum',label:'Executive'},{id:'rpt_party',icon:'agents',label:'Responsible Party'},{id:'rpt_weekly',icon:'daily',label:'Weekly'},{id:'rpt_monthly',icon:'report',label:'Monthly'}]},
+  {label:'Reports',items:[{id:'rpt_verify',icon:'all',label:'Verify'},{id:'rpt_anomaly',icon:'analy',label:'Anomaly'},{id:'rpt_executive',icon:'cum',label:'Executive'},{id:'rpt_weekly',icon:'daily',label:'Weekly'},{id:'rpt_monthly',icon:'report',label:'Monthly'}]},
 ];
 
 function Nav({active,onChange,collapsed,onToggle,onSettings,onSignOut,onReset,user}){
@@ -2645,33 +2645,55 @@ function buildEmailHtml(title,subtitle,bodyHtml){
 }
 
 // ── REPORT: VERIFY ────────────────────────────────────────────────
-function ReportVerify({tickets,showToast}){
+function ReportVerify({tickets,onBulkUpdate,showToast}){
   const[spText,setSpText]=useState('');
   const[spTickets,setSpTickets]=useState([]);
   const[parsed,setParsed]=useState(false);
+  const[fixed,setFixed]=useState({});// num -> true when rectified
   const FIELDS=['status','category','resp'];
   function parseCSV(txt){
     const lines=txt.trim().split('\n');if(lines.length<2)return[];
     const hdr=lines[0].split(',').map(function(h){return h.trim().toLowerCase();});
     return lines.slice(1).filter(Boolean).map(function(l){
-      const cols=l.split(',').map(function(c){return c.trim();});
+      const cols=l.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});
       const o={};hdr.forEach(function(h,i){o[h]=cols[i]||'';});
       return{num:o.num||o['ticket no']||o['ticket_no']||o.id||'',status:(o.status||'').toLowerCase(),category:o.category||o.cat||'',resp:o.resp||o['responsible party']||o.responsible||''};
     });
   }
-  function doParse(){const r=parseCSV(spText);setSpTickets(r);setParsed(true);}
+  function doParse(){const r=parseCSV(spText);setSpTickets(r);setParsed(true);setFixed({});}
   const appMap={};tickets.forEach(function(t){if(t.num)appMap[String(t.num)]=t;});
-  const mismatches=spTickets.map(function(sp){
+  const allMismatches=spTickets.map(function(sp){
     const app=appMap[String(sp.num)];
     if(!app)return{num:sp.num,issue:'Not found in app',sp:sp,app:null};
     const diffs=FIELDS.filter(function(f){return sp[f]&&app[f]&&sp[f].toLowerCase()!==String(app[f]).toLowerCase();});
     if(diffs.length)return{num:sp.num,issue:'Field mismatch: '+diffs.join(', '),sp:sp,app:app,diffs:diffs};
     return null;
   }).filter(Boolean);
-  const matched=spTickets.length-mismatches.length;
+  const mismatches=allMismatches.filter(function(m){return !fixed[m.num];});
+  const matched=spTickets.length-allMismatches.length;
+
+  function applyFix(m){
+    if(!m.app||!m.diffs)return;
+    const patch={};m.diffs.forEach(function(f){patch[f]=m.sp[f];});
+    onBulkUpdate([m.app.id],patch);
+    setFixed(function(p){return Object.assign({},p,{[m.num]:true});});
+    showToast('Fixed #'+m.num+' ✓');
+  }
+  function applyAll(){
+    const fixable=mismatches.filter(function(m){return m.app&&m.diffs&&m.diffs.length;});
+    if(!fixable.length)return;
+    const byId={};fixable.forEach(function(m){byId[m.app.id]=byId[m.app.id]||{};m.diffs.forEach(function(f){byId[m.app.id][f]=m.sp[f];});});
+    // apply each individually via onBulkUpdate
+    Object.entries(byId).forEach(function(e){onBulkUpdate([e[0]],e[1]);});
+    const newFixed={};fixable.forEach(function(m){newFixed[m.num]=true;});
+    setFixed(function(p){return Object.assign({},p,newFixed);});
+    showToast('Fixed '+fixable.length+' tickets ✓');
+  }
+
+  const fixable=mismatches.filter(function(m){return m.app&&m.diffs&&m.diffs.length;});
   return(
     <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Verify Report</h1><div className="page-sub">Compare SharePoint import vs app tickets</div></div></div>
+      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Verify Report</h1><div className="page-sub">Compare SharePoint import vs app tickets — fix mismatches in one click</div></div></div>
       <div className="card" style={{marginBottom:16}}>
         <div className="card-head"><h3>Paste SharePoint CSV</h3></div>
         <div style={{padding:'0 20px 16px'}}>
@@ -2681,8 +2703,8 @@ function ReportVerify({tickets,showToast}){
       </div>
       {parsed&&(
         <div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
-            {[{l:'SP Tickets',v:spTickets.length,c:'#6366F1'},{l:'Matched',v:matched,c:'#22C55E'},{l:'Mismatches',v:mismatches.length,c:mismatches.length?'#EF4444':'#22C55E'}].map(function(s){return(
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:16}}>
+            {[{l:'SP Tickets',v:spTickets.length,c:'#6366F1'},{l:'Matched',v:matched,c:'#22C55E'},{l:'Mismatches',v:allMismatches.length,c:allMismatches.length?'#EF4444':'#22C55E'},{l:'Fixed',v:Object.keys(fixed).length,c:'#22C55E'}].map(function(s){return(
               <div key={s.l} className="card" style={{padding:16,textAlign:'center'}}>
                 <div style={{font:'700 28px/1 Sora,sans-serif',color:s.c}}>{s.v}</div>
                 <div style={{font:'500 11px Sora,sans-serif',color:'var(--muted)',marginTop:4}}>{s.l}</div>
@@ -2690,26 +2712,45 @@ function ReportVerify({tickets,showToast}){
             );})}
           </div>
           <div className="card">
-            <div className="card-head"><h3>Mismatches</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{mismatches.length} issues</span></div>
-            {!mismatches.length?<div style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>All tickets match ✓</div>:(
+            <div className="card-head">
+              <h3>Mismatches</h3>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{mismatches.length} remaining</span>
+                {fixable.length>0&&<button className="btn btn-primary btn-sm" onClick={applyAll} style={{fontSize:11,padding:'4px 12px'}}>Fix All ({fixable.length})</button>}
+              </div>
+            </div>
+            {!mismatches.length?<div style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>{allMismatches.length?'All mismatches fixed ✓':'All tickets match ✓'}</div>:(
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
                   <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
-                    {['Ticket #','Issue','SP Status','App Status','SP Category','App Category','SP Resp','App Resp'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}
+                    {['Ticket #','Issue','SP Value → App Value','Action'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}
                   </tr></thead>
                   <tbody>
-                    {mismatches.map(function(m){return(
-                      <tr key={m.num} style={{borderBottom:'1px solid var(--bdark)'}}>
-                        <td style={{padding:'10px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{m.num}</td>
-                        <td style={{padding:'10px 12px',color:'#EF4444',fontSize:11}}>{m.issue}</td>
-                        <td style={{padding:'10px 12px'}}>{m.sp&&statusBadgeHtml(m.sp.status)&&<span dangerouslySetInnerHTML={{__html:statusBadgeHtml(m.sp.status)}}/>}</td>
-                        <td style={{padding:'10px 12px'}}>{m.app&&<span dangerouslySetInnerHTML={{__html:statusBadgeHtml(m.app.status)}}/>}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.sp&&m.sp.category}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.app&&m.app.category}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.sp&&m.sp.resp}</td>
-                        <td style={{padding:'10px 12px',color:'var(--fg)'}}>{m.app&&m.app.resp}</td>
-                      </tr>
-                    );})}
+                    {mismatches.map(function(m){
+                      const canFix=m.app&&m.diffs&&m.diffs.length;
+                      return(
+                        <tr key={m.num} style={{borderBottom:'1px solid var(--bdark)'}}>
+                          <td style={{padding:'10px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{m.num}</td>
+                          <td style={{padding:'10px 12px',color:'#EF4444',fontSize:11}}>{m.issue}</td>
+                          <td style={{padding:'10px 12px'}}>
+                            {m.diffs&&m.diffs.map(function(f){return(
+                              <div key={f} style={{marginBottom:4,display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+                                <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.06em'}}>{f}:</span>
+                                <span dangerouslySetInnerHTML={{__html:f==='status'?statusBadgeHtml(m.sp[f]):''}}/>
+                                {f!=='status'&&<span style={{font:'500 11px Sora,sans-serif',color:'#EF4444'}}>{m.sp[f]}</span>}
+                                <span style={{color:'var(--muted)'}}>→</span>
+                                <span dangerouslySetInnerHTML={{__html:f==='status'?statusBadgeHtml(m.app[f]):''}}/>
+                                {f!=='status'&&<span style={{font:'500 11px Sora,sans-serif',color:'var(--fg)'}}>{m.app[f]}</span>}
+                              </div>
+                            );})}
+                            {!m.diffs&&<span style={{color:'var(--muted)',fontSize:11}}>Not in app</span>}
+                          </td>
+                          <td style={{padding:'10px 12px'}}>
+                            {canFix&&<button className="btn btn-sm" onClick={function(){applyFix(m);}} style={{fontSize:11,padding:'4px 10px',background:'rgba(99,102,241,.15)',color:'#818CF8',border:'1px solid rgba(99,102,241,.3)'}}>Apply SP Values</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2722,38 +2763,58 @@ function ReportVerify({tickets,showToast}){
 }
 
 // ── REPORT: ANOMALY ────────────────────────────────────────────────
-function ReportAnomaly({tickets}){
+function ReportAnomaly({tickets,onBulkUpdate,showToast}){
   const now=rptWatNow();
+  // Collect unique responsible parties from resolved tickets for the assign dropdown
+  const knownParties=[...new Set(tickets.map(function(t){return t.resp;}).filter(Boolean))].sort();
+
   const slaBreaches=tickets.filter(function(t){
     if(t.status==='resolved')return false;
     const d=rptWatDate(t);if(!d)return false;
-    const ms=now-new Date(d+'T00:00:00');
-    return ms>48*3600000;
+    return now-new Date(d+'T00:00:00')>48*3600000;
   });
-  const numCounts={};tickets.forEach(function(t){if(t.num){numCounts[String(t.num)]=(numCounts[String(t.num)]||0)+1;}});
+  const numCounts={};tickets.forEach(function(t){if(t.num)numCounts[String(t.num)]=(numCounts[String(t.num)]||0)+1;});
   const dupes=tickets.filter(function(t){return t.num&&numCounts[String(t.num)]>1;});
   const dupeNums=[...new Set(dupes.map(function(t){return String(t.num);}))];
   const orphans=tickets.filter(function(t){return !t.resp&&t.status!=='resolved';});
   const missing=tickets.filter(function(t){return !t.category||!t.num||!t.name;});
-  const sections=[
-    {key:'sla',label:'SLA Breaches (>48h unresolved)',color:'#EF4444',items:slaBreaches,cols:['#','Name','Category','Resp','Status','Created']},
-    {key:'dupe',label:'Duplicate Ticket Numbers',color:'#F97316',items:dupes,cols:['#','Name','Category','Agent','Status']},
-    {key:'orphan',label:'Orphaned Tickets (no responsible party)',color:'#FBBF24',items:orphans,cols:['#','Name','Category','Status','Created']},
-    {key:'missing',label:'Missing Required Fields',color:'#A78BFA',items:missing,cols:['#','Name','Category','Status']},
-  ];
-  function row(t,cols){return cols.map(function(c){
-    if(c==='#')return<td key={c} style={{padding:'8px 12px',color:'var(--ek-gold)',fontWeight:700}}>#{t.num||'—'}</td>;
-    if(c==='Name')return<td key={c} style={{padding:'8px 12px',color:'var(--fg)'}}>{t.name||'—'}</td>;
-    if(c==='Category')return<td key={c} style={{padding:'8px 12px',color:'var(--fg)',fontSize:11}}>{t.category||<span style={{color:'#EF4444'}}>MISSING</span>}</td>;
-    if(c==='Resp')return<td key={c} style={{padding:'8px 12px',color:'var(--fg)'}}>{t.resp||<span style={{color:'#EF4444'}}>NONE</span>}</td>;
-    if(c==='Status')return<td key={c} style={{padding:'8px 12px'}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/></td>;
-    if(c==='Created')return<td key={c} style={{padding:'8px 12px',color:'var(--muted)',fontSize:11}}>{rptWatDate(t)||'—'}</td>;
-    if(c==='Agent')return<td key={c} style={{padding:'8px 12px',color:'var(--muted)'}}>{t.agent||'—'}</td>;
-    return<td key={c} style={{padding:'8px 12px'}}>—</td>;
-  });}
+
+  // Per-ticket inline edit state
+  const[orphanAssign,setOrphanAssign]=useState({});// id -> resp string
+  const[missingEdit,setMissingEdit]=useState({});// id -> {category,num,name}
+
+  function fixSLA(ids,newStatus){
+    onBulkUpdate(ids,{status:newStatus});
+    showToast('Updated '+ids.length+' ticket'+(ids.length>1?'s':'')+' → '+newStatus+' ✓');
+  }
+  function fixOrphan(t){
+    const r=orphanAssign[t.id]||'';if(!r.trim())return;
+    onBulkUpdate([t.id],{resp:r.trim()});
+    showToast('Assigned #'+t.num+' → '+r.trim()+' ✓');
+  }
+  function fixAllOrphans(resp){
+    if(!resp)return;
+    const ids=orphans.map(function(t){return t.id;});
+    onBulkUpdate(ids,{resp});
+    showToast('Assigned '+ids.length+' orphaned tickets → '+resp+' ✓');
+  }
+  function fixMissing(t){
+    const e=missingEdit[t.id]||{};
+    const patch={};
+    if(e.category&&!t.category)patch.category=e.category;
+    if(e.name&&!t.name)patch.name=e.name;
+    if(!Object.keys(patch).length)return;
+    onBulkUpdate([t.id],patch);
+    showToast('Patched #'+t.num+' ✓');
+  }
+
+  const CELL={padding:'8px 12px'};
+  const TH={padding:'8px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'};
+  const inlineInput={background:'var(--bg2)',border:'1px solid var(--bsoft)',borderRadius:6,color:'var(--fg)',font:'12px Sora,sans-serif',padding:'4px 8px',width:'100%'};
+
   return(
     <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Anomaly Report</h1><div className="page-sub">Flags SLA breaches, duplicates, orphans &amp; missing fields</div></div></div>
+      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Anomaly Report</h1><div className="page-sub">Diagnose &amp; fix SLA breaches, duplicates, orphans, missing fields</div></div></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
         {[{l:'SLA Breaches',v:slaBreaches.length,c:'#EF4444'},{l:'Duplicates',v:dupeNums.length+' nums',c:'#F97316'},{l:'Orphaned',v:orphans.length,c:'#FBBF24'},{l:'Missing Fields',v:missing.length,c:'#A78BFA'}].map(function(s){return(
           <div key={s.l} className="card" style={{padding:16,textAlign:'center'}}>
@@ -2762,87 +2823,316 @@ function ReportAnomaly({tickets}){
           </div>
         );})}
       </div>
-      {sections.map(function(sec){return(
-        <div key={sec.key} className="card" style={{marginBottom:16}}>
-          <div className="card-head"><h3 style={{color:sec.color}}>{sec.label}</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{sec.items.length} tickets</span></div>
-          {!sec.items.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
-            <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
-                <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{sec.cols.map(function(h){return<th key={h} style={{padding:'8px 12px',textAlign:'left',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
-                <tbody>{sec.items.map(function(t,i){return<tr key={i} style={{borderBottom:'1px solid var(--bdark)'}}>{row(t,sec.cols)}</tr>;})}</tbody>
-              </table>
-            </div>
-          )}
+
+      {/* SLA BREACHES */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head">
+          <h3 style={{color:'#EF4444'}}>SLA Breaches (&gt;48h unresolved)</h3>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{slaBreaches.length} tickets</span>
+            {slaBreaches.length>0&&<button className="btn btn-sm" onClick={function(){fixSLA(slaBreaches.map(function(t){return t.id;}), 'progress');}} style={{fontSize:11,padding:'4px 10px',background:'rgba(59,130,246,.15)',color:'#93C5FD',border:'1px solid rgba(59,130,246,.3)'}}>Mark All In Progress</button>}
+          </div>
         </div>
-      );})}
+        {!slaBreaches.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Category','Responsible Party','Status','Created','Action'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{slaBreaches.map(function(t){
+                const hrs=Math.round((now-new Date(rptWatDate(t)+'T00:00:00'))/3600000);
+                return(
+                  <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)'}}>
+                    <td style={{...CELL,color:'var(--ek-gold)',fontWeight:700}}>#{t.num||'—'}</td>
+                    <td style={{...CELL,color:'var(--fg)'}}>{t.name||'—'}</td>
+                    <td style={{...CELL,color:'var(--fg)',fontSize:11}}>{t.category||'—'}</td>
+                    <td style={{...CELL,color:'var(--fg)'}}>{t.resp||<span style={{color:'#EF4444'}}>NONE</span>}</td>
+                    <td style={{...CELL}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/><span style={{font:'500 10px Sora,sans-serif',color:'#EF4444',marginLeft:6}}>{hrs}h</span></td>
+                    <td style={{...CELL,color:'var(--muted)',fontSize:11}}>{rptWatDate(t)||'—'}</td>
+                    <td style={{...CELL}}>
+                      <div style={{display:'flex',gap:4}}>
+                        <button className="btn btn-sm" onClick={function(){fixSLA([t.id],'progress');}} style={{fontSize:10,padding:'3px 8px',background:'rgba(59,130,246,.15)',color:'#93C5FD',border:'1px solid rgba(59,130,246,.3)'}}>In Progress</button>
+                        <button className="btn btn-sm" onClick={function(){fixSLA([t.id],'resolved');}} style={{fontSize:10,padding:'3px 8px',background:'rgba(34,197,94,.15)',color:'#86EFAC',border:'1px solid rgba(34,197,94,.3)'}}>Resolve</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* DUPLICATES */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head"><h3 style={{color:'#F97316'}}>Duplicate Ticket Numbers</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{dupeNums.length} duplicate numbers ({dupes.length} tickets)</span></div>
+        {!dupes.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Category','Agent','Status'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{dupes.map(function(t,i){return(
+                <tr key={i} style={{borderBottom:'1px solid var(--bdark)',background:numCounts[String(t.num)]>1?'rgba(249,115,22,.04)':'transparent'}}>
+                  <td style={{...CELL,color:'#F97316',fontWeight:700}}>#{t.num}</td>
+                  <td style={{...CELL,color:'var(--fg)'}}>{t.name||'—'}</td>
+                  <td style={{...CELL,color:'var(--fg)',fontSize:11}}>{t.category||'—'}</td>
+                  <td style={{...CELL,color:'var(--muted)'}}>{t.agent||'—'}</td>
+                  <td style={{...CELL}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/></td>
+                </tr>
+              );})}</tbody>
+            </table>
+            <div style={{padding:'12px 16px',font:'500 11px Sora,sans-serif',color:'var(--muted)',borderTop:'1px solid var(--bdark)'}}>Resolve duplicates by editing tickets in All Complaints and merging or deleting the duplicate entry.</div>
+          </div>
+        )}
+      </div>
+
+      {/* ORPHANS */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head">
+          <h3 style={{color:'#FBBF24'}}>Orphaned Tickets (no responsible party)</h3>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{orphans.length} tickets</span>
+            {orphans.length>0&&knownParties.length>0&&(
+              <div style={{display:'flex',gap:4,alignItems:'center'}}>
+                <select id="orphan-bulk-assign" style={{...inlineInput,width:'auto'}} defaultValue="">
+                  <option value="">Assign all to…</option>
+                  {knownParties.map(function(p){return<option key={p} value={p}>{p}</option>;})}
+                </select>
+                <button className="btn btn-sm" onClick={function(){const s=document.getElementById('orphan-bulk-assign');fixAllOrphans(s.value);}} style={{fontSize:11,padding:'4px 10px',background:'rgba(251,191,36,.15)',color:'#FCD34D',border:'1px solid rgba(251,191,36,.3)'}}>Apply All</button>
+              </div>
+            )}
+          </div>
+        </div>
+        {!orphans.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Category','Status','Created','Assign To','Action'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{orphans.map(function(t){return(
+                <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)'}}>
+                  <td style={{...CELL,color:'var(--ek-gold)',fontWeight:700}}>#{t.num||'—'}</td>
+                  <td style={{...CELL,color:'var(--fg)'}}>{t.name||'—'}</td>
+                  <td style={{...CELL,color:'var(--fg)',fontSize:11}}>{t.category||'—'}</td>
+                  <td style={{...CELL}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml(t.status)}}/></td>
+                  <td style={{...CELL,color:'var(--muted)',fontSize:11}}>{rptWatDate(t)||'—'}</td>
+                  <td style={{...CELL,minWidth:160}}>
+                    {knownParties.length>0?(
+                      <select value={orphanAssign[t.id]||''} onChange={function(e){setOrphanAssign(function(p){return Object.assign({},p,{[t.id]:e.target.value});});}} style={inlineInput}>
+                        <option value="">Select party…</option>
+                        {knownParties.map(function(p){return<option key={p} value={p}>{p}</option>;})}
+                      </select>
+                    ):(
+                      <input value={orphanAssign[t.id]||''} onChange={function(e){setOrphanAssign(function(p){return Object.assign({},p,{[t.id]:e.target.value});});}} placeholder="Responsible party…" style={inlineInput}/>
+                    )}
+                  </td>
+                  <td style={{...CELL}}>
+                    <button className="btn btn-sm" onClick={function(){fixOrphan(t);}} style={{fontSize:10,padding:'3px 8px',background:'rgba(251,191,36,.15)',color:'#FCD34D',border:'1px solid rgba(251,191,36,.3)'}} disabled={!(orphanAssign[t.id]||'').trim()}>Assign</button>
+                  </td>
+                </tr>
+              );})}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* MISSING FIELDS */}
+      <div className="card" style={{marginBottom:16}}>
+        <div className="card-head"><h3 style={{color:'#A78BFA'}}>Missing Required Fields</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{missing.length} tickets</span></div>
+        {!missing.length?<div style={{padding:'24px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>None found ✓</div>:(
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['#','Name','Missing','Fill In','Action'].map(function(h){return<th key={h} style={TH}>{h}</th>;})}</tr></thead>
+              <tbody>{missing.map(function(t){
+                const missingFields=[];if(!t.category)missingFields.push('category');if(!t.num)missingFields.push('num');if(!t.name)missingFields.push('name');
+                const e=missingEdit[t.id]||{};
+                return(
+                  <tr key={t.id} style={{borderBottom:'1px solid var(--bdark)'}}>
+                    <td style={{...CELL,color:'var(--ek-gold)',fontWeight:700}}>#{t.num||<span style={{color:'#EF4444'}}>MISSING</span>}</td>
+                    <td style={{...CELL,color:'var(--fg)'}}>{t.name||<span style={{color:'#EF4444'}}>MISSING</span>}</td>
+                    <td style={{...CELL}}>{missingFields.map(function(f){return<span key={f} style={{display:'inline-block',background:'rgba(167,139,250,.15)',color:'#A78BFA',borderRadius:4,padding:'1px 6px',fontSize:10,fontWeight:700,marginRight:4,textTransform:'uppercase'}}>{f}</span>;})}</td>
+                    <td style={{...CELL,minWidth:200}}>
+                      {!t.category&&<input value={e.category||''} onChange={function(ev){var v=ev.target.value;setMissingEdit(function(p){var sub=Object.assign({},p[t.id]||{},{category:v});return Object.assign({},p,{[t.id]:sub});});}} placeholder="Category…" style={{...inlineInput,marginBottom:4}}/>}
+                      {!t.name&&<input value={e.name||''} onChange={function(ev){var v=ev.target.value;setMissingEdit(function(p){var sub=Object.assign({},p[t.id]||{},{name:v});return Object.assign({},p,{[t.id]:sub});});}} placeholder="Name…" style={inlineInput}/>}
+                    </td>
+                    <td style={{...CELL}}>
+                      <button className="btn btn-sm" onClick={function(){fixMissing(t);}} style={{fontSize:10,padding:'3px 8px',background:'rgba(167,139,250,.15)',color:'#C4B5FD',border:'1px solid rgba(167,139,250,.3)'}}>Save</button>
+                    </td>
+                  </tr>
+                );
+              })}</tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── REPORT: EXECUTIVE ─────────────────────────────────────────────
+// ── REPORT: EXECUTIVE + RESPONSIBLE PARTY (merged) ────────────────
 function ReportExecutive({tickets,showToast}){
+  const[tab,setTab]=useState('overview');
   const total=tickets.length;
   const res=tickets.filter(function(t){return t.status==='resolved';}).length;
   const prg=tickets.filter(function(t){return t.status==='progress';}).length;
   const unr=tickets.filter(function(t){return t.status==='unresolved';}).length;
   const resPct=total?Math.round(res/total*100):0;
+  const resFill=resPct>=80?'#22C55E':resPct>=60?'#F59E0B':'#EF4444';
 
-  // Category breakdown
+  // Category data
   const catMap={};tickets.forEach(function(t){const c=t.category||'Uncategorised';if(!catMap[c])catMap[c]={total:0,res:0,prg:0,unr:0};catMap[c].total++;if(t.status==='resolved')catMap[c].res++;else if(t.status==='progress')catMap[c].prg++;else catMap[c].unr++;});
   const cats=Object.entries(catMap).sort(function(a,b){return b[1].total-a[1].total;});
 
-  // Top 5 unresolved parties
-  const respMap={};tickets.filter(function(t){return t.status==='unresolved';}).forEach(function(t){const r=t.resp||'Unassigned';respMap[r]=(respMap[r]||0)+1;});
-  const top5=Object.entries(respMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+  // Responsible party data
+  const partyMap={};tickets.forEach(function(t){const r=t.resp||'Unassigned';if(!partyMap[r])partyMap[r]={total:0,res:0,prg:0,unr:0};partyMap[r].total++;if(t.status==='resolved')partyMap[r].res++;else if(t.status==='progress')partyMap[r].prg++;else partyMap[r].unr++;});
+  const partyRows=Object.entries(partyMap).map(function(e){const p=e[1].total?Math.round(e[1].res/e[1].total*100):0;return{name:e[0],...e[1],pct:p};}).sort(function(a,b){return b.total-a.total;});
+
+  // Top 5 worst unresolved
+  const top5unr=partyRows.slice().sort(function(a,b){return b.unr-a.unr;}).slice(0,5);
+
+  const TABS=[{id:'overview',l:'Overview'},{id:'categories',l:'By Category'},{id:'parties',l:'By Responsible Party'}];
 
   function exportEmail(){
-    const catRows=cats.map(function(e){const c=e[0],d=e[1];const p=d.total?Math.round(d.res/d.total*100):0;return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${c}</td><td style="padding:10px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#1E293B">${d.total}</td><td style="padding:10px 12px;text-align:center">${statusBadgeHtml('resolved').replace(/>RESOLVED</,`>${d.res}<`)}</td><td style="padding:10px 12px;text-align:center">${statusBadgeHtml('unresolved').replace(/>UNRESOLVED</,`>${d.unr}<`)}</td><td style="padding:10px 12px;min-width:120px">${pctBarHtml(p)}<div style="font:600 11px Sora,sans-serif;color:#64748B;margin-top:2px">${p}%</div></td></tr>`;}).join('');
-    const top5Rows=top5.map(function(e,i){return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font:700 13px Sora,sans-serif;color:#${['F97316','F59E0B','FBBF24','A78BFA','6366F1'][i]}">#${i+1}</td><td style="padding:10px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${e[0]}</td><td style="padding:10px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#EF4444">${e[1]}</td></tr>`;}).join('');
+    const catRows=cats.map(function(e){const c=e[0],d=e[1];const p=d.total?Math.round(d.res/d.total*100):0;return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:10px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${c}</td><td style="padding:10px 12px;text-align:center;font:700 13px Sora,sans-serif;color:#1E293B">${d.total}</td><td style="padding:10px 12px;text-align:center;color:#22C55E;font:700 13px Sora,sans-serif">${d.res}</td><td style="padding:10px 12px;text-align:center;color:#EF4444;font:700 13px Sora,sans-serif">${d.unr}</td><td style="padding:10px 12px;min-width:120px">${pctBarHtml(p)}<div style="font:600 11px Sora,sans-serif;color:#64748B;margin-top:2px">${p}%</div></td></tr>`;}).join('');
+    const partyHtml=partyRows.map(function(r){return`<tr style="border-bottom:1px solid #E2E8F0"><td style="padding:8px 12px;font:500 12px Sora,sans-serif;color:#1E293B">${r.name}</td><td style="padding:8px 12px;text-align:center;font:700 13px Sora,sans-serif">${r.total}</td><td style="padding:8px 12px;text-align:center;color:#22C55E;font:700 13px Sora,sans-serif">${r.res}</td><td style="padding:8px 12px;text-align:center;color:#EF4444;font:700 13px Sora,sans-serif">${r.unr}</td><td style="padding:8px 12px">${pctBarHtml(r.pct)}<div style="font:600 10px Sora,sans-serif;color:#64748B;margin-top:2px">${r.pct}%</div></td><td style="padding:8px 12px">${gradeBadgeHtml(r.pct)}</td></tr>`;}).join('');
     const body=`
-<div style="display:flex;gap:16px;margin-bottom:24px">
-${[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution %',v:resPct+'%',c:resPct>=80?'#22C55E':resPct>=60?'#F59E0B':'#EF4444'}].map(function(s){return`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 20px;text-align:center;flex:1"><div style="font:800 26px/1 Sora,sans-serif;color:${s.c}">${s.v}</div><div style="font:500 10px Sora,sans-serif;color:#64748B;margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${s.l}</div></div>`;}).join('')}
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+${[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution Rate',v:resPct+'%',c:resFill}].map(function(s){return`<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;text-align:center;flex:1;min-width:80px"><div style="font:800 26px/1 Sora,sans-serif;color:${s.c}">${s.v}</div><div style="font:500 10px Sora,sans-serif;color:#64748B;margin-top:4px;text-transform:uppercase;letter-spacing:.1em">${s.l}</div></div>`;}).join('')}
 </div>
-<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 12px">Category Breakdown</h3>
+<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 10px">Category Breakdown</h3>
 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:24px">
-<thead><tr style="background:#F1F5F9"><th style="padding:10px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Category</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Total</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Resolved</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Unresolved</th><th style="padding:10px 12px;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Rate</th></tr></thead>
-<tbody>${catRows}</tbody>
-</table>
-<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 12px">Top 5 Unresolved Parties</h3>
+<thead><tr style="background:#F1F5F9"><th style="padding:8px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Category</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Total</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Resolved</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Unresolved</th><th style="padding:8px 12px;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Rate</th></tr></thead>
+<tbody>${catRows}</tbody></table>
+<h3 style="font:700 14px Sora,sans-serif;color:#0A1628;margin:0 0 10px">Responsible Party Performance</h3>
 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden">
-<thead><tr style="background:#F1F5F9"><th style="padding:10px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Rank</th><th style="padding:10px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Party</th><th style="padding:10px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase;letter-spacing:.08em">Unresolved</th></tr></thead>
-<tbody>${top5Rows}</tbody>
-</table>`;
-    const html=buildEmailHtml('Executive Summary Report','EK CX Hub · All Tickets · '+new Date().toLocaleDateString('en-GB'),body);
-    navigator.clipboard.writeText(html).then(function(){showToast('Email HTML copied to clipboard ✓');}).catch(function(){showToast('Copy failed — check clipboard permissions','error');});
+<thead><tr style="background:#F1F5F9"><th style="padding:8px 12px;text-align:left;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Party</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Total</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Resolved</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Unresolved</th><th style="padding:8px 12px;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Rate</th><th style="padding:8px 12px;text-align:center;font:700 10px Sora,sans-serif;color:#64748B;text-transform:uppercase">Rating</th></tr></thead>
+<tbody>${partyHtml}</tbody></table>`;
+    const html=buildEmailHtml('Executive Summary Report','EK CX Hub · '+new Date().toLocaleDateString('en-GB'),body);
+    navigator.clipboard.writeText(html).then(function(){showToast('Email HTML copied ✓');}).catch(function(){showToast('Copy failed','error');});
   }
+
+  const tabStyle=function(id){return{padding:'8px 18px',border:'none',borderRadius:20,cursor:'pointer',font:'600 12px Sora,sans-serif',transition:'all .15s',background:tab===id?'var(--ek-gold)':' transparent',color:tab===id?'#0A1628':'var(--muted)'};};
 
   return(
     <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Executive Report</h1><div className="page-sub">Full breakdown with resolution rates &amp; top unresolved parties</div></div>
+      <div className="page-header">
+        <div><h1 style={{color:'var(--ek-gold)'}}>Executive Report</h1><div className="page-sub">Category breakdown · Responsible party performance · Export ready</div></div>
         <button className="btn btn-primary" onClick={exportEmail}>Copy Email HTML</button>
       </div>
+
+      {/* KPI row */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:20}}>
-        {[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution %',v:resPct+'%',c:resPct>=80?'#22C55E':resPct>=60?'#F59E0B':'#EF4444'}].map(function(s){return(
+        {[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'},{l:'Resolution %',v:resPct+'%',c:resFill}].map(function(s){return(
           <div key={s.l} className="card" style={{padding:16,textAlign:'center'}}>
             <div style={{font:'800 28px/1 Sora,sans-serif',color:s.c}}>{s.v}</div>
             <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:4,textTransform:'uppercase',letterSpacing:'.1em'}}>{s.l}</div>
           </div>
         );})}
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16}}>
+
+      {/* Donut-style resolution ring + top 5 worst */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        <div className="card" style={{padding:20}}>
+          <div style={{font:'700 12px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:12}}>Overall Resolution Rate</div>
+          <div style={{display:'flex',alignItems:'center',gap:20}}>
+            <div style={{position:'relative',width:100,height:100,flexShrink:0}}>
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bg2)" strokeWidth="14"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke={resFill} strokeWidth="14"
+                  strokeDasharray={`${resPct*2.513} 251.3`} strokeDashoffset="62.83" strokeLinecap="round" style={{transition:'stroke-dasharray .6s ease'}}/>
+              </svg>
+              <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}}>
+                <div style={{font:'800 18px/1 Sora,sans-serif',color:resFill}}>{resPct}%</div>
+              </div>
+            </div>
+            <div style={{flex:1}}>
+              {[{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progress',v:prg,c:'#3B82F6'},{l:'Unresolved',v:unr,c:'#EF4444'}].map(function(s){return(
+                <div key={s.l} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                  <div style={{width:10,height:10,borderRadius:'50%',background:s.c,flexShrink:0}}/>
+                  <span style={{flex:1,font:'500 12px Sora,sans-serif',color:'var(--muted)'}}>{s.l}</span>
+                  <span style={{font:'700 13px Sora,sans-serif',color:s.c}}>{s.v}</span>
+                  <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',minWidth:32,textAlign:'right'}}>{total?Math.round(s.v/total*100):0}%</span>
+                </div>
+              );})}
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{padding:20}}>
+          <div style={{font:'700 12px Sora,sans-serif',color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.1em',marginBottom:12}}>Top 5 — Most Unresolved</div>
+          {top5unr.map(function(r,i){const colors=['#EF4444','#F97316','#F59E0B','#FBBF24','#A78BFA'];return(
+            <div key={r.name} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+              <span style={{font:'800 13px Sora,sans-serif',color:colors[i],minWidth:20}}>#{i+1}</span>
+              <span style={{flex:1,font:'500 12px Sora,sans-serif',color:'var(--fg)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</span>
+              <div style={{minWidth:60,textAlign:'right'}}>
+                <span style={{font:'700 13px Sora,sans-serif',color:'#EF4444'}}>{r.unr}</span>
+                <span style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginLeft:4}}>unresolved</span>
+              </div>
+            </div>
+          );})}
+          {!top5unr.length&&<div style={{padding:'24px 0',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No unresolved tickets ✓</div>}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:'flex',gap:4,marginBottom:14}}>
+        {TABS.map(function(t){return<button key={t.id} style={tabStyle(t.id)} onClick={function(){setTab(t.id);}}>{t.l}</button>;})}
+      </div>
+
+      {tab==='overview'&&(
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div className="card">
+            <div className="card-head"><h3>Category Volume</h3></div>
+            <div style={{padding:'0 16px 16px'}}>
+              {cats.slice(0,8).map(function(e){const pctC=total?Math.round(e[1].total/total*100):0;const fill=e[1].total?Math.round(e[1].res/e[1].total*100):0;const fCol=fill>=80?'#22C55E':fill>=60?'#F59E0B':'#EF4444';return(
+                <div key={e[0]} style={{marginBottom:10}}>
+                  <div style={{display:'flex',justifyContent:'space-between',font:'500 12px Sora,sans-serif',color:'var(--fg)',marginBottom:3}}>
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'65%'}}>{e[0]}</span>
+                    <span style={{display:'flex',gap:8,flexShrink:0}}>
+                      <span style={{font:'600 11px Sora,sans-serif',color:'var(--muted)'}}>{pctC}%</span>
+                      <span style={{font:'700 12px Sora,sans-serif',color:'var(--fg)'}}>{e[1].total}</span>
+                    </span>
+                  </div>
+                  <div style={{background:'var(--bg2)',borderRadius:4,height:6,position:'relative'}}>
+                    <div style={{background:fCol,width:(e[1].res/e[1].total*100)+'%',height:6,borderRadius:4,position:'absolute',left:0,top:0}}/>
+                    <div style={{background:'rgba(59,130,246,.5)',width:(e[1].prg/e[1].total*100)+'%',height:6,position:'absolute',left:(e[1].res/e[1].total*100)+'%',top:0}}/>
+                  </div>
+                </div>
+              );})}
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-head"><h3>Party Performance</h3></div>
+            <div style={{padding:'0 16px 16px'}}>
+              {partyRows.slice(0,8).map(function(r){return(
+                <div key={r.name} style={{marginBottom:10}}>
+                  <div style={{display:'flex',justifyContent:'space-between',font:'500 12px Sora,sans-serif',color:'var(--fg)',marginBottom:3}}>
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'60%'}}>{r.name}</span>
+                    <span style={{display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+                      <span dangerouslySetInnerHTML={{__html:gradeBadgeHtml(r.pct)}}/>
+                    </span>
+                  </div>
+                  <div style={{background:'var(--bg2)',borderRadius:4,height:6}}>
+                    <div style={{background:r.pct>=80?'#22C55E':r.pct>=60?'#F59E0B':'#EF4444',width:r.pct+'%',height:6,borderRadius:4}}/>
+                  </div>
+                  <div style={{font:'500 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{r.res} resolved / {r.total} total</div>
+                </div>
+              );})}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab==='categories'&&(
         <div className="card">
           <div className="card-head"><h3>Category Breakdown</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{cats.length} categories</span></div>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
-              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>{['Category','Total','Resolved','Unresolved','Rate'].map(function(h){return<th key={h} style={{padding:'8px 12px',textAlign:h==='Category'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
+                {['Category','Total','Resolved','In Progress','Unresolved','Resolution Rate'].map(function(h){return<th key={h} style={{padding:'8px 12px',textAlign:h==='Category'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,textTransform:'uppercase'}}>{h}</th>;})}</tr></thead>
               <tbody>{cats.map(function(e){const c=e[0],d=e[1];const p=d.total?Math.round(d.res/d.total*100):0;const fill=p>=80?'#22C55E':p>=60?'#F59E0B':'#EF4444';return(
                 <tr key={c} style={{borderBottom:'1px solid var(--bdark)'}}>
                   <td style={{padding:'8px 12px',color:'var(--fg)'}}>{c}</td>
                   <td style={{padding:'8px 12px',textAlign:'center',fontWeight:700,color:'var(--fg)'}}>{d.total}</td>
-                  <td style={{padding:'8px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml('resolved').replace('>RESOLVED<',`>${d.res}<`)}}/></td>
-                  <td style={{padding:'8px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:statusBadgeHtml('unresolved').replace('>UNRESOLVED<',`>${d.unr}<`)}}/></td>
-                  <td style={{padding:'8px 12px',minWidth:120}}>
-                    <div style={{background:'var(--bg2)',borderRadius:4,height:8,width:'100%'}}><div style={{background:fill,width:p+'%',height:8,borderRadius:4}}/></div>
+                  <td style={{padding:'8px 12px',textAlign:'center',color:'#22C55E',fontWeight:700}}>{d.res}</td>
+                  <td style={{padding:'8px 12px',textAlign:'center',color:'#3B82F6',fontWeight:700}}>{d.prg}</td>
+                  <td style={{padding:'8px 12px',textAlign:'center',color:'#EF4444',fontWeight:700}}>{d.unr}</td>
+                  <td style={{padding:'8px 12px',minWidth:140}}>
+                    <div style={{background:'var(--bg2)',borderRadius:4,height:7}}><div style={{background:fill,width:p+'%',height:7,borderRadius:4}}/></div>
                     <div style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{p}%</div>
                   </td>
                 </tr>
@@ -2851,66 +3141,37 @@ ${[{l:'Total',v:total,c:'#6366F1'},{l:'Resolved',v:res,c:'#22C55E'},{l:'In Progr
             </table>
           </div>
         </div>
+      )}
+
+      {tab==='parties'&&(
         <div className="card">
-          <div className="card-head"><h3>Top 5 Unresolved Parties</h3></div>
-          <div style={{padding:'0 16px 16px'}}>
-            {top5.map(function(e,i){const colors=['#F97316','#F59E0B','#FBBF24','#A78BFA','#6366F1'];return(
-              <div key={e[0]} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:i<4?'1px solid var(--bdark)':'none'}}>
-                <span style={{font:'800 14px Sora,sans-serif',color:colors[i],minWidth:20}}>#{i+1}</span>
-                <span style={{flex:1,font:'500 12px Sora,sans-serif',color:'var(--fg)'}}>{e[0]}</span>
-                <span style={{font:'700 14px Sora,sans-serif',color:'#EF4444'}}>{e[1]}</span>
-              </div>
-            );})}
-            {!top5.length&&<div style={{padding:'24px 0',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No unresolved tickets ✓</div>}
+          <div className="card-head"><h3>Responsible Party Performance</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{partyRows.length} parties</span></div>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
+              <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
+                {['Responsible Party','Total','Resolved','In Progress','Unresolved','Rate','Rating'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:h==='Responsible Party'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,textTransform:'uppercase'}}>{h}</th>;})}
+              </tr></thead>
+              <tbody>
+                {partyRows.map(function(r){const fill=r.pct>=80?'#22C55E':r.pct>=60?'#F59E0B':'#EF4444';return(
+                  <tr key={r.name} style={{borderBottom:'1px solid var(--bdark)'}}>
+                    <td style={{padding:'10px 12px',color:'var(--fg)',fontWeight:600}}>{r.name}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'var(--fg)'}}>{r.total}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:'#22C55E',fontWeight:700}}>{r.res}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:'#3B82F6',fontWeight:700}}>{r.prg}</td>
+                    <td style={{padding:'10px 12px',textAlign:'center',color:'#EF4444',fontWeight:700}}>{r.unr}</td>
+                    <td style={{padding:'10px 12px',minWidth:130}}>
+                      <div style={{background:'var(--bg2)',borderRadius:4,height:8}}><div style={{background:fill,width:r.pct+'%',height:8,borderRadius:4}}/></div>
+                      <div style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{r.pct}%</div>
+                    </td>
+                    <td style={{padding:'10px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:gradeBadgeHtml(r.pct)}}/></td>
+                  </tr>
+                );})}
+                {!partyRows.length&&<tr><td colSpan={7} style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No ticket data</td></tr>}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ── REPORT: RESPONSIBLE PARTY ─────────────────────────────────────
-function ReportResponsibleParty({tickets}){
-  const partyMap={};
-  tickets.forEach(function(t){
-    const r=t.resp||'Unassigned';
-    if(!partyMap[r])partyMap[r]={total:0,res:0,prg:0,unr:0};
-    partyMap[r].total++;
-    if(t.status==='resolved')partyMap[r].res++;
-    else if(t.status==='progress')partyMap[r].prg++;
-    else partyMap[r].unr++;
-  });
-  const rows=Object.entries(partyMap).map(function(e){const r=e[0],d=e[1];const pct=d.total?Math.round(d.res/d.total*100):0;return{name:r,...d,pct};}).sort(function(a,b){return b.total-a.total;});
-  return(
-    <div className="main-inner">
-      <div className="page-header"><div><h1 style={{color:'var(--ek-gold)'}}>Responsible Party Report</h1><div className="page-sub">Per-party resolution rates with performance ratings</div></div></div>
-      <div className="card">
-        <div className="card-head"><h3>All Responsible Parties</h3><span style={{font:'600 10px Sora,sans-serif',color:'var(--muted)'}}>{rows.length} parties</span></div>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',font:'500 12px/1.5 Sora,sans-serif'}}>
-            <thead><tr style={{borderBottom:'1px solid var(--bsoft)'}}>
-              {['Responsible Party','Total','Resolved','In Progress','Unresolved','Rate','Rating'].map(function(h){return<th key={h} style={{padding:'10px 12px',textAlign:h==='Responsible Party'?'left':'center',color:'var(--muted)',fontWeight:700,fontSize:10,letterSpacing:'.08em',textTransform:'uppercase'}}>{h}</th>;})}
-            </tr></thead>
-            <tbody>
-              {rows.map(function(r){const fill=r.pct>=80?'#22C55E':r.pct>=60?'#F59E0B':'#EF4444';return(
-                <tr key={r.name} style={{borderBottom:'1px solid var(--bdark)'}}>
-                  <td style={{padding:'10px 12px',color:'var(--fg)',fontWeight:600}}>{r.name}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',fontWeight:700,color:'var(--fg)'}}>{r.total}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',color:'#22C55E',fontWeight:700}}>{r.res}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',color:'#3B82F6',fontWeight:700}}>{r.prg}</td>
-                  <td style={{padding:'10px 12px',textAlign:'center',color:'#EF4444',fontWeight:700}}>{r.unr}</td>
-                  <td style={{padding:'10px 12px',minWidth:130}}>
-                    <div style={{background:'var(--bg2)',borderRadius:4,height:8,width:'100%'}}><div style={{background:fill,width:r.pct+'%',height:8,borderRadius:4}}/></div>
-                    <div style={{font:'600 10px Sora,sans-serif',color:'var(--muted)',marginTop:2}}>{r.pct}%</div>
-                  </td>
-                  <td style={{padding:'10px 12px',textAlign:'center'}}><span dangerouslySetInnerHTML={{__html:gradeBadgeHtml(r.pct)}}/></td>
-                </tr>
-              );})}
-              {!rows.length&&<tr><td colSpan={7} style={{padding:'32px',textAlign:'center',color:'var(--muted)',font:'500 12px Sora,sans-serif'}}>No ticket data</td></tr>}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -4115,10 +4376,9 @@ function App(){
     agents:    <Agents tickets={tickets} shifts={shifts} onShift={onShift} showToast={showToast}/>,
     sync:      <CloudSync tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
     data:      <DataPage tickets={tickets} setTickets={setTickets} showToast={showToast}/>,
-    rpt_verify:    <ReportVerify tickets={tickets} showToast={showToast}/>,
-    rpt_anomaly:   <ReportAnomaly tickets={tickets}/>,
+    rpt_verify:    <ReportVerify tickets={tickets} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});}} showToast={showToast}/>,
+    rpt_anomaly:   <ReportAnomaly tickets={tickets} onBulkUpdate={function(ids,patch){setTickets(function(prev){const next=prev.map(function(t){return ids.includes(t.id)?Object.assign({},t,patch):t;});persistTickets(next);return next;});}} showToast={showToast}/>,
     rpt_executive: <ReportExecutive tickets={tickets} showToast={showToast}/>,
-    rpt_party:     <ReportResponsibleParty tickets={tickets}/>,
     rpt_weekly:    <ReportWeekly tickets={tickets} showToast={showToast}/>,
     rpt_monthly:   <ReportMonthly tickets={tickets} showToast={showToast}/>,
   };
