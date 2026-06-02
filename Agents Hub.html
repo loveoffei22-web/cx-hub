@@ -2678,8 +2678,10 @@ function App(){
   const _agtnow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
   const currentYM=_agtnow.getFullYear()+'-'+String(_agtnow.getMonth()+1).padStart(2,'0');
   const[activeMonth,setActiveMonth]=useState(function(){
-    var saved=localStorage.getItem('ek_active_month');
-    return saved||currentYM;
+    // Boot: pick latest month from stored tickets, fall back to currentYM
+    var stored=[];try{stored=JSON.parse(localStorage.getItem('ek_v2_tickets')||'[]');}catch(e){}
+    var max='';stored.forEach(function(t){var ym=shiftWatYM(t);if(ym&&ym>max)max=ym;});
+    return max||currentYM;
   });
   const[theme,setTheme]=useState(function(){
     const mode=localStorage.getItem('ek_theme_mode');
@@ -2727,6 +2729,12 @@ function App(){
   allTix.forEach(function(t){var ym=shiftWatYM(t);if(ym)_agtMonthSet.add(ym);});
   _agtMonthSet.add(currentYM);
   var availMonths=Array.from(_agtMonthSet).sort();
+  // Auto-snap to latest month whenever new ticket data arrives
+  var _latestYM=(function(){var max='';allTix.forEach(function(t){var ym=shiftWatYM(t);if(ym&&ym>max)max=ym;});return max||currentYM;})();
+  React.useEffect(function(){
+    setActiveMonth(_latestYM);
+    localStorage.setItem('ek_active_month',_latestYM);
+  },[_latestYM]);
   var viewTix=allTix.filter(function(t){return shiftWatYM(t)===activeMonth;});
   function setTickets(tix){setTicketsState(tix);if(agent)saveTix(agent.id,tix);}
   function onSignIn(a){
