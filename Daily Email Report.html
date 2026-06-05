@@ -375,10 +375,16 @@ function processJSON(data){
   const prevDate=new Date(watNow.getFullYear(),watNow.getMonth()-1,1);
   const prevYM=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
 
-  // Tally per category — current month only (shift-aware)
+  // Tally per category — current month only (raw WAT calendar month, no shift)
   const tally = {}; // key=normCat(category) → {res,prg,unr,today,origCat}
   for(const t of tickets){
-    if(shiftWatYM(t) !== curYM) continue; // skip tickets not in current month
+    const rawDate = t.created||t.receivedAt||t.received||'';
+    if(!rawDate) continue;
+    const d = new Date(rawDate);
+    if(isNaN(d.getTime())) continue;
+    const wat = new Date(d.toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+    const ticketYM = wat.getFullYear()+'-'+String(wat.getMonth()+1).padStart(2,'0');
+    if(ticketYM !== curYM) continue; // skip tickets not in current calendar month
     const catRaw = (t.category||'').trim();
     const key    = normCat(catRaw)||'__uncategorised__';
     if(!tally[key]) tally[key]={res:0,prg:0,unr:0,today:0,origCat:catRaw||'Uncategorised'};
