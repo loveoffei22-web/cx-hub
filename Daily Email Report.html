@@ -369,9 +369,16 @@ function processJSON(data){
   const exportedAt = data.exportedAt || '';
   const today = watToday();
 
-  // Tally per category (not per responsible party)
+  // Determine current month (WAT) for filtering
+  const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
+  const curYM=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0');
+  const prevDate=new Date(watNow.getFullYear(),watNow.getMonth()-1,1);
+  const prevYM=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+
+  // Tally per category — current month only (shift-aware)
   const tally = {}; // key=normCat(category) → {res,prg,unr,today,origCat}
   for(const t of tickets){
+    if(shiftWatYM(t) !== curYM) continue; // skip tickets not in current month
     const catRaw = (t.category||'').trim();
     const key    = normCat(catRaw)||'__uncategorised__';
     if(!tally[key]) tally[key]={res:0,prg:0,unr:0,today:0,origCat:catRaw||'Uncategorised'};
@@ -384,13 +391,7 @@ function processJSON(data){
     if(createdDate===today) tally[key].today++;
   }
 
-  // Tally May pending per category (shift-aware: May = shiftWatYM === current year -05)
-  // Determine the "previous month" = one month before the earliest current-month ticket
-  // Simple approach: any ticket with shiftWatYM ending in previous calendar month
-  const watNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Africa/Lagos'}));
-  const curYM=watNow.getFullYear()+'-'+String(watNow.getMonth()+1).padStart(2,'0');
-  const prevDate=new Date(watNow.getFullYear(),watNow.getMonth()-1,1);
-  const prevYM=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+  // Tally May pending per category (shift-aware)
 
   const mayTally={}; // key=normCat → pending count from previous month
   for(const t of tickets){
